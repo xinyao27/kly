@@ -21,9 +21,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist/*"
-  ],
+  "files": ["dist/*"],
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -64,5 +62,8 @@
   },
   "lint-staged": {
     "*": "biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true"
+  },
+  "dependencies": {
+    "zod": "^4.2.1"
   }
 }
