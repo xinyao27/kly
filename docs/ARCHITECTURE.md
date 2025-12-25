@@ -112,7 +112,7 @@ export default kit.defineApp({
 
 ### 2.2 Simplified UI Abstraction
 
-Instead of exposing full OpenTUI API, provide a minimal abstraction layer:
+Provide a minimal abstraction layer based on `@clack/prompts`:
 
 ```typescript
 interface ClaiUI {
@@ -131,16 +131,13 @@ interface ClaiUI {
   // Status
   spinner(message: string): SpinnerController
   progress(total: number): ProgressController
-
-  // Advanced: raw OpenTUI access
-  raw(): OpenTUIRenderer
 }
 ```
 
 **Benefits**:
 - LLM can easily generate correct code (small API surface)
 - 5-minute learning curve for users
-- Power users access full OpenTUI via `ctx.ui.raw()`
+- Consistent cross-platform experience
 
 ---
 
@@ -416,7 +413,7 @@ async run({ args, ctx }) {
 |-------|------------|
 | Runtime | Bun |
 | Type Safety | TypeScript + Standard Schema (Zod/Valibot/ArkType) |
-| TUI | OpenTUI (with simplified wrapper) |
+| TUI | @clack/prompts |
 | Build | tsdown |
 | Distribution | GitHub-first + Cloudflare Workers |
 | Web IDE | WebContainer API + xterm.js |
@@ -426,22 +423,13 @@ async run({ args, ctx }) {
 
 ## 8. Risks & Mitigations
 
-### 8.1 Zig Dependency (OpenTUI)
-
-**Risk**: OpenTUI requires Zig compiler, increasing user friction.
-
-**Mitigation**:
-- Provide pre-compiled binaries
-- Wait for OpenTUI stable release
-- Have fallback to simpler TUI library (e.g., Clack)
-
-### 8.2 Bun Compatibility
+### 8.1 Bun Compatibility
 
 **Risk**: Some npm packages may have Bun compatibility issues.
 
 **Mitigation**: Keep Node.js fallback path.
 
-### 8.3 Security Sandbox
+### 8.2 Security Sandbox
 
 **Risk**: Monkey-patching `fetch` can be bypassed via dynamic imports.
 
@@ -456,7 +444,7 @@ async run({ args, ctx }) {
 | Days | Focus | Deliverable |
 |------|-------|-------------|
 | 1-2 | Core | `@clai/kit` `defineApp` + Zod schema |
-| 3-4 | UI Layer | OpenTUI minimal wrapper (`ctx.ui`) |
+| 3-4 | UI Layer | @clack/prompts wrapper (`ctx.ui`) |
 | 5-6 | Runtime | `clai run ./local.ts` + basic permission intercept |
 | 7-8 | Network | GitHub URL parser + basic cache |
 | 9-10 | AI | `ctx.infer` + streaming output |

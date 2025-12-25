@@ -7,4 +7,9 @@ export default defineConfig([
     exports: true,
     publint: true,
   },
+  {
+    entry: ["bin/clai.ts"],
+    outDir: "dist/bin",
+    format: "esm",
+  },
 ]);
