@@ -40,8 +40,15 @@ export interface SelectConfig<T> {
  * ```
  */
 export async function select<T = string>(config: SelectConfig<T>): Promise<T> {
-  // Non-TTY fallback: auto-select first option
+  // Non-TTY fallback: auto-select first option or throw in MCP mode
   if (!isTTY()) {
+    // In MCP mode, interactive selection is not allowed
+    if (process.env.CLAI_MCP_MODE === "true") {
+      throw new Error(
+        `Interactive selection not available in MCP mode. All parameters must be defined in the tool's inputSchema. Selection prompt: ${config.prompt}`,
+      );
+    }
+
     const firstOption = config.options[0];
     if (!firstOption) {
       throw new Error("No options provided");

@@ -14,6 +14,12 @@ export async function confirm(
   defaultValue = false,
 ): Promise<boolean> {
   if (!isTTY()) {
+    // In MCP mode, warn about using default value for confirmation
+    if (process.env.CLAI_MCP_MODE === "true") {
+      console.warn(
+        `[MCP Warning] Interactive confirmation not available. Using default value (${defaultValue}) for: ${message}`,
+      );
+    }
     return defaultValue;
   }
 

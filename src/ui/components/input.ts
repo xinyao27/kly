@@ -32,6 +32,14 @@ export async function input(config: InputConfig): Promise<string> {
     if (config.defaultValue !== undefined) {
       return config.defaultValue;
     }
+
+    // Provide MCP-specific error message
+    if (process.env.CLAI_MCP_MODE === "true") {
+      throw new Error(
+        `Interactive input not available in MCP mode. All parameters must be defined in the tool's inputSchema. Missing parameter: ${config.prompt}`,
+      );
+    }
+
     throw new Error(
       "Interactive input not available in non-TTY mode. Please provide all required arguments.",
     );

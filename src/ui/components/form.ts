@@ -58,8 +58,21 @@ export async function form(
     console.log(`\n${pc.bold(config.title)}\n`);
   }
 
-  // Non-TTY fallback: return defaults
+  // Non-TTY fallback: return defaults or throw in MCP mode
   if (!isTTY()) {
+    // In MCP mode, interactive forms are not allowed
+    if (process.env.CLAI_MCP_MODE === "true") {
+      const requiredFields = config.fields
+        .filter((f) => f.required && f.defaultValue === undefined)
+        .map((f) => f.name);
+
+      if (requiredFields.length > 0) {
+        throw new Error(
+          `Interactive form not available in MCP mode. All parameters must be defined in the tool's inputSchema. Missing required fields: ${requiredFields.join(", ")}`,
+        );
+      }
+    }
+
     for (const field of config.fields) {
       result[field.name] = field.defaultValue;
     }

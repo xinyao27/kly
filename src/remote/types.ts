@@ -58,4 +58,6 @@ export interface RunRemoteOptions {
   skipInstall?: boolean;
   /** Arguments to pass to the app */
   args?: string[];
+  /** Run in MCP mode */
+  mcp?: boolean;
 }

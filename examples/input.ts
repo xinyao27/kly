@@ -4,47 +4,42 @@ import { input } from "../src/ui";
 
 const inputTool = tool({
   name: "text-input",
-  description: "Prompt for user input with various configurations",
+  description: "Get text input from user",
   inputSchema: z.object({
-    mode: z
-      .enum(["simple", "default", "placeholder", "maxlength"])
-      .default("simple")
-      .describe("Input mode to demonstrate"),
+    prompt: z.string().describe("The prompt message to show"),
+    value: z
+      .string()
+      .optional()
+      .describe(
+        "The value to use (in MCP mode, this is provided by Claude; in CLI mode, user is prompted)",
+      ),
+    defaultValue: z
+      .string()
+      .optional()
+      .describe("Default value if no input provided"),
+    placeholder: z.string().optional().describe("Placeholder text"),
+    maxLength: z.number().optional().describe("Maximum length of input"),
   }),
-  execute: async ({ mode }) => {
+  execute: async (
+    { prompt, value, defaultValue, placeholder, maxLength },
+    context,
+  ) => {
     let result: string;
 
-    switch (mode) {
-      case "simple":
-        result = await input({
-          prompt: "What is your name?",
-        });
-        break;
-
-      case "default":
-        result = await input({
-          prompt: "Enter your username",
-          defaultValue: "guest",
-        });
-        break;
-
-      case "placeholder":
-        result = await input({
-          prompt: "Enter your email",
-          placeholder: "user@example.com",
-        });
-        break;
-
-      case "maxlength":
-        result = await input({
-          prompt: "Enter a short code",
-          placeholder: "Max 6 characters",
-          maxLength: 6,
-        });
-        break;
+    // In MCP mode: use the provided value from schema
+    if (context.mode === "mcp") {
+      result = value ?? defaultValue ?? "";
+    } else {
+      // In CLI mode: prompt for interactive input
+      result = await input({
+        prompt,
+        defaultValue,
+        placeholder,
+        maxLength,
+      });
     }
+
     return {
-      mode,
       input: result,
       message: `You entered: ${result}`,
     };

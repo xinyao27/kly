@@ -69,7 +69,7 @@ export async function runRemote(
   }
 
   // 7. Validate and execute
-  await executeApp(ref, repoPath, options.args ?? []);
+  await executeApp(ref, repoPath, options.args ?? [], options.mcp ?? false);
 }
 
 /**
@@ -79,6 +79,7 @@ async function executeApp(
   ref: RepoRef,
   repoPath: string,
   args: string[],
+  _mcp: boolean,
 ): Promise<void> {
   // Read config and validate
   const config = readClaiConfig(repoPath);
@@ -108,6 +109,11 @@ async function executeApp(
   }
 
   const absoluteEntryPath = join(repoPath, entryPoint);
+
+  // Set MCP mode if requested
+  if (_mcp) {
+    process.env.CLAI_MCP_MODE = "true";
+  }
 
   // Set process.argv for detectMode() to work
   process.argv = ["bun", absoluteEntryPath, ...args];

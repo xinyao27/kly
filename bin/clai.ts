@@ -43,6 +43,26 @@ async function main() {
     return;
   }
 
+  if (command === "mcp") {
+    const target = args[1];
+    if (!target) {
+      console.error("Error: Missing file path or remote reference");
+      console.error("Usage: clai mcp <file|user/repo[@ref]>");
+      process.exit(1);
+    }
+
+    // Check for --force flag
+    const forceIndex = args.indexOf("--force");
+    const force = forceIndex !== -1;
+
+    if (isRemoteRef(target)) {
+      await runRemote(target, { args: [], force, mcp: true });
+    } else {
+      await runFileAsMcp(target);
+    }
+    return;
+  }
+
   console.error(`Unknown command: ${command}`);
   console.error('Run "clai --help" for usage');
   process.exit(1);
@@ -59,6 +79,19 @@ async function runFile(filePath: string, appArgs: string[]) {
   await import(absolutePath);
 }
 
+async function runFileAsMcp(filePath: string) {
+  const absolutePath = resolve(process.cwd(), filePath);
+
+  // Set MCP mode environment variable
+  process.env.CLAI_MCP_MODE = "true";
+
+  // Modify process.argv
+  process.argv = ["bun", absolutePath];
+
+  // Dynamic import triggers defineApp's auto-execution in MCP mode
+  await import(absolutePath);
+}
+
 function showHelp() {
   console.log(`
 clai - Command Line AI
@@ -68,6 +101,7 @@ Usage:
 
 Commands:
   run <target>   Run a Clai app
+  mcp <target>   Start an MCP server for a Clai app
 
 Target can be:
   ./file.ts              Local file
@@ -86,6 +120,8 @@ Examples:
   clai run user/weather-app
   clai run user/weather-app@v1.0.0
   clai run user/weather-app -- --city=Beijing
+  clai mcp ./my-tool.ts
+  clai mcp user/weather-app
 `);
 }
 

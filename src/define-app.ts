@@ -104,12 +104,20 @@ export function defineApp<TTools extends AnyTool[]>(
     },
   };
 
-  // Auto-run in CLI mode
+  // Auto-run based on mode
   const mode = detectMode();
   if (mode === "cli") {
     runCli(app, definition).catch((err) => {
       console.error("Fatal error:", err.message);
       process.exit(1);
+    });
+  } else if (mode === "mcp") {
+    // Dynamically import MCP server to avoid bundling it in CLI mode
+    import("./mcp").then(({ startMcpServer }) => {
+      startMcpServer(app).catch((err) => {
+        console.error("MCP server error:", err.message);
+        process.exit(1);
+      });
     });
   }
 

@@ -29,6 +29,12 @@ export interface PasswordConfig {
 export async function password(config: PasswordConfig): Promise<string> {
   // Non-TTY fallback: throw error (passwords should never have defaults)
   if (!isTTY()) {
+    if (process.env.CLAI_MCP_MODE === "true") {
+      throw new Error(
+        "Password input not available in MCP mode. Sensitive credentials should be provided via environment variables or the tool's inputSchema.",
+      );
+    }
+
     throw new Error(
       "Password input not available in non-TTY mode. Please provide credentials via environment variables.",
     );

@@ -1,4 +1,7 @@
 export { defineApp } from "./define-app";
+export type { JsonSchema } from "./mcp";
+// MCP exports
+export { startMcpServer } from "./mcp";
 export { tool } from "./tool";
 export type {
   AnyTool,
