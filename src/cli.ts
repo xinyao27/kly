@@ -1,17 +1,3 @@
-/* agent-frontmatter:start
-AGENT: CLI utilities for Clai
-PURPOSE: Parse command line arguments and generate help text
-USAGE: Used by defineApp to handle CLI mode execution
-EXPORTS: parseCliArgs, parseSubcommand, generateMultiToolsHelp, generateToolHelp, isHelpRequested
-FEATURES:
-  - Parse --key=value and --key value formats
-  - Handle boolean flags (--flag, --no-flag)
-  - Auto-convert numbers and booleans
-  - Dynamic help generation from JSON Schema
-  - Subcommand parsing
-SEARCHABLE: cli, args, parser, help, command line, subcommand, json schema
-agent-frontmatter:end */
-
 import type { AnyTool, AppDefinition, StandardSchemaV1 } from "./types";
 
 /**
@@ -342,4 +328,63 @@ export function generateMultiToolsHelp(config: AppDefinition): string {
   lines.push(`Run '${config.name} <command> --help' for more information.`);
 
   return lines.join("\n");
+}
+
+/**
+ * Input field for interactive prompts (duplicated to avoid circular deps)
+ */
+interface SchemaInputField {
+  name: string;
+  label: string;
+  type: "string" | "number" | "boolean" | "enum";
+  required: boolean;
+  defaultValue?: unknown;
+  description?: string;
+  enumValues?: string[];
+  min?: number;
+  max?: number;
+}
+
+/**
+ * Get missing required fields from a schema based on provided args
+ */
+export function getMissingRequiredFields(
+  schema: StandardSchemaV1,
+  providedArgs: Record<string, unknown>,
+): SchemaInputField[] {
+  const jsonSchema = extractJsonSchema(schema);
+  if (!jsonSchema) return [];
+
+  const properties = extractProperties(jsonSchema);
+  const missing: SchemaInputField[] = [];
+
+  for (const prop of properties) {
+    // Skip if already provided
+    if (providedArgs[prop.name] !== undefined) continue;
+
+    // Skip if not required (has default or optional)
+    if (!prop.required) continue;
+
+    // Convert to input field
+    let fieldType: SchemaInputField["type"] = "string";
+    if (prop.type === "number" || prop.type === "integer") {
+      fieldType = "number";
+    } else if (prop.type === "boolean") {
+      fieldType = "boolean";
+    } else if (prop.enum && prop.enum.length > 0) {
+      fieldType = "enum";
+    }
+
+    missing.push({
+      name: prop.name,
+      label: prop.description || prop.name,
+      type: fieldType,
+      required: true,
+      defaultValue: prop.default,
+      description: prop.description,
+      enumValues: prop.enum?.map(String),
+    });
+  }
+
+  return missing;
 }

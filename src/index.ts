@@ -1,15 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Main entry point for Clai
-PURPOSE: Export public API for tool, defineApp and related types
-USAGE: import { tool, defineApp } from "clai"
-EXPORTS: tool, defineApp, AppDefinition, Tool, ToolDefinition, ExecuteContext, ClaiApp, ValidationError
-FEATURES:
-  - Re-exports tool helper function
-  - Re-exports defineApp function
-  - Re-exports all public types
-SEARCHABLE: entry, export, api, clai
-agent-frontmatter:end */
-
 export { defineApp } from "./define-app";
 export { tool } from "./tool";
 export type {
@@ -24,3 +12,25 @@ export type {
   ToolDefinition,
 } from "./types";
 export { ValidationError } from "./types";
+
+// UI exports - functional API
+export type {
+  FormConfig,
+  FormField,
+  InputConfig,
+  SelectOption,
+  SpinnerHandle,
+} from "./ui";
+export {
+  confirm,
+  error,
+  form,
+  formatText,
+  help,
+  input,
+  isTTY,
+  output,
+  select,
+  spinner,
+  theme,
+} from "./ui";

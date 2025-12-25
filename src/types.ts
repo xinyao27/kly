@@ -1,16 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Type definitions for Clai
-PURPOSE: Define core types for tool, defineApp, context, and app instances
-USAGE: Import types in tool.ts, define-app.ts and other modules
-EXPORTS: StandardSchemaV1, InferOutput, Tool, ToolDefinition, AppDefinition, ExecuteContext, ClaiApp, RuntimeMode
-FEATURES:
-  - Standard Schema V1 interface (inlined for zero deps)
-  - Type inference from schema to args
-  - Dual API support (tool + defineApp)
-  - Runtime mode detection types
-SEARCHABLE: types, schema, tool, defineApp, context, standard schema
-agent-frontmatter:end */
-
 /**
  * Standard Schema V1 interface (inlined to avoid external dependency)
  * @see https://github.com/standard-schema/standard-schema

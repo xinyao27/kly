@@ -1,15 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Tool helper function
-PURPOSE: Create type-safe tool definitions with parameter inference
-USAGE: import { tool } from "clai"
-EXPORTS: tool
-FEATURES:
-  - TypeScript type inference from parameters to execute args
-  - Vercel AI SDK compatible API
-  - Composable with defineApp
-SEARCHABLE: tool, helper, type inference, ai sdk
-agent-frontmatter:end */
-
 import type { StandardSchemaV1, Tool, ToolDefinition } from "./types";
 
 /**

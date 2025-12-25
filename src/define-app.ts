@@ -1,20 +1,8 @@
-/* agent-frontmatter:start
-AGENT: Core defineApp function
-PURPOSE: Create Clai app instances with schema validation and multi-mode execution
-USAGE: Main export for users to define their apps
-EXPORTS: defineApp
-FEATURES:
-  - Standard Schema validation
-  - CLI/MCP/programmatic mode detection
-  - Auto-execution in CLI mode
-  - Help and version handling
-  - Subcommand support for tools
-SEARCHABLE: defineApp, app, schema, validation, cli, mcp
-agent-frontmatter:end */
-
 import {
   generateMultiToolsHelp,
+  generateSingleToolHelp,
   generateToolHelp,
+  getMissingRequiredFields,
   isHelpRequested,
   isVersionRequested,
   parseCliArgs,
@@ -22,6 +10,7 @@ import {
 } from "./cli";
 import type { AnyTool, AppDefinition, ClaiApp, RuntimeMode } from "./types";
 import { ValidationError } from "./types";
+import { error, form, isTTY, output, select } from "./ui";
 
 /**
  * Detect the current runtime mode
@@ -110,15 +99,16 @@ export function defineApp<TTools extends AnyTool[]>(
       }
 
       // Execute
-      return tool.execute(result.value, { mode });
+      const execResult = await tool.execute(result.value, { mode });
+      return execResult;
     },
   };
 
   // Auto-run in CLI mode
   const mode = detectMode();
   if (mode === "cli") {
-    runCli(app, definition).catch((error) => {
-      console.error("Fatal error:", error.message);
+    runCli(app, definition).catch((err) => {
+      console.error("Fatal error:", err.message);
       process.exit(1);
     });
   }
@@ -133,13 +123,42 @@ async function runCli<TTools extends AnyTool[]>(
   app: ClaiApp<TTools>,
   definition: AppDefinition<TTools>,
 ): Promise<void> {
+  const argv = process.argv.slice(2);
   const isSingleTool = definition.tools.length === 1;
 
+  // Handle --help and --version without TUI
+  if (isHelpRequested(argv)) {
+    if (isSingleTool) {
+      console.log(generateSingleToolHelp(definition, definition.tools[0]!));
+    } else {
+      const { subcommand } = parseSubcommand(argv);
+      if (subcommand) {
+        const tool = app.tools.get(subcommand);
+        if (tool) {
+          console.log(generateToolHelp(definition.name, tool));
+        } else {
+          console.log(generateMultiToolsHelp(definition));
+        }
+      } else {
+        console.log(generateMultiToolsHelp(definition));
+      }
+    }
+    return;
+  }
+
+  if (isVersionRequested(argv)) {
+    console.log(`${definition.name} v${definition.version}`);
+    return;
+  }
+
+  // Run the appropriate CLI mode
   if (isSingleTool) {
     await runSingleToolCli(app, definition);
   } else {
     await runMultiToolsCli(app, definition);
   }
+  // Clean exit
+  process.exit(0);
 }
 
 /**
@@ -151,40 +170,35 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
 ): Promise<void> {
   const argv = process.argv.slice(2);
   const tool = definition.tools[0]!;
+  const interactive = isTTY();
 
-  // Handle --help
-  if (isHelpRequested(argv)) {
-    const { generateSingleToolHelp } = await import("./cli");
-    console.log(generateSingleToolHelp(definition, tool));
-    return;
+  // Parse args
+  let parsedArgs = parseCliArgs(argv) as Record<string, unknown>;
+
+  // Check for missing required fields and prompt if in TTY mode
+  if (interactive) {
+    const missingFields = getMissingRequiredFields(
+      tool.inputSchema,
+      parsedArgs,
+    );
+
+    if (missingFields.length > 0) {
+      const additionalArgs = await form({ fields: missingFields });
+      parsedArgs = { ...parsedArgs, ...additionalArgs };
+    }
   }
-
-  // Handle --version
-  if (isVersionRequested(argv)) {
-    console.log(`${definition.name} v${definition.version}`);
-    return;
-  }
-
-  // Parse args and execute
-  const parsedArgs = parseCliArgs(argv);
 
   try {
     const result = await app.execute(tool.name, parsedArgs);
     if (result !== undefined) {
-      if (typeof result === "string") {
-        console.log(result);
-      } else {
-        console.log(JSON.stringify(result, null, 2));
-      }
+      output(result);
     }
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      console.error(`Error: ${error.message}`);
-      console.error("");
-      console.error(`Run with --help for usage information.`);
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      error(err.message, [`Run with --help for usage information.`]);
       process.exit(1);
     }
-    throw error;
+    throw err;
   }
 }
 
@@ -196,63 +210,74 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
   definition: AppDefinition<TTools>,
 ): Promise<void> {
   const argv = process.argv.slice(2);
-  const { subcommand } = parseSubcommand(argv);
-
-  // Handle --help (app level, no subcommand)
-  if (isHelpRequested(argv) && !subcommand) {
-    console.log(generateMultiToolsHelp(definition));
-    return;
-  }
-
-  // Handle --version
-  if (isVersionRequested(argv)) {
-    console.log(`${definition.name} v${definition.version}`);
-    return;
-  }
+  let { subcommand } = parseSubcommand(argv);
+  const interactive = isTTY();
 
   // Get rest args (subcommand already parsed above)
   const { args: restArgs } = parseSubcommand(argv);
 
+  // Interactive tool selection if no subcommand and in TTY mode
   if (!subcommand) {
-    console.error("Error: No subcommand provided.");
-    console.error("");
-    console.log(generateMultiToolsHelp(definition));
-    process.exit(1);
-  }
-
-  const tool = app.tools.get(subcommand);
-  if (!tool) {
-    console.error(`Error: Unknown command '${subcommand}'.`);
-    console.error("");
-    console.log(generateMultiToolsHelp(definition));
-    process.exit(1);
-  }
-
-  // Handle --help for specific tool
-  if (isHelpRequested(restArgs)) {
-    console.log(generateToolHelp(definition.name, tool));
-    return;
-  }
-
-  // Parse args and execute
-  const parsedArgs = parseCliArgs(restArgs);
-
-  try {
-    const result = await app.execute(subcommand, parsedArgs);
-    if (result !== undefined) {
-      if (typeof result === "string") {
-        console.log(result);
-      } else {
-        console.log(JSON.stringify(result, null, 2));
-      }
-    }
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      console.error(`Error: ${error.message}`);
-      console.error("");
-      console.error(`Run '${definition.name} ${subcommand} --help' for usage.`);
+    if (interactive) {
+      // Show interactive menu to select a tool
+      const toolOptions = definition.tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        value: t.name,
+      }));
+      subcommand = await select({
+        options: toolOptions,
+        prompt: `${definition.name} - Select a command`,
+      });
+    } else {
+      error("No subcommand provided.", [
+        `Available commands: ${definition.tools.map((t) => t.name).join(", ")}`,
+        `Run '${definition.name} --help' for usage.`,
+      ]);
       process.exit(1);
     }
-    throw error;
+  }
+
+  // At this point subcommand is guaranteed to be a string
+  const selectedCommand = subcommand as string;
+
+  const tool = app.tools.get(selectedCommand);
+  if (!tool) {
+    error(`Unknown command '${selectedCommand}'.`, [
+      `Available commands: ${definition.tools.map((t) => t.name).join(", ")}`,
+      `Run '${definition.name} --help' for usage.`,
+    ]);
+    process.exit(1);
+  }
+
+  // Parse args
+  let parsedArgs = parseCliArgs(restArgs) as Record<string, unknown>;
+
+  // Check for missing required fields and prompt if in TTY mode
+  if (interactive) {
+    const missingFields = getMissingRequiredFields(
+      tool.inputSchema,
+      parsedArgs,
+    );
+
+    if (missingFields.length > 0) {
+      const additionalArgs = await form({ fields: missingFields });
+      parsedArgs = { ...parsedArgs, ...additionalArgs };
+    }
+  }
+
+  try {
+    const result = await app.execute(selectedCommand, parsedArgs);
+    if (result !== undefined) {
+      output(result);
+    }
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      error(err.message, [
+        `Run '${definition.name} ${selectedCommand} --help' for usage.`,
+      ]);
+      process.exit(1);
+    }
+    throw err;
   }
 }

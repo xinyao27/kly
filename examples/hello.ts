@@ -1,15 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Hello world example app
-PURPOSE: Demonstrate basic defineApp usage with tool
-USAGE: bun run examples/hello.ts --name=World
-EXPORTS: none (CLI app)
-FEATURES:
-  - Single tool wrapped in defineApp (no subcommand needed)
-  - String and boolean parameters
-  - Simple greeting output
-SEARCHABLE: example, hello, demo
-agent-frontmatter:end */
-
 import { z } from "zod";
 import { defineApp, tool } from "../src";
 

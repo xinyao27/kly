@@ -6,6 +6,7 @@
     "disableSourceOfProjectReferenceRedirect": true, // https://www.typescriptlang.org/zh/tsconfig#disableSourceOfProjectReferenceRedirect
     "target": "esnext", // https://www.typescriptlang.org/zh/tsconfig#target
     "jsx": "preserve", // https://www.typescriptlang.org/zh/tsconfig#jsx
+    "jsxImportSource": "@opentui/solid",
     "lib": ["esnext", "dom"], // https://www.typescriptlang.org/zh/tsconfig#lib
     "noLib": false, // https://www.typescriptlang.org/zh/tsconfig#noLib
     "useDefineForClassFields": true, // https://www.typescriptlang.org/zh/tsconfig#useDefineForClassFields

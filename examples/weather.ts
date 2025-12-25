@@ -1,15 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Weather CLI with multiple tools
-PURPOSE: Demonstrate multi-tools mode with subcommands
-USAGE: bun run examples/weather.ts current --city=Beijing
-EXPORTS: currentTool, forecastTool
-FEATURES:
-  - Multiple tools in one app
-  - Subcommand support (current, forecast)
-  - Shared types between tools
-SEARCHABLE: example, weather, multi-tools, subcommand
-agent-frontmatter:end */
-
 import { z } from "zod";
 import { defineApp, tool } from "../src";
 

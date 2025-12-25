@@ -54,39 +54,6 @@ bun run up             # Update dependencies to latest major versions using taze
 
 ## Code Quality Configuration
 
-## Metadata Comment Standard
-
-**IMPORTANT: Every new TypeScript or JavaScript file MUST start with an `agent-frontmatter` block.** This is a mandatory requirement for all code files in the project.
-
-All TypeScript and JavaScript entry points should start with the sentinel-wrapped metadata block so agents and scripts can identify file purpose:
-
-```ts
-/* agent-frontmatter:start
-AGENT: Agent runtime handler
-PURPOSE: Route incoming messages through the agent class pipeline
-USAGE: Import and mount inside the chosen template handler
-EXPORTS: createAgentHandler
-FEATURES:
-  - Validates config
-  - Streams token events
-  - Dispatches tool executions
-SEARCHABLE: agent handler, pipeline, runtime
-agent-frontmatter:end */
-```
-
-Keep field names and ordering consistent across files. Expand `FEATURES` or `EXPORTS` only when relevant.
-
-### Biome
-- **Formatter**: 2 spaces, line width 80, double quotes for JS
-- **Linter**: Uses recommended rules with specific customizations:
-  - a11y rules disabled
-  - `noExplicitAny`, `noNonNullAssertion` disabled
-  - Auto-organizes imports
-  - Supports Tailwind directives in CSS
-
-### TypeScript
-- Type checking runs as part of `lint` script
-
 ## Project Structure
 
 - `src/` - Source TypeScript files (currently minimal starter code)

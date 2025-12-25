@@ -1,14 +1,3 @@
-/* agent-frontmatter:start
-AGENT: Tests for Clai core functionality
-PURPOSE: Verify defineApp and CLI parsing work correctly
-USAGE: bun test
-EXPORTS: none (test file)
-FEATURES:
-  - Test CLI argument parsing
-  - Test validation errors
-SEARCHABLE: test, spec, cli, parser
-agent-frontmatter:end */
-
 import { describe, expect, it } from "bun:test";
 import { parseCliArgs } from "../src/cli";
 

@@ -22,15 +22,12 @@
     "access": "public"
   },
   "files": ["dist/*"],
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
-    }
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "scripts": {
@@ -43,6 +40,11 @@
     "test": "bun test",
     "up": "taze major -I",
     "prepare": "simple-git-hooks"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "picocolors": "^1.1.1",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@antfu/ni": "^28.0.0",
@@ -62,8 +64,5 @@
   },
   "lint-staged": {
     "*": "biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true"
-  },
-  "dependencies": {
-    "zod": "^4.2.1"
   }
 }
