@@ -43,7 +43,7 @@ export async function input(config: InputConfig): Promise<string> {
     placeholder: config.placeholder,
     validate: config.maxLength
       ? (value) => {
-          if (value.length > config.maxLength!) {
+          if (value && value.length > config.maxLength!) {
             return `Input must be ${config.maxLength} characters or less`;
           }
           return undefined;
