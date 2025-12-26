@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
+import { isNaturalLanguage, parseNaturalLanguage } from "../src/ai";
+import { parseCliArgs } from "../src/cli";
 import { isRemoteRef, runRemote } from "../src/remote";
+import type { ClaiApp } from "../src/types";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -71,12 +74,102 @@ async function main() {
 async function runFile(filePath: string, appArgs: string[]) {
   const absolutePath = resolve(process.cwd(), filePath);
 
-  // Modify process.argv so defineApp's detectMode() works correctly
-  // It checks if argv[1] ends with .ts/.js to determine CLI mode
-  process.argv = ["bun", absolutePath, ...appArgs];
+  // Check if first arg is natural language
+  const firstArg = appArgs[0];
+  const useNaturalLanguage = firstArg && isNaturalLanguage(firstArg);
 
-  // Dynamic import triggers defineApp's auto-execution
-  await import(absolutePath);
+  if (useNaturalLanguage) {
+    // Natural language mode: parse with LLM
+    await runFileWithNaturalLanguage(absolutePath, appArgs);
+  } else {
+    // Normal mode: pass through arguments
+    // Modify process.argv so defineApp's detectMode() works correctly
+    process.argv = ["bun", absolutePath, ...appArgs];
+
+    // Dynamic import triggers defineApp's auto-execution
+    await import(absolutePath);
+  }
+}
+
+async function runFileWithNaturalLanguage(
+  absolutePath: string,
+  appArgs: string[],
+) {
+  // Set programmatic mode to prevent auto-execution
+  process.env.CLAI_PROGRAMMATIC = "true";
+
+  // Import the app
+  const module = await import(absolutePath);
+
+  // Reset programmatic mode
+  delete process.env.CLAI_PROGRAMMATIC;
+
+  // Get the app instance (should be default export)
+  const app: ClaiApp = module.default;
+
+  if (!app || typeof app.execute !== "function") {
+    console.error(
+      "Error: The app file must export a ClaiApp instance as default export",
+    );
+    console.error("Make sure you call defineApp() and it returns the result");
+    process.exit(1);
+  }
+
+  // Parse CLI args (--flags)
+  const parsedFlags = parseCliArgs(appArgs);
+
+  // Collect natural language input (non-flag args)
+  const naturalInput = appArgs.filter((arg) => !arg.startsWith("-")).join(" ");
+
+  // Determine which tool to use
+  let toolName: string;
+  if (app.definition.tools.length === 1) {
+    // Single tool app
+    toolName = app.definition.tools[0]!.name;
+  } else if (parsedFlags.tool) {
+    // Multi-tool app with explicit tool selection
+    toolName = String(parsedFlags.tool);
+    delete parsedFlags.tool; // Remove from args
+  } else {
+    // Multi-tool app without tool selection
+    console.error("Error: Multi-tool app requires --tool flag");
+    console.error(
+      `Available tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
+    );
+    console.error("\nUsage:");
+    console.error(
+      `  clai run ${absolutePath} --tool=<name> "natural language"`,
+    );
+    process.exit(1);
+  }
+
+  const tool = app.tools.get(toolName);
+  if (!tool) {
+    console.error(`Error: Unknown tool '${toolName}'`);
+    console.error(
+      `Available tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  // Parse natural language to extract parameters
+  const parsedParams = await parseNaturalLanguage(
+    naturalInput,
+    tool.inputSchema,
+    parsedFlags,
+  );
+
+  // Execute the tool
+  const result = await app.execute(toolName, parsedParams);
+
+  // Output result
+  if (result !== undefined) {
+    if (typeof result === "string") {
+      console.log(result);
+    } else {
+      console.log(JSON.stringify(result, null, 2));
+    }
+  }
 }
 
 async function runFileAsMcp(filePath: string) {

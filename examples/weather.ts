@@ -51,9 +51,12 @@ const forecastTool = tool({
 });
 
 // Multi-tools app
-defineApp({
+const app = defineApp({
   name: "weather",
   version: "0.1.0",
   description: "Weather CLI with current conditions and forecast",
   tools: [currentTool, forecastTool],
 });
+
+// Export for programmatic usage (e.g., natural language mode)
+export default app;

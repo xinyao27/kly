@@ -14,9 +14,11 @@ const greetTool = tool({
   },
 });
 
-defineApp({
+const app = defineApp({
   name: "hello",
   version: "0.1.0",
   description: "Hello world CLI",
   tools: [greetTool],
 });
+
+export default app;
