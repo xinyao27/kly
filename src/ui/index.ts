@@ -30,10 +30,21 @@ export {
   select,
 } from "./components/select";
 export { type SpinnerHandle, spinner } from "./components/spinner";
+export {
+  type ColumnAlign,
+  type TableColumn,
+  type TableConfig,
+  table,
+} from "./components/table";
 export { type Task, type TaskResult, tasks } from "./components/tasks";
 
 // Utilities
-export { type AnsiColor, formatText, pc, theme } from "./utils/colors";
+export {
+  type AnsiColor,
+  formatText,
+  pc as color,
+  theme,
+} from "./utils/colors";
 
 // Output utilities
 export { error, help, output } from "./utils/output";

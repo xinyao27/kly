@@ -113,11 +113,27 @@ export interface AppMetadata {
 
 /**
  * App definition with tools array
+ *
+ * @example
+ * ```typescript
+ * defineApp({
+ *   name: "my-app",
+ *   version: "0.1.0",
+ *   description: "My CLI app",
+ *   tools: [greetTool, farewellTool],
+ *   instructions: "When user expresses greeting intent, prefer the greet tool",
+ * })
+ * ```
  */
 export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]>
   extends AppMetadata {
   /** Array of tools */
   tools: TTools;
+  /**
+   * AI instructions for Skill mode
+   * Hints for AI routing when this app is composed with others
+   */
+  instructions?: string;
 }
 
 /**

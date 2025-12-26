@@ -1,156 +1,258 @@
 # Clai (Command Line AI) Project Roadmap
 
 > **Mission:** Redefining the terminal experience where CLI meets AI.
-> **Core Identity:** Visual ambiguity logo (cli <-> ai) | Domain target: `clai.run`
+> **Core Identity:** Visual ambiguity logo (cli <-> ai) | Domain target: `clai.sh`
 
 ---
 
 ## Phase 1: The Protocol (SDK & Definition)
 
-**Goal:** Define the standard contract for "micro-apps". Everything starts with `kit`.
+**Goal:** Define the standard contract for "micro-apps" with Tool + App separation pattern.
 
 ### 1.1 Build `@clai/kit` SDK
 
-* **Architecture Core:** Based on **Bun** + **Zod** + **TypeScript**.
-* **`defineApp` Interface:**
-  * **Schema First:** Mandatory use of Zod for input parameter definitions (auto-generates TUI and CLI argument parsing).
-  * **Metadata:** Includes name, description, version.
-  * **Lifecycle:** `run({ args, ctx })` standard execution entry point.
+* **Architecture Core:** Based on **Bun** + **Standard Schema** + **TypeScript**.
+* **Two-Layer API Design:**
+  * **`tool()`** - Define individual capabilities with inputSchema and execute function.
+  * **`defineApp()`** - Compose multiple tools into a distributable app.
 
-* **AI Capability Integration (`ctx.infer`):**
-  * Built-in prompt template injection interface.
-  * Support for streaming output for instant feedback.
+* **Tool Definition Interface:**
+  ```typescript
+  tool({
+    name: "greet",
+    description: "Say hello to someone",
+    inputSchema: z.object({ name: z.string() }),
+    execute: async ({ name }) => `Hello, ${name}!`,
+  })
+  ```
+
+* **App Composition Interface:**
+  ```typescript
+  defineApp({
+    name: "hello",
+    version: "0.1.0",
+    description: "Hello world CLI",
+    tools: [greetTool, farewellTool],
+    instructions: "AI routing hints for Skill mode",
+  })
+  ```
+
+* **Standard Schema Compatibility:**
+  * Support Zod, Valibot, ArkType, TypeBox - any Standard Schema compliant library.
+  * Auto-generates TUI forms and CLI argument parsing from schema.
 
 * **MCP Compatibility:**
-  * SDK natively supports export to **Model Context Protocol (MCP)** format, ensuring Claude Desktop can directly "learn" any Clai tool.
-
-### 1.2 Declarative Permission System (The Contract)
-
-* **Metadata Standard:**
-  * Define `clai.permissions` field in `package.json` (or single-file header comment `// @clai-perm`).
-* **Fine-grained Control:**
-  * `fs.read`: whitelist paths (e.g., `["./src", "~/Downloads"]`)
-  * `net`: whitelist domains (e.g., `["api.openai.com"]`)
-  * `shell`: whitelist commands (e.g., `["git", "npm"]`)
+  * SDK natively exports `tools[]` array as MCP Tool list.
+  * Claude Desktop/Claude Code can directly invoke any Clai tool.
 
 ---
 
-## Phase 2: The Runtime (Runner & Security)
+## Phase 2: The Runtime
 
-**Goal:** Implement `npx clai run`, allowing code to run in a controlled, secure, and elegant environment.
+**Goal:** Implement `clai run` with context-aware execution modes.
 
-### 2.1 Runtime Security Sandbox (The Guardian)
+### 2.1 Runtime Mode Detection
 
-* **Bun Permission Completion:**
-  * Since Bun lacks `--allow-net`, intercept `globalThis.fetch` and `Bun.file` via **Monkey Patch / Preload Script** techniques.
-  * **Runtime Interception:** Before each IO operation, compare against the permission whitelist defined in Phase 1.
+* **CLI Mode (interactive):**
+  * Without args: List all available tools for user selection.
+  * With tool name: Auto-generate TUI form from inputSchema.
+  * With full args: Direct execution.
 
-* **iOS-Style Popup (TUI):**
-  * On first run of unauthorized scripts, display interactive TUI:
-    * `"Script 'Cleaner' wants to access your Desktop. [Allow Once] [Always Allow]"`
+* **MCP Mode (stdio/json):**
+  * Expose `tools[]` array directly as MCP Tool list.
+  * AI handles parameter parsing - zero additional LLM calls.
+
+* **Skill Mode (composed):**
+  * Use `instructions` field for AI routing hints.
+  * Composable with other apps via `ctx.run()`.
 
 ### 2.2 Smart TUI Generator
 
-* **No-Code UI:** If user doesn't pass arguments, Runner automatically renders interactive forms (Input, Select, Confirm) based on Zod Schema.
-* **Spinners & Progress:** Built-in elegant loading animations to mask LLM inference latency.
+* **No-Code UI:** Auto-render interactive forms based on inputSchema.
+* **Context-Aware Rendering:**
+  * CLI mode: Full TUI components via @clack/prompts.
+  * MCP mode: Convert to structured text output.
+* **Built-in Status Components:** Spinners, progress bars, tables.
 
 ---
 
-## Phase 3: The Distribution (Go-Style Network)
+## Phase 3: AI Integration
 
-**Goal:** Decentralized distribution. Solve "publishing difficulty" and "version fragmentation" problems.
+**Goal:** Seamless LLM integration with cascading provider fallback.
 
-### 3.1 URL as Identity
+### 3.1 LLM Configuration Management
 
-* **Direct GitHub Connection:** Support `clai run github.com/user/repo`.
-* **Integrity Verification:**
-  * Introduce **`clai.sum`** (similar to `go.sum`).
-  * Hash signature of code content + `bun.lock` + permission declarations to prevent code tampering.
+* **Config Commands:**
+  ```bash
+  clai config set provider openai
+  clai config set openai.api_key sk-xxxx
+  clai config set provider ollama  # Local models
+  clai config set provider deepseek
+  ```
 
-### 3.2 Subdomain Mapping System (Vanity URLs)
+* **Supported Providers:**
+  * OpenAI, Anthropic, DeepSeek
+  * Ollama (local models)
+  * Custom endpoints
 
-* **Service Architecture:** Establish `clai.run` domain service.
-* **Registration Process:** User submits PR to `clai-registry` repo -> auto-deploy DNS/Redirect rules.
-* **Result:** `jack.clai.run/tool` -> 302 Redirect -> `github.com/jack/tools/index.ts`.
+### 3.2 Cascading Inference Providers
 
-### 3.3 Acceleration Proxy (The Proxy)
+* **Priority Order:**
+  1. MCP environment (free - Claude handles it)
+  2. Local Ollama (free, requires install)
+  3. User-configured API Key (user pays)
+  4. Official cloud gateway (limited free tier)
+
+### 3.3 Hybrid Parameter Mode
+
+* **Execution Modes:**
+  ```bash
+  # Fully specified - no LLM needed
+  clai run weather.ts --city Beijing --days 7
+
+  # Fuzzy intent - uses configured LLM
+  clai run weather.ts "Is Beijing cold tomorrow?"
+
+  # Mixed mode - AI fills in missing params
+  clai run weather.ts --city Beijing "should I bring umbrella?"
+  ```
+
+---
+
+## Phase 4: The Distribution (Go-Style Network)
+
+**Goal:** Decentralized distribution with auto-alias registration.
+
+### 4.1 URL as Identity
+
+* **Supported Formats:**
+  ```bash
+  clai run github.com/user/repo          # GitHub direct
+  clai run github.com/user/repo@v1.2.3   # Version pinning
+  clai run x/npm-updater                 # Short alias
+  clai run jack.clai.sh/hello            # Custom domain
+  clai run ./my-tool.ts                  # Local development
+  ```
+
+### 4.2 Auto Alias Registration
+
+* **First Run Flow:**
+  ```bash
+  npx clai run jack.clai.sh/hello  # Downloads and registers
+  hello greet --name "World"       # Works directly after
+  ```
+
+### 4.3 Integrity Verification (clai.sum)
+
+* **Security:**
+  * Hash signature of code content + bun.lock.
+  * Prevent code tampering via `clai.sum` file.
+
+### 4.4 Subdomain Mapping System
+
+* **Service Architecture:** Establish `clai.sh` domain service.
+* **Registration:** User submits PR to registry repo -> auto-deploy.
+* **Result:** `jack.clai.sh/tool` -> 302 -> `github.com/jack/tools/index.ts`
+
+### 4.5 Acceleration Proxy
 
 * **Tech Stack:** Cloudflare Workers.
 * **Features:**
-  * Cache GitHub source code (solve slow access in China).
-  * Pre-compute Schema and Metadata (accelerate `clai list` display).
+  * Cache GitHub source code.
+  * Pre-compute Schema and Metadata.
 
 ---
 
-## Phase 4: The Studio (Web Creation & Preview)
+## Phase 5: The Studio (Web Creation & Preview)
 
-**Goal:** Dimensional reduction strike. Let non-programmers complete the full dev-to-publish flow in browser.
+**Goal:** Let non-programmers complete the full dev-to-publish flow in browser.
 
-### 4.1 WebContainer-Based IDE
+### 5.1 No-Code TUI Previewer
 
-* **Tech Selection:** Use StackBlitz's **WebContainer API** to run real Node.js/Bun environment in browser.
-* **Main Features:**
-  * **Dual-Screen Editor:** Left side Zod form designer / Prompt editing, right side real-time code preview.
-  * **Real Terminal Simulation:** Integrate `xterm.js`, TUI effects in browser identical to local.
-  * **Network Proxy Bridge:** Solve browser CORS issues, let Web Clai access external APIs.
+* **Three-Panel Layout:**
+  ```
+  ┌─────────────────┬─────────────────┬─────────────────┐
+  │  Schema Builder │   Terminal      │   AI Logic      │
+  │  (visual)       │   (xterm.js)    │   (generate)    │
+  ├─────────────────┼─────────────────┼─────────────────┤
+  │  Visual schema  │  Real-time      │  Generate       │
+  │  editor for     │  terminal       │  execute()      │
+  │  inputSchema    │  simulation     │  from AI        │
+  └─────────────────┴─────────────────┴─────────────────┘
+  ```
 
-### 4.2 One-Click Publish Loop
+### 5.2 WebContainer-Based IDE
 
-* **OAuth Integration:** User clicks "Publish", system auto-creates Gist or Repo in user's GitHub.
-* **Auto Domain Claim:** Auto-submit subdomain registration PR, accessible via `clai run xxx` in minutes.
+* **Tech Selection:** StackBlitz's **WebContainer API** for browser-native Bun.
+* **Features:**
+  * Real terminal simulation via xterm.js.
+  * Network proxy bridge for external API access.
+  * Full isolation for security.
 
----
+### 5.3 One-Click Publish Loop
 
-## Phase 5: The Evolution (Self-Healing)
-
-**Goal:** Build technical moat, let the ecosystem self-maintain.
-
-### 5.1 Runtime Self-Healing (Runtime Fix)
-
-* **Error Interceptor:** Capture all `stderr` and uncaught exceptions.
-* **AI Diagnosis:** Send error stack + source code + environment info to LLM.
-* **Hot Patch:** LLM generates temporary fix code, asks user whether to apply and retry.
-
-### 5.2 Automated Contribution (Auto-PR)
-
-* **Closed-Loop Feedback:** If Hot Patch runs successfully, Runner prompts user:
-  * `"Fix worked! Would you like to send a PR to the author?"`
-
-* **Background Execution:** Auto Fork original repo -> Submit fix -> Create Pull Request (e.g., `fix: runtime error handling by Clai AI`).
+* **OAuth Integration:** Auto-create Gist or Repo in user's GitHub.
+* **Auto Domain Claim:** Auto-submit subdomain registration PR.
 
 ---
 
-## Phase 6: Sustainability (Business Model)
+## Phase 6: The Evolution (Self-Healing)
 
-**Goal:** Ensure project sustainable development, not just passion-driven.
+**Goal:** Build technical moat with self-maintaining ecosystem.
 
-### 6.1 Commercial Tiers
+### 6.1 Runtime Self-Healing
 
-* **Community (Free):** Open source SDK, public Proxy, `.clai.run` subdomain.
+* **Error Interceptor:** Capture all stderr and uncaught exceptions.
+* **AI Diagnosis:** Send error stack + source code + environment to LLM.
+* **Hot Patch:** LLM generates temporary fix, asks user whether to apply.
+
+### 6.2 Automated Contribution (Auto-PR)
+
+* **Closed-Loop Feedback:**
+  ```
+  "Fix worked! Would you like to send a PR to the author?"
+  ```
+* **Background Execution:** Auto Fork -> Submit fix -> Create Pull Request.
+
+---
+
+## Phase 7: Sustainability (Business Model)
+
+**Goal:** Ensure project sustainable development.
+
+### 7.1 Commercial Tiers
+
+* **Community (Free):**
+  * Open source SDK
+  * Public Proxy
+  * `.clai.sh` subdomain
+
 * **Pro (Developer):**
-  * Private repository support (OAuth Token management).
-  * Cloud Secrets injection (configure API Keys on Web, securely distribute to local).
+  * Private repository support
+  * Cloud Secrets injection
 
 * **Enterprise (B2B):**
-  * **Private Registry:** Deploy `proxy.clai` on enterprise intranet, audit and control which scripts employees can run.
-  * **RBAC Permission Dashboard:** Unified management of team internal tool permission policies.
+  * Private Registry deployment
+  * RBAC Permission Dashboard
 
-### 6.2 Trust Rating System
+### 7.2 Trust Rating System
 
 * **Verified Author:** GitHub verified + long-term no malicious behavior.
-* **Audited Script:** Scripts scanned by AI static analysis with no backdoors, marked with checkmark.
+* **Audited Script:** AI static analysis with no backdoors.
 
 ---
 
-## Execution Sprint (MVP: The First 2 Weeks)
+## Execution Sprint (MVP)
 
 | Days | Focus | Deliverable |
 |------|-------|-------------|
-| 1-3 | Kernel | Complete `packages/kit`. Implement `defineApp` and mock `PermissionGuard`. |
-| 4-6 | Runner | Complete `packages/cli`. Implement local `.ts` file execution and basic TUI rendering. |
-| 7-9 | Network | Implement simplest GitHub URL parser/downloader. |
-| 10 | Branding | Register domain `clai.run` (or alternatives `hop.sh`, `oxe.run`), design "visual pun" logo. |
-| 11-14 | Launch | Write README, record Demo, publish v0.1.0 to npm. |
+| 1-2 | Core API | `tool()` + `defineApp()` with Standard Schema support |
+| 3-4 | UI Layer | @clack/prompts wrapper (`ctx.ui`) |
+| 5-6 | Runtime | `clai run ./local.ts` |
+| 7-8 | Network | GitHub URL parser + basic cache |
+| 9-10 | AI | `ctx.infer` + provider configuration + streaming |
+| 11-12 | MCP | MCP adapter for tools[] exposure |
+| 13-14 | Launch | Demo apps + docs + npm publish |
 
 ---
 
@@ -159,12 +261,26 @@
 | Layer | Technology |
 |-------|------------|
 | Runtime | Bun |
-| Type Safety | TypeScript + Zod |
-| TUI | Ink / Clack |
+| Type Safety | TypeScript + Standard Schema (Zod/Valibot/ArkType) |
+| TUI | @clack/prompts |
 | Build | tsdown |
 | Distribution | GitHub-first + Cloudflare Workers |
 | Web IDE | WebContainer API + xterm.js |
 | AI Integration | MCP Protocol Compatible |
+
+---
+
+## Architecture Positioning
+
+clai is the **"Terminal OS"** microkernel:
+
+| Component | Role |
+|-----------|------|
+| Kernel | Bun (extreme speed) |
+| Interface | Zod + tool() / defineApp() (type-safe) |
+| Brain | LLM (fuzzy intent handling) |
+| Peripherals | MCP / Skills (ecosystem integration) |
+| Address | clai.sh (decentralized distribution) |
 
 ---
 

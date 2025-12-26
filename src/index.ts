@@ -18,13 +18,17 @@ export { ValidationError } from "./types";
 
 // UI exports - functional API
 export type {
+  ColumnAlign,
   FormConfig,
   FormField,
   InputConfig,
   SelectOption,
   SpinnerHandle,
+  TableColumn,
+  TableConfig,
 } from "./ui";
 export {
+  color,
   confirm,
   error,
   form,
@@ -35,5 +39,6 @@ export {
   output,
   select,
   spinner,
+  table,
   theme,
 } from "./ui";
