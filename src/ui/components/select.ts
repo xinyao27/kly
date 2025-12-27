@@ -1,4 +1,6 @@
 import * as p from "@clack/prompts";
+import { sendIPCRequest } from "../../sandbox/ipc-client";
+import { isMCP, isSandbox } from "../../shared/runtime-mode";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -40,10 +42,18 @@ export interface SelectConfig<T> {
  * ```
  */
 export async function select<T = string>(config: SelectConfig<T>): Promise<T> {
+  // Sandbox mode: use IPC to request select from host
+  if (isSandbox()) {
+    return sendIPCRequest<T>("prompt:select", {
+      prompt: config.prompt ?? "Select an option",
+      options: config.options,
+    });
+  }
+
   // Non-TTY fallback: auto-select first option or throw in MCP mode
   if (!isTTY()) {
     // In MCP mode, interactive selection is not allowed
-    if (process.env.CLAI_MCP_MODE === "true") {
+    if (isMCP()) {
       throw new Error(
         `Interactive selection not available in MCP mode. All parameters must be defined in the tool's inputSchema. Selection prompt: ${config.prompt}`,
       );

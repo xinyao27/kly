@@ -67,6 +67,10 @@ const app = defineApp({
   name: "travel-advisor",
   version: "0.1.0",
   description: "AI-powered travel advisor with natural language support",
+  permissions: {
+    // Needs API keys for natural language processing
+    apiKeys: true,
+  },
   tools: [adviseTool],
   instructions:
     "Help users plan their trips by extracting destination, duration, and preferences from natural language",

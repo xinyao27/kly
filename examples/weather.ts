@@ -55,6 +55,9 @@ const app = defineApp({
   name: "weather",
   version: "0.1.0",
   description: "Weather CLI with current conditions and forecast",
+  permissions: {
+    // This app doesn't need any special permissions (uses mock data)
+  },
   tools: [currentTool, forecastTool],
 });
 

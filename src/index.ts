@@ -6,6 +6,7 @@ export { tool } from "./tool";
 export type {
   AnyTool,
   AppDefinition,
+  AppPermissions,
   ClaiApp,
   ExecuteContext,
   InferOutput,

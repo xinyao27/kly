@@ -1,4 +1,6 @@
 import * as p from "@clack/prompts";
+import { sendIPCRequest } from "../../sandbox/ipc-client";
+import { isSandbox } from "../../shared/runtime-mode";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -47,6 +49,15 @@ export interface MultiSelectConfig<T> {
 export async function multiselect<T = string>(
   config: MultiSelectConfig<T>,
 ): Promise<T[]> {
+  // Sandbox mode: use IPC to request multiselect from host
+  if (isSandbox()) {
+    return sendIPCRequest<T[]>("prompt:multiselect", {
+      prompt: config.prompt ?? "Select options",
+      options: config.options,
+      required: config.required,
+    });
+  }
+
   // Non-TTY fallback: return initial values or empty array
   if (!isTTY()) {
     return config.initialValues ?? [];

@@ -1,9 +1,16 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
-import { isNaturalLanguage, parseNaturalLanguage, selectTool } from "../src/ai";
-import { parseCliArgs } from "../src/cli";
+import { modelsCommand } from "../src/ai/models-command";
+import { launchSandbox } from "../src/host/launcher";
+import { getAppIdentifier } from "../src/permissions";
+import { permissionsCommand } from "../src/permissions/cli";
+import { buildSandboxConfig } from "../src/permissions/config-builder";
+import { extractAppPermissions } from "../src/permissions/extract";
+import {
+  checkStoredPermission,
+  requestUnifiedPermission,
+} from "../src/permissions/unified-prompt";
 import { isRemoteRef, runRemote } from "../src/remote";
-import type { ClaiApp } from "../src/types";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -20,8 +27,12 @@ async function main() {
   }
 
   if (command === "models") {
-    const { modelsCommand } = await import("../src/ai/models-command");
     await modelsCommand();
+    return;
+  }
+
+  if (command === "permissions") {
+    await permissionsCommand();
     return;
   }
 
@@ -80,108 +91,70 @@ async function main() {
 async function runFile(filePath: string, appArgs: string[]) {
   const absolutePath = resolve(process.cwd(), filePath);
 
-  // Check if first arg is natural language
-  const firstArg = appArgs[0];
-  const useNaturalLanguage = firstArg && isNaturalLanguage(firstArg);
+  // Set local file identifier for permission tracking
+  const prevLocalRef = process.env.CLAI_LOCAL_REF;
+  process.env.CLAI_LOCAL_REF = `local:${absolutePath}`;
 
-  if (useNaturalLanguage) {
-    // Natural language mode: parse with LLM
-    await runFileWithNaturalLanguage(absolutePath, appArgs);
-  } else {
-    // Normal mode: pass through arguments
-    // Modify process.argv so defineApp's detectMode() works correctly
-    process.argv = ["bun", absolutePath, ...appArgs];
+  try {
+    // Get app identifier
+    const appId = getAppIdentifier();
 
-    // Dynamic import triggers defineApp's auto-execution
-    await import(absolutePath);
-  }
-}
+    // Check if permission already granted
+    const storedConfig = checkStoredPermission(appId);
+    let sandboxConfig = storedConfig;
+    let allowApiKey = false;
 
-async function runFileWithNaturalLanguage(
-  absolutePath: string,
-  appArgs: string[],
-) {
-  // Set programmatic mode to prevent auto-execution
-  process.env.CLAI_PROGRAMMATIC = "true";
+    if (!storedConfig) {
+      // Extract declared permissions from app
+      const appPermissions = await extractAppPermissions(absolutePath);
 
-  // Import the app
-  const module = await import(absolutePath);
+      // Build complete sandbox config (with auto-LLM domains if apiKeys: true)
+      sandboxConfig = buildSandboxConfig(appPermissions);
 
-  // Reset programmatic mode
-  delete process.env.CLAI_PROGRAMMATIC;
-
-  // Get the app instance (should be default export)
-  const app: ClaiApp = module.default;
-
-  if (!app || typeof app.execute !== "function") {
-    console.error(
-      "Error: The app file must export a ClaiApp instance as default export",
-    );
-    console.error("Make sure you call defineApp() and it returns the result");
-    process.exit(1);
-  }
-
-  // Parse CLI args (--flags)
-  const parsedFlags = parseCliArgs(appArgs);
-
-  // Collect natural language input (non-flag args)
-  const naturalInput = appArgs.filter((arg) => !arg.startsWith("-")).join(" ");
-
-  // Determine which tool to use
-  let toolName: string;
-  if (app.definition.tools.length === 1) {
-    // Single tool app
-    toolName = app.definition.tools[0]!.name;
-  } else if (parsedFlags.tool) {
-    // Multi-tool app with explicit tool selection
-    toolName = String(parsedFlags.tool);
-    delete parsedFlags.tool; // Remove from args
-  } else {
-    // Multi-tool app without tool selection - use AI to select
-    try {
-      toolName = await selectTool(
-        naturalInput,
-        app.definition.tools.map((t) => ({
-          name: t.name,
-          description: t.description || "",
-        })),
+      // Show unified permission prompt
+      console.log("🔐 Checking permissions...");
+      const allowed = await requestUnifiedPermission(
+        appId,
+        appPermissions,
+        sandboxConfig,
       );
-    } catch (error) {
-      console.error("Error: Failed to automatically select tool");
-      console.error(error instanceof Error ? error.message : String(error));
-      console.error(
-        `\nAvailable tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
-      );
-      console.error("\nYou can manually specify a tool with --tool=<name>");
-      process.exit(1);
-    }
-  }
 
-  const tool = app.tools.get(toolName);
-  if (!tool) {
-    console.error(`Error: Unknown tool '${toolName}'`);
-    console.error(
-      `Available tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
-    );
-    process.exit(1);
-  }
+      if (!allowed) {
+        console.error("❌ Permission denied");
+        process.exit(1);
+      }
 
-  // Parse natural language to extract parameters
-  const parsedParams = await parseNaturalLanguage(
-    naturalInput,
-    tool.inputSchema,
-    parsedFlags,
-  );
-
-  // Execute the tool
-  const result = await app.execute(toolName, parsedParams);
-
-  // Output result
-  if (result !== undefined) {
-    if (typeof result === "string") {
-      console.log(result);
+      // Set API key access based on declared permissions
+      allowApiKey = appPermissions?.apiKeys ?? false;
     } else {
-      console.log(JSON.stringify(result, null, 2));
+      // Permission already granted, check stored config for apiKeys
+      // We need to re-extract to determine if apiKeys was requested
+      const appPermissions = await extractAppPermissions(absolutePath);
+      allowApiKey = appPermissions?.apiKeys ?? false;
+    }
+
+    // Launch in sandbox
+    const result = await launchSandbox({
+      scriptPath: absolutePath,
+      args: appArgs,
+      appId,
+      sandboxConfig,
+      allowApiKey,
+    });
+
+    if (result.error) {
+      console.error(`\n❌ Error: ${result.error}`);
+    }
+
+    if (result.exitCode !== 0) {
+      process.exit(result.exitCode);
+    }
+  } finally {
+    // Restore environment
+    if (prevLocalRef === undefined) {
+      delete process.env.CLAI_LOCAL_REF;
+    } else {
+      process.env.CLAI_LOCAL_REF = prevLocalRef;
     }
   }
 }
@@ -208,6 +181,7 @@ Usage:
 
 Commands:
   models         Manage LLM model configurations
+  permissions    Manage app permissions
   run <target>   Run a Clai app
   mcp <target>   Start an MCP server for a Clai app
 
@@ -224,6 +198,7 @@ Options:
 
 Examples:
   clai models
+  clai permissions
   clai run ./my-tool.ts
   clai run ./my-tool.ts --name=World
   clai run user/weather-app

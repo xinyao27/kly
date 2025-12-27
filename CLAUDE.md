@@ -54,6 +54,39 @@ bun run up             # Update dependencies to latest major versions using taze
 
 ## Code Quality Configuration
 
+## Coding Guidelines
+
+### Import Preferences
+
+**Avoid Dynamic Imports Unless Necessary**
+
+Prefer static imports over dynamic imports (`await import(...)`) unless there's a specific reason:
+- Module is only needed in certain runtime modes (e.g., MCP vs CLI)
+- Lazy loading is required for performance
+- Circular dependency issues need to be resolved
+
+**Bad Example:**
+```typescript
+if (command === "models") {
+  const { modelsCommand } = await import("../src/ai/models-command");
+  await modelsCommand();
+}
+```
+
+**Good Example:**
+```typescript
+import { modelsCommand } from "../src/ai/models-command";
+
+if (command === "models") {
+  await modelsCommand();
+}
+```
+
+**Acceptable Use Cases:**
+- MCP server module in defineApp (only loaded when needed in MCP mode)
+- Large dependencies that are rarely used
+- Runtime-specific modules
+
 ## Project Structure
 
 - `src/` - Source TypeScript files (currently minimal starter code)

@@ -1,5 +1,5 @@
+import { checkApiKeyPermission, getAppIdentifier } from "../permissions";
 import type { ModelConfig, ModelInfo, ModelsContext } from "../types";
-import { checkApiKeyPermission, getAppIdentifier } from "./permissions";
 import { getCurrentModelConfig, listModels } from "./storage";
 
 /**

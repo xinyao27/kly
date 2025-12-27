@@ -12,6 +12,105 @@ import { join } from "node:path";
 // ============ Configuration ============
 
 const NAMES_TO_CHECK = [
+  // CLI + AI combinations
+  "clai", // CLI + AI (current name)
+  "clia", // CLI + A
+  "aicli", // AI + CLI
+  "aic", // AI + Command
+  "cai", // Command + AI
+
+  // Unix/X style AI variants
+  "aix", // AI + X
+  "clix", // CLI + X
+  "claix", // CLI + AI + X
+
+  // Minimal (2-3 letters)
+  "lai", // Line + AI
+  "sai", // Shell + AI
+  "tai", // Terminal + AI
+  "vai", // V + AI
+  "zai", // Z + AI
+
+  // New: Phonetic CLI variants
+  "kli", // sounds like CLI
+  "klai", // K + L + AI
+  "qli", // Q (query) + LI
+
+  // New: [letter] + IA pattern
+  "lia", // Line Intelligence Assistant
+  "tia", // Terminal Intelligence Assistant
+  "sia", // Shell Intelligence Assistant
+  "ria", // Runtime Intelligence Assistant
+  "mia", // Machine Intelligence Assistant
+  "pia", // ? Intelligence Assistant
+  "nia", // ? Intelligence Assistant
+
+  // New: [letter] + AI pattern (more variants)
+  "kai", // K + AI
+  "jai", // J + AI
+  "rai", // R + AI
+  "wai", // W + AI
+  "xai", // X + AI (eXplainable AI)
+
+  // New: Minimal X combinations
+  "ix", // Intelligence + X
+  "cx", // Command + X
+  "ax", // AI + X
+  "lix", // Line + X
+  "pix", // ? + X
+  "mix", // Multi + X
+  "vix", // ? + X
+  "zix", // Z + X
+
+  // New: Two-letter + ai pattern
+  "hai", // Help + AI
+  "dai", // Dev + AI
+  "bai", // Build + AI
+  "fai", // Flow + AI
+  "gai", // Go + AI
+  "pai", // ? + AI
+  "mai", // ? + AI
+  "oai", // Open + AI
+  "uai", // Universal + AI
+  "qai", // Query + AI
+  "yai", // Your + AI
+
+  // New: Three-letter x endings (Unix style)
+  "cax", // Command + A + X
+  "dax", // Dev + A + X
+  "gax", // Go + A + X
+  "jax", // ? + X
+  "lax", // Line + A + X
+  "pax", // ? + X
+  "rax", // Run + A + X
+  "wax", // ? + X
+  "yax", // ? + X
+  "zax", // Z + A + X
+
+  // New: ai prefix variations
+  "aiq", // AI + Query
+  "aik", // AI + Kit
+  "aio", // AI + O
+  "aip", // AI + P
+  "ait", // AI + Terminal
+
+  // New: Ultra minimal (2 letters)
+  "qi", // 气 (Chinese: energy/qi)
+  "xi", // ξ (Greek letter)
+  "zo", // Z + O
+  "ko", // K + O
+
+  // New: CLI phonetic variants
+  "kly", // sounds like CLI
+  "cly", // variant of CLI
+  "kla", // K + LA
+
+  // Creative/Phonetic
+  "cliq", // sounds like "click"
+  "clasp", // CLI + ASP
+  "clue", // gives clues
+  "clio", // muse of history / CLI + O
+
   // Original suggestions
   "unitool",
   "onecli",
@@ -30,7 +129,6 @@ const NAMES_TO_CHECK = [
   // Unix/X style
   "trinix", // trini + x (unix style)
   "toolx", // tool + x
-  "clix", // cli + x
   "kernix", // kernel + x
   "basex", // base + x
 
@@ -172,27 +270,71 @@ async function checkDomainAvailability(
   }
 
   try {
-    // Try to fetch the domain with a short timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500); // Reduced timeout
+    // Use whois command to check domain registration status
+    const proc = Bun.spawn(["whois", domain], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
 
-    const response = await fetch(`http://${domain}`, {
-      method: "HEAD",
-      signal: controller.signal,
-      redirect: "manual",
-    }).catch(() => null);
+    const output = await new Response(proc.stdout).text();
+    const exitCode = await proc.exited;
 
-    clearTimeout(timeoutId);
+    // If whois command failed, return unknown
+    if (exitCode !== 0) {
+      console.log(`  [Domain] ${domain} - ⚠️  whois failed`);
+      return null;
+    }
 
-    // If we get any response, domain has DNS records (taken)
-    const isAvailable = response === null;
+    // Parse whois output to determine availability
+    const outputLower = output.toLowerCase();
 
-    cache.domains[domain] = isAvailable;
-    return isAvailable;
-  } catch (_error) {
-    // Timeout or network error likely means no DNS record
-    cache.domains[domain] = true; // Assume available
-    return true;
+    // Common patterns indicating domain is available
+    const availablePatterns = [
+      "no match",
+      "not found",
+      "no data found",
+      "no entries found",
+      "status: free",
+      "status: available",
+      "no match for domain",
+      "not registered",
+      "no information available",
+    ];
+
+    // Common patterns indicating domain is taken
+    const takenPatterns = [
+      "registrar:",
+      "creation date:",
+      "created:",
+      "registered:",
+      "domain name:",
+      "status: registered",
+      "status: active",
+    ];
+
+    // Check if domain is available
+    const isAvailable = availablePatterns.some((pattern) =>
+      outputLower.includes(pattern),
+    );
+
+    // Double check if domain is taken
+    const isTaken = takenPatterns.some((pattern) =>
+      outputLower.includes(pattern),
+    );
+
+    // If we found clear evidence, use it
+    let result: boolean | null = null;
+    if (isAvailable && !isTaken) {
+      result = true;
+    } else if (isTaken) {
+      result = false;
+    }
+
+    cache.domains[domain] = result;
+    return result;
+  } catch (error) {
+    console.log(`  [Domain] ${domain} - ⚠️  Error: ${error}`);
+    return null;
   }
 }
 
@@ -200,14 +342,36 @@ async function checkDomainsForName(
   name: string,
   cache: CacheData,
 ): Promise<Array<{ domain: string; available: boolean | null }>> {
-  // Check all domains in parallel for speed
-  const checks = DOMAIN_SUFFIXES.map(async (suffix) => {
-    const domain = `${name}${suffix}`;
-    const available = await checkDomainAvailability(domain, cache);
-    return { domain, available };
-  });
+  const results: Array<{ domain: string; available: boolean | null }> = [];
 
-  return Promise.all(checks);
+  // Check domains sequentially to avoid rate limiting and show progress
+  for (const suffix of DOMAIN_SUFFIXES) {
+    const domain = `${name}${suffix}`;
+
+    // Check cache first to determine if we need to show progress
+    const isCached = domain in cache.domains;
+
+    if (isCached) {
+      const available = cache.domains[domain] ?? null;
+      results.push({ domain, available });
+    } else {
+      // Show progress for uncached queries
+      process.stdout.write(`  [Domain] Checking ${domain}...`);
+      const available = await checkDomainAvailability(domain, cache);
+
+      // Clear the progress line
+      process.stdout.write(`\r${" ".repeat(60)}\r`);
+
+      // Show result
+      const status =
+        available === true ? "✅" : available === false ? "❌" : "⚠️";
+      console.log(`  [Domain] ${domain} - ${status}`);
+
+      results.push({ domain, available });
+    }
+  }
+
+  return results;
 }
 
 // ============ Main Logic ============

@@ -75,5 +75,8 @@ defineApp({
   name: "progress-example",
   version: "0.1.0",
   description: "Progress bar examples",
+  permissions: {
+    // Simple UI demo, no special permissions needed
+  },
   tools: [progressTool],
 });

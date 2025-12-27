@@ -1,4 +1,6 @@
 import * as p from "@clack/prompts";
+import { sendIPCRequest } from "../../sandbox/ipc-client";
+import { isMCP, isSandbox } from "../../shared/runtime-mode";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -13,9 +15,14 @@ export async function confirm(
   message: string,
   defaultValue = false,
 ): Promise<boolean> {
+  // Sandbox mode: use IPC to request confirm from host
+  if (isSandbox()) {
+    return sendIPCRequest<boolean>("prompt:confirm", { message, defaultValue });
+  }
+
   if (!isTTY()) {
     // In MCP mode, warn about using default value for confirmation
-    if (process.env.CLAI_MCP_MODE === "true") {
+    if (isMCP()) {
       console.warn(
         `[MCP Warning] Interactive confirmation not available. Using default value (${defaultValue}) for: ${message}`,
       );

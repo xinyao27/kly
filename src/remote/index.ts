@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { ENV_VARS } from "../shared/constants";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
 import { getRepoCachePath, parseRemoteRef } from "./parser";
@@ -79,7 +80,7 @@ async function executeApp(
   ref: RepoRef,
   repoPath: string,
   args: string[],
-  _mcp: boolean,
+  mcp: boolean,
 ): Promise<void> {
   // Read config and validate
   const config = readClaiConfig(repoPath);
@@ -110,16 +111,73 @@ async function executeApp(
 
   const absoluteEntryPath = join(repoPath, entryPoint);
 
-  // Set MCP mode if requested
-  if (_mcp) {
-    process.env.CLAI_MCP_MODE = "true";
+  // Set remote ref environment variable for permission tracking
+  const remoteRef = `github.com/${ref.owner}/${ref.repo}`;
+  const prevRemoteRef = process.env[ENV_VARS.REMOTE_REF];
+  process.env[ENV_VARS.REMOTE_REF] = remoteRef;
+
+  try {
+    // Dynamic imports to avoid circular dependencies
+    const { getAppIdentifier, checkApiKeyPermission, getAppSandboxConfig } =
+      await import("../permissions");
+    const { launchSandbox } = await import("../host/launcher");
+
+    const appId = getAppIdentifier();
+
+    // Check permissions
+    console.log("🔐 Checking permissions...");
+    const allowApiKey = await checkApiKeyPermission(appId);
+
+    if (!allowApiKey) {
+      console.error("❌ Permission denied: API key access rejected");
+      process.exit(1);
+    }
+
+    // Get sandbox configuration
+    const sandboxConfig = await getAppSandboxConfig(appId);
+
+    if (!sandboxConfig) {
+      console.error("❌ Permission denied: Sandbox configuration rejected");
+      process.exit(1);
+    }
+
+    // Handle MCP mode
+    if (mcp) {
+      // For MCP mode, we still need special handling
+      // For now, just run directly without sandbox
+      console.warn(
+        "⚠️  MCP mode with remote repos not yet fully supported in new architecture",
+      );
+      process.env[ENV_VARS.MCP_MODE] = "true";
+      process.argv = ["bun", absoluteEntryPath];
+      await import(absoluteEntryPath);
+      return;
+    }
+
+    // Launch in sandbox
+    const result = await launchSandbox({
+      scriptPath: absoluteEntryPath,
+      args,
+      appId,
+      sandboxConfig,
+      allowApiKey,
+    });
+
+    if (result.error) {
+      console.error(`\n❌ Error: ${result.error}`);
+    }
+
+    if (result.exitCode !== 0) {
+      process.exit(result.exitCode);
+    }
+  } finally {
+    // Restore environment
+    if (prevRemoteRef === undefined) {
+      delete process.env[ENV_VARS.REMOTE_REF];
+    } else {
+      process.env[ENV_VARS.REMOTE_REF] = prevRemoteRef;
+    }
   }
-
-  // Set process.argv for detectMode() to work
-  process.argv = ["bun", absoluteEntryPath, ...args];
-
-  // Dynamic import triggers defineApp's auto-execution
-  await import(absoluteEntryPath);
 }
 
 export { clearAllCache, invalidateCache } from "./cache";

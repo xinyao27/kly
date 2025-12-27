@@ -9,33 +9,23 @@ import {
   parseCliArgs,
   parseSubcommand,
 } from "./cli";
-import type { AnyTool, AppDefinition, ClaiApp, RuntimeMode } from "./types";
+import { detectMode, isSandbox } from "./shared/runtime-mode";
+import type { AnyTool, AppDefinition, ClaiApp } from "./types";
 import { ValidationError } from "./types";
 import { error, form, isTTY, output, select } from "./ui";
 
 /**
- * Detect the current runtime mode
+ * Get the appropriate models context based on runtime environment
  */
-function detectMode(): RuntimeMode {
-  // MCP mode: Check for MCP environment variable
-  if (process.env.CLAI_MCP_MODE === "true") {
-    return "mcp";
+async function _getModelsContext() {
+  if (isSandbox()) {
+    // In sandbox: use IPC-based context
+    // Dynamic import for runtime-specific module loading
+    const m = await import("./sandbox/sandboxed-context");
+    return m.getSandboxedContext().modelsContext;
   }
-
-  // Programmatic mode: Check for explicit flag
-  if (process.env.CLAI_PROGRAMMATIC === "true") {
-    return "programmatic";
-  }
-
-  // CLI mode: Running a .ts file directly with bun
-  const scriptPath = process.argv[1] ?? "";
-  const isDirectRun = scriptPath.endsWith(".ts") || scriptPath.endsWith(".js");
-  if (isDirectRun) {
-    return "cli";
-  }
-
-  // Default to programmatic (e.g., when imported as a module)
-  return "programmatic";
+  // Outside sandbox: use direct file access
+  return createModelsContext();
 }
 
 /**
@@ -99,10 +89,10 @@ export function defineApp<TTools extends AnyTool[]>(
         throw new ValidationError(result.issues);
       }
 
-      // Execute
+      // Execute with appropriate context (sandboxed or direct)
       const execResult = await tool.execute(result.value, {
         mode,
-        models: createModelsContext(),
+        models: await _getModelsContext(),
       });
       return execResult;
     },
@@ -188,6 +178,7 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
   let parsedArgs = parseCliArgs(argv) as Record<string, unknown>;
 
   // Check for missing required fields and prompt if in TTY mode
+  // In sandbox mode, form() will use IPC to prompt in the host process
   if (interactive) {
     const missingFields = getMissingRequiredFields(
       tool.inputSchema,
@@ -229,6 +220,7 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
   const { args: restArgs } = parseSubcommand(argv);
 
   // Interactive tool selection if no subcommand and in TTY mode
+  // In sandbox mode, select() will use IPC to prompt in the host process
   if (!subcommand) {
     if (interactive) {
       // Show interactive menu to select a tool
@@ -266,6 +258,7 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
   let parsedArgs = parseCliArgs(restArgs) as Record<string, unknown>;
 
   // Check for missing required fields and prompt if in TTY mode
+  // In sandbox mode, form() will use IPC to prompt in the host process
   if (interactive) {
     const missingFields = getMissingRequiredFields(
       tool.inputSchema,

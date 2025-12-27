@@ -1,5 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
+import { sendIPCRequest } from "../../sandbox/ipc-client";
+import { isMCP, isSandbox } from "../../shared/runtime-mode";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -52,6 +54,11 @@ export interface FormConfig {
 export async function form(
   config: FormConfig,
 ): Promise<Record<string, unknown>> {
+  // Sandbox mode: use IPC to request form from host
+  if (isSandbox()) {
+    return sendIPCRequest<Record<string, unknown>>("prompt:form", config);
+  }
+
   const result: Record<string, unknown> = {};
 
   if (config.title) {
@@ -61,7 +68,7 @@ export async function form(
   // Non-TTY fallback: return defaults or throw in MCP mode
   if (!isTTY()) {
     // In MCP mode, interactive forms are not allowed
-    if (process.env.CLAI_MCP_MODE === "true") {
+    if (isMCP()) {
       const requiredFields = config.fields
         .filter((f) => f.required && f.defaultValue === undefined)
         .map((f) => f.name);

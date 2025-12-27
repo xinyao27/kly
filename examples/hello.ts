@@ -18,6 +18,10 @@ const app = defineApp({
   name: "hello",
   version: "0.1.0",
   description: "Hello world CLI",
+  permissions: {
+    // This simple app doesn't need any permissions
+    // No API keys, no network, no special filesystem access
+  },
   tools: [greetTool],
 });
 

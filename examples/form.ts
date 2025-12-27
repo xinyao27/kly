@@ -165,5 +165,8 @@ defineApp({
   name: "form-example",
   version: "0.1.0",
   description: "Multi-field form examples",
+  permissions: {
+    // Simple UI demo, no special permissions needed
+  },
   tools: [formTool],
 });
