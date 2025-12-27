@@ -19,7 +19,6 @@ export interface JsonSchema {
  */
 export function convertToJsonSchema(schema: StandardSchemaV1): JsonSchema {
   // Check if it's a Zod schema by looking for _def property
-  // biome-ignore lint/suspicious/noExplicitAny: Need to check internal Zod structure
   const zodSchema = schema as any;
 
   if (zodSchema._def) {

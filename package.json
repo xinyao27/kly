@@ -46,6 +46,9 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.1",
+    "@ai-sdk/deepseek": "^2.0.1",
+    "@ai-sdk/google": "^3.0.1",
+    "@ai-sdk/mistral": "^3.0.1",
     "@ai-sdk/openai": "^3.0.1",
     "@clack/prompts": "1.0.0-alpha.9",
     "@modelcontextprotocol/sdk": "^1.25.1",

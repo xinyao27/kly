@@ -1,12 +1,5 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { table } from "../components/table";
-
-// Mock process.stdout.isTTY
-let _originalIsTTY: boolean | undefined;
-
-beforeEach(() => {
-  _originalIsTTY = process.stdout.isTTY;
-});
 
 describe("table", () => {
   test("should render table with data", () => {

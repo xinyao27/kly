@@ -76,13 +76,15 @@
 
 ---
 
-## Phase 3: AI Integration
+## Phase 3: AI Integration ✅
 
 **Goal:** Seamless LLM integration with cascading provider fallback.
 
-### 3.1 LLM Configuration Management
+**Status:** Partially complete (Hybrid Parameter Mode implemented)
 
-* **Config Commands:**
+### 3.1 LLM Configuration Management ⏸️
+
+* **Config Commands:** (Planned)
   ```bash
   clai config set provider openai
   clai config set openai.api_key sk-xxxx
@@ -90,32 +92,49 @@
   clai config set provider deepseek
   ```
 
+* **Current Implementation:** Environment variable detection
+  * `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL`
+  * `ANTHROPIC_API_KEY` / `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL`
+
 * **Supported Providers:**
-  * OpenAI, Anthropic, DeepSeek
-  * Ollama (local models)
-  * Custom endpoints
+  * ✅ OpenAI
+  * ✅ Anthropic
+  * ⏸️ DeepSeek (can use via custom endpoints)
+  * ⏸️ Ollama (planned)
 
-### 3.2 Cascading Inference Providers
+### 3.2 Cascading Inference Providers ⏸️
 
-* **Priority Order:**
+* **Priority Order:** (Planned)
   1. MCP environment (free - Claude handles it)
   2. Local Ollama (free, requires install)
   3. User-configured API Key (user pays)
   4. Official cloud gateway (limited free tier)
 
-### 3.3 Hybrid Parameter Mode
+* **Current Implementation:** Environment variable priority
+  1. `OPENAI_API_KEY` → Uses OpenAI
+  2. `ANTHROPIC_API_KEY` → Uses Anthropic
+
+### 3.3 Hybrid Parameter Mode ✅
 
 * **Execution Modes:**
   ```bash
   # Fully specified - no LLM needed
   clai run weather.ts --city Beijing --days 7
 
-  # Fuzzy intent - uses configured LLM
+  # Fuzzy intent - uses configured LLM ✅
   clai run weather.ts "Is Beijing cold tomorrow?"
 
-  # Mixed mode - AI fills in missing params
+  # Mixed mode - AI fills in missing params ✅
   clai run weather.ts --city Beijing "should I bring umbrella?"
   ```
+
+* **Features:**
+  * ✅ Natural language detection
+  * ✅ Parameter extraction with LLM
+  * ✅ Smart tool selection for multi-tool apps
+  * ✅ Result caching (up to 100 entries)
+  * ✅ Hybrid CLI flags + natural language
+  * ✅ Spinner feedback during LLM calls
 
 ---
 

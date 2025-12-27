@@ -390,21 +390,138 @@ clai is the **"Terminal OS"** microkernel:
 
 ---
 
-## 10. Risks & Mitigations
+## 10. AI Integration Architecture
 
-### 10.1 Bun Compatibility
+### 10.1 Natural Language Processing Flow
+
+```
+User Input: "What's the weather in Beijing?"
+     │
+     ├─▶ isNaturalLanguage() ──▶ Detect: spaces, questions, common words
+     │                            Result: true
+     │
+     ├─▶ Multi-tool app? ──▶ selectTool()
+     │   ├─ Input: user input + tool descriptions
+     │   ├─ LLM: "current" or "forecast"
+     │   └─ Output: selected tool name
+     │
+     └─▶ parseNaturalLanguage()
+         ├─ Cache check (hit? return cached)
+         ├─ Extract JSON schema from StandardSchemaV1
+         ├─ Build system prompt with schema
+         ├─ Call LLM (OpenAI/Anthropic)
+         ├─ Parse JSON response
+         ├─ Merge with CLI flags (flags take precedence)
+         └─ Cache result & return
+```
+
+### 10.2 Provider Detection & Configuration
+
+```typescript
+// Configuration from ~/.clai/config.json
+getCurrentModelConfig():
+  1. Read config from ~/.clai/config.json
+  2. Return current model configuration
+  3. null → Error: "Run 'clai models' to configure"
+
+// Configuration managed via interactive command
+clai models:
+  - Add new model configuration
+  - Switch between configured models
+  - List/remove models
+  - All providers supported (OpenAI, Anthropic, Google, etc.)
+```
+
+### 10.3 Smart Tool Selection
+
+For multi-tool apps, AI automatically selects the appropriate tool:
+
+```typescript
+// Example: Weather app with "current" and "forecast" tools
+selectTool(
+  "Will it rain tomorrow?",  // User input
+  [
+    { name: "current", description: "Get current weather" },
+    { name: "forecast", description: "Get weather forecast" }
+  ]
+)
+// → LLM analyzes intent → Returns "forecast"
+```
+
+### 10.4 Parameter Extraction Caching
+
+```typescript
+// In-memory LRU cache (max 100 entries)
+parameterCache: Map<cacheKey, extractedParams>
+
+cacheKey = hash(naturalInput + schema + providedArgs)
+
+// Cache hit: Instant return (~0ms vs 500-2000ms)
+// Cache miss: LLM call + cache store
+```
+
+### 10.5 Reasoning Model Compatibility
+
+```typescript
+// OpenAI reasoning models (o1, o3, gpt-5) don't support temperature
+const isReasoningModel =
+  modelName.includes("o1") ||
+  modelName.includes("o3") ||
+  modelName.includes("gpt-5")
+
+await generateText({
+  model,
+  ...(isReasoningModel ? {} : { temperature: 0 }),
+  system: systemPrompt,
+  prompt: userInput,
+})
+```
+
+### 10.6 Error Handling
+
+```typescript
+try {
+  // LLM call with spinner
+  const { text } = await generateText(...)
+  spinner.succeed("Parameters extracted")
+
+  // Parse & validate JSON
+  const cleaned = text.replace(/```json\s*|\s*```/g, "")
+  const parsed = JSON.parse(cleaned)
+
+  return { ...parsed, ...providedArgs }
+} catch (error) {
+  spinner.fail("Failed to analyze request")
+  throw new Error("Detailed error message...")
+}
+```
+
+---
+
+## 11. Risks & Mitigations
+
+### 11.1 Bun Compatibility
 
 **Risk**: Some npm packages may have Bun compatibility issues.
 
 **Mitigation**: Keep Node.js fallback path.
 
-### 10.2 Security Sandbox
+### 11.2 Security Sandbox
 
 **Risk**: Monkey-patching `fetch` can be bypassed via dynamic imports.
 
 **Mitigation**:
 - Short-term: Best-effort interception via `--preload`
 - Long-term: WASM sandbox or isolated process
+
+### 11.3 LLM API Costs
+
+**Risk**: Frequent natural language usage can incur API costs.
+
+**Mitigation**:
+- In-memory caching (100 entries) for repeated queries
+- Fast, cheap models by default (gpt-4o-mini, claude-3-5-haiku)
+- Users can override with environment variables
 
 ---
 

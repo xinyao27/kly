@@ -1,3 +1,4 @@
+import { createModelsContext } from "./ai/context";
 import {
   generateMultiToolsHelp,
   generateSingleToolHelp,
@@ -99,7 +100,10 @@ export function defineApp<TTools extends AnyTool[]>(
       }
 
       // Execute
-      const execResult = await tool.execute(result.value, { mode });
+      const execResult = await tool.execute(result.value, {
+        mode,
+        models: createModelsContext(),
+      });
       return execResult;
     },
   };

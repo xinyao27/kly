@@ -1,9 +1,31 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import type { StandardSchemaV1 } from "../types";
 import { isTTY, spinner } from "../ui";
-import { detectLLMConfig, getNoLLMConfiguredMessage } from "./config";
+import { getNoLLMConfiguredMessage } from "./config";
+import { createModel } from "./provider";
+import { getCurrentModelConfig } from "./storage";
+
+/**
+ * Simple in-memory cache for parameter extraction results
+ * Key: hash of (naturalInput + schema + providedArgs)
+ * Value: extracted parameters
+ */
+const _parameterCache = new Map<string, Record<string, unknown>>();
+const _MAX_CACHE_SIZE = 100;
+
+/**
+ * Generate a simple cache key from inputs
+ */
+function _getCacheKey(
+  naturalInput: string,
+  schema: StandardSchemaV1,
+  providedArgs: Record<string, unknown>,
+): string {
+  // Simple hash: combine inputs with JSON.stringify
+  const schemaKey = JSON.stringify(extractJsonSchema(schema));
+  const argsKey = JSON.stringify(providedArgs);
+  return `${naturalInput}|${schemaKey}|${argsKey}`;
+}
 
 /**
  * Extract JSON Schema from StandardSchemaV1
@@ -63,27 +85,20 @@ export async function parseNaturalLanguage(
   schema: StandardSchemaV1,
   providedArgs: Record<string, unknown> = {},
 ): Promise<Record<string, unknown>> {
-  const config = detectLLMConfig();
+  // Check cache first
+  const cacheKey = _getCacheKey(naturalInput, schema, providedArgs);
+  const cached = _parameterCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const config = getCurrentModelConfig();
   if (!config) {
     throw new Error(getNoLLMConfiguredMessage());
   }
 
-  const modelName =
-    config.model ||
-    (config.provider === "openai" ? "gpt-5-mini" : "claude-4-5-haiku");
-
-  const provider =
-    config.provider === "openai"
-      ? createOpenAI({
-          apiKey: config.apiKey,
-          baseURL: config.baseURL,
-        })
-      : createAnthropic({
-          apiKey: config.apiKey,
-          baseURL: config.baseURL,
-        });
-
-  const model = provider(modelName);
+  const model = createModel(config);
+  const modelName = config.model || "";
 
   // Extract JSON schema and build system prompt
   const jsonSchema = extractJsonSchema(schema);
@@ -93,9 +108,16 @@ export async function parseNaturalLanguage(
   const s = isTTY() ? spinner("Analyzing your request with AI...") : null;
 
   try {
+    // Note: Reasoning models (like o1, o3) don't support temperature parameter
+    // For those models, omit temperature to avoid warnings
+    const isReasoningModel =
+      modelName.includes("o1") ||
+      modelName.includes("o3") ||
+      modelName.includes("gpt-5");
+
     const { text } = await generateText({
       model,
-      temperature: 0,
+      ...(isReasoningModel ? {} : { temperature: 0 }),
       system: systemPrompt,
       prompt: naturalInput,
     });
@@ -115,9 +137,94 @@ export async function parseNaturalLanguage(
       );
     }
 
-    return { ...parsed, ...providedArgs };
+    const result = { ...parsed, ...providedArgs };
+
+    // Cache the result (with size limit)
+    if (_parameterCache.size >= _MAX_CACHE_SIZE) {
+      // Remove oldest entry (first item in Map)
+      const firstKey = _parameterCache.keys().next().value;
+      if (firstKey) {
+        _parameterCache.delete(firstKey);
+      }
+    }
+    _parameterCache.set(cacheKey, result);
+
+    return result;
   } catch (error) {
     s?.fail("Failed to analyze request");
+    throw error;
+  }
+}
+
+/**
+ * Select the most appropriate tool based on user input using LLM
+ */
+export async function selectTool(
+  userInput: string,
+  tools: Array<{ name: string; description: string }>,
+): Promise<string> {
+  if (tools.length === 0) {
+    throw new Error("No tools available");
+  }
+
+  if (tools.length === 1) {
+    return tools[0]!.name;
+  }
+
+  const config = getCurrentModelConfig();
+  if (!config) {
+    throw new Error(getNoLLMConfiguredMessage());
+  }
+
+  const model = createModel(config);
+  const modelName = config.model || "";
+
+  // Build system prompt for tool selection
+  const toolsDescription = tools
+    .map((t) => `- ${t.name}: ${t.description}`)
+    .join("\n");
+
+  const systemPrompt = `You are a tool selection assistant. Given user input and available tools, select the most appropriate tool.
+
+Available tools:
+${toolsDescription}
+
+Instructions:
+1. Output ONLY the tool name (e.g., "current" or "forecast")
+2. No explanation, no markdown, just the exact tool name
+3. Choose based on the user's intent`;
+
+  const s = isTTY() ? spinner("Selecting tool...") : null;
+
+  try {
+    // Note: Reasoning models (like o1, o3) don't support temperature parameter
+    const isReasoningModel =
+      modelName.includes("o1") ||
+      modelName.includes("o3") ||
+      modelName.includes("gpt-5");
+
+    const { text } = await generateText({
+      model,
+      ...(isReasoningModel ? {} : { temperature: 0 }),
+      system: systemPrompt,
+      prompt: userInput,
+    });
+
+    s?.succeed("Tool selected");
+
+    const selectedTool = text.trim();
+
+    // Validate the selection
+    const tool = tools.find((t) => t.name === selectedTool);
+    if (!tool) {
+      throw new Error(
+        `LLM selected unknown tool '${selectedTool}'. Available: ${tools.map((t) => t.name).join(", ")}`,
+      );
+    }
+
+    return selectedTool;
+  } catch (error) {
+    s?.fail("Failed to select tool");
     throw error;
   }
 }

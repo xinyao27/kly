@@ -54,6 +54,79 @@ export type InferOutput<TSchema> =
 export type RuntimeMode = "cli" | "mcp" | "programmatic";
 
 /**
+ * Model configuration information (basic info without secrets)
+ */
+export interface ModelInfo {
+  /** Model configuration name */
+  name: string;
+  /** Provider (openai, anthropic, etc.) */
+  provider: string;
+  /** Model name (e.g., gpt-4, claude-3-opus) */
+  model?: string;
+  /** Whether this is the current active model */
+  isCurrent: boolean;
+}
+
+/**
+ * Full model configuration including API keys
+ */
+export interface ModelConfig {
+  /** Provider (openai, anthropic, etc.) */
+  provider: string;
+  /** Model name (e.g., gpt-4, claude-3-opus) */
+  model?: string;
+  /** API key */
+  apiKey?: string;
+  /** Base URL */
+  baseURL?: string;
+}
+
+/**
+ * Models management interface
+ * Provides access to configured LLM models and their credentials
+ */
+export interface ModelsContext {
+  /**
+   * List all configured models (without API keys)
+   */
+  list(): ModelInfo[];
+
+  /**
+   * Get the current active model info
+   */
+  getCurrent(): ModelInfo | null;
+
+  /**
+   * Get a specific model info by name
+   */
+  get(name: string): ModelInfo | null;
+
+  /**
+   * Get full configuration for a model (including API key)
+   *
+   * ⚠️  SECURITY: This method requires user permission
+   * The first time this is called, the user will be prompted to grant permission.
+   * Permission can be granted for:
+   * - One time only
+   * - Always for this app
+   * - Denied
+   *
+   * @param name - Model name (if not specified, returns current model)
+   * @returns Full config or null if not found/configured
+   * @throws Error if permission is denied
+   *
+   * @example
+   * ```typescript
+   * const config = await context.models.getConfigAsync();
+   * if (config) {
+   *   // Use config.provider, config.apiKey, config.model etc.
+   * }
+   * ```
+   */
+  getConfigAsync(name?: string): Promise<ModelConfig | null>;
+}
+
+/**
  * Context passed to the execute function
  */
 export interface ExecuteContext {
@@ -61,6 +134,19 @@ export interface ExecuteContext {
   mode: RuntimeMode;
   /** Abort signal for cancellation */
   abortSignal?: AbortSignal;
+  /**
+   * Models management
+   * Access configured LLM models and their credentials
+   * @example
+   * ```typescript
+   * const config = context.models.getConfig();
+   * if (config) {
+   *   // Use config.provider, config.apiKey, config.model etc.
+   *   // to create your own AI SDK provider instance
+   * }
+   * ```
+   */
+  models: ModelsContext;
 }
 
 /**

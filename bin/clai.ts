@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
-import { isNaturalLanguage, parseNaturalLanguage } from "../src/ai";
+import { isNaturalLanguage, parseNaturalLanguage, selectTool } from "../src/ai";
 import { parseCliArgs } from "../src/cli";
 import { isRemoteRef, runRemote } from "../src/remote";
 import type { ClaiApp } from "../src/types";
@@ -16,6 +16,12 @@ async function main() {
 
   if (command === "--version" || command === "-v") {
     showVersion();
+    return;
+  }
+
+  if (command === "models") {
+    const { modelsCommand } = await import("../src/ai/models-command");
+    await modelsCommand();
     return;
   }
 
@@ -131,16 +137,24 @@ async function runFileWithNaturalLanguage(
     toolName = String(parsedFlags.tool);
     delete parsedFlags.tool; // Remove from args
   } else {
-    // Multi-tool app without tool selection
-    console.error("Error: Multi-tool app requires --tool flag");
-    console.error(
-      `Available tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
-    );
-    console.error("\nUsage:");
-    console.error(
-      `  clai run ${absolutePath} --tool=<name> "natural language"`,
-    );
-    process.exit(1);
+    // Multi-tool app without tool selection - use AI to select
+    try {
+      toolName = await selectTool(
+        naturalInput,
+        app.definition.tools.map((t) => ({
+          name: t.name,
+          description: t.description || "",
+        })),
+      );
+    } catch (error) {
+      console.error("Error: Failed to automatically select tool");
+      console.error(error instanceof Error ? error.message : String(error));
+      console.error(
+        `\nAvailable tools: ${app.definition.tools.map((t) => t.name).join(", ")}`,
+      );
+      console.error("\nYou can manually specify a tool with --tool=<name>");
+      process.exit(1);
+    }
   }
 
   const tool = app.tools.get(toolName);
@@ -193,6 +207,7 @@ Usage:
   clai <command> [options]
 
 Commands:
+  models         Manage LLM model configurations
   run <target>   Run a Clai app
   mcp <target>   Start an MCP server for a Clai app
 
@@ -208,6 +223,7 @@ Options:
   --version, -v  Show version
 
 Examples:
+  clai models
   clai run ./my-tool.ts
   clai run ./my-tool.ts --name=World
   clai run user/weather-app

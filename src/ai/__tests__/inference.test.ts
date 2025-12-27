@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test";
-import { isNaturalLanguage } from "../inference";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
+import { isNaturalLanguage, parseNaturalLanguage } from "../inference";
+import * as storage from "../storage";
 
 describe("isNaturalLanguage", () => {
   test("should detect natural language with spaces", () => {
@@ -43,4 +44,45 @@ describe("isNaturalLanguage", () => {
     expect(isNaturalLanguage("weather in Beijing")).toBe(true);
     expect(isNaturalLanguage("trip to Paris")).toBe(true);
   });
+});
+
+describe("parseNaturalLanguage", () => {
+  let mockGetCurrentModelConfig: ReturnType<typeof spyOn> | null = null;
+
+  beforeEach(() => {
+    // Clean up any previous mocks
+    mockGetCurrentModelConfig?.mockRestore();
+    mockGetCurrentModelConfig = null;
+  });
+
+  afterEach(() => {
+    // Restore mocks
+    mockGetCurrentModelConfig?.mockRestore();
+  });
+
+  test("should throw error when no LLM is configured", async () => {
+    // Mock getCurrentModelConfig to return null
+    mockGetCurrentModelConfig = spyOn(
+      storage,
+      "getCurrentModelConfig",
+    ).mockReturnValue(null);
+
+    const mockSchema = {
+      "~standard": {
+        version: 1,
+        vendor: "zod",
+        validate: () => ({ success: true, value: {} }),
+        jsonSchema: { type: "object", properties: {} },
+      },
+    };
+
+    await expect(
+      parseNaturalLanguage("test input", mockSchema as any),
+    ).rejects.toThrow("Natural language mode requires a configured LLM model");
+  });
+
+  // Note: Full integration tests with actual LLM calls are performed
+  // in the end-to-end tests and manual testing with real examples.
+  // Unit tests here focus on error handling and edge cases that don't
+  // require mocking the AI SDK.
 });

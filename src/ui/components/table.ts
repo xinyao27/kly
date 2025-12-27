@@ -126,8 +126,6 @@ function renderTTY<T>(config: TableConfig<T>): string {
 
   // Calculate column widths
   const widths = calculateColumnWidths(columns, rows, showHeader);
-  const _totalWidth =
-    widths.reduce((sum, w) => sum + w, 0) + (columns.length - 1);
 
   // Title
   if (title) {
