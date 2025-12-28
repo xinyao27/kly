@@ -16,6 +16,7 @@ import type {
   SandboxInitMessage,
 } from "../shared/ipc-protocol";
 import { isIPCResponse, isSandboxInitMessage } from "../shared/ipc-protocol";
+import { error } from "../ui";
 import { createSandboxedModelsContext } from "./sandboxed-context";
 
 /**
@@ -167,7 +168,7 @@ function sendExecutionComplete(
 function main() {
   // Ensure we're in sandbox mode
   if (process.env.KLY_SANDBOX_MODE !== "true") {
-    console.error("Error: This script must be run in sandbox mode");
+    error("This script must be run in sandbox mode");
     process.exit(1);
   }
 

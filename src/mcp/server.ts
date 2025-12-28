@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { KlyApp } from "../types";
+import { error } from "../ui";
 import { convertToJsonSchema } from "./schema-converter";
 
 /**
@@ -92,8 +93,8 @@ export async function startMcpServer(app: KlyApp): Promise<void> {
   });
 
   // Error handling
-  server.onerror = (error) => {
-    console.error("[MCP Error]", error);
+  server.onerror = (err) => {
+    error(`[MCP Error] ${err}`);
   };
 
   process.on("SIGINT", async () => {

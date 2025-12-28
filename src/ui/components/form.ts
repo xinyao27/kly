@@ -62,7 +62,7 @@ export async function form(
   const result: Record<string, unknown> = {};
 
   if (config.title) {
-    console.log(`\n${pc.bold(config.title)}\n`);
+    p.log.message(pc.bold(config.title));
   }
 
   // Non-TTY fallback: return defaults or throw in MCP mode

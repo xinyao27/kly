@@ -1,4 +1,5 @@
 import type { AppPermissions } from "../types";
+import { log } from "../ui";
 
 /**
  * Extract declared permissions from a remote app
@@ -42,7 +43,7 @@ export async function extractAppPermissions(
   } catch (error) {
     // If we can't extract permissions, return undefined
     // The calling code will fall back to asking for all permissions
-    console.warn(
+    log.warn(
       `⚠️  Could not extract permissions from app (${error instanceof Error ? error.message : "unknown error"})`,
     );
     return undefined;

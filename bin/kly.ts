@@ -13,6 +13,7 @@ import {
   requestUnifiedPermission,
 } from "../src/permissions/unified-prompt";
 import { isRemoteRef, runRemote } from "../src/remote";
+import { error } from "../src/ui";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -41,8 +42,8 @@ async function main() {
   if (command === "run") {
     const target = args[1];
     if (!target) {
-      console.error("Error: Missing file path or remote reference");
-      console.error("Usage: kly run <file|user/repo[@ref]>");
+      error("Missing file path or remote reference");
+      p.cancel("Usage: kly run <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -72,8 +73,8 @@ async function main() {
   if (command === "mcp") {
     const target = args[1];
     if (!target) {
-      console.error("Error: Missing file path or remote reference");
-      console.error("Usage: kly mcp <file|user/repo[@ref]>");
+      error("Missing file path or remote reference");
+      p.cancel("Usage: kly mcp <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -91,8 +92,8 @@ async function main() {
     return;
   }
 
-  console.error(`Unknown command: ${command}`);
-  console.error('Run "kly --help" for usage');
+  error(`Unknown command: ${command}`);
+  p.cancel('Run "kly --help" for usage');
   process.exit(1);
 }
 
@@ -129,7 +130,7 @@ async function runFile(filePath: string, appArgs: string[]) {
       );
 
       if (!allowed) {
-        console.error("❌ Permission denied");
+        p.cancel("❌ Permission denied");
         process.exit(1);
       }
 
@@ -154,7 +155,7 @@ async function runFile(filePath: string, appArgs: string[]) {
     });
 
     if (result.error) {
-      console.error(`\n❌ Error: ${result.error}`);
+      error(result.error);
     }
 
     if (result.exitCode !== 0) {
@@ -184,8 +185,7 @@ async function runFileAsMcp(filePath: string) {
 }
 
 function showHelp() {
-  console.log(`
-kly - Command Line AI
+  p.log.message(`kly - Command Line AI
 
 Usage:
   kly <command> [options]
@@ -217,8 +217,7 @@ Examples:
   kly run user/weather-app@v1.0.0
   kly run user/weather-app -- --city=Beijing
   kly mcp ./my-tool.ts
-  kly mcp user/weather-app
-`);
+  kly mcp user/weather-app`);
 }
 
 function showVersion() {
@@ -226,6 +225,6 @@ function showVersion() {
 }
 
 main().catch((err) => {
-  console.error(err.message || err);
+  p.cancel(err.message || err);
   process.exit(1);
 });

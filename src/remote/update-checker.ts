@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { select } from "../ui";
+import { log, output, select } from "../ui";
 import { isTTY } from "../ui/utils/tty";
 import { updateRepoRecord } from "./lockfile";
 import type {
@@ -97,11 +97,10 @@ export async function promptUserForUpdate(
 ): Promise<UpdateChoice> {
   const repoName = `${ref.provider}:${ref.owner}/${ref.repo}#${ref.ref}`;
 
-  console.log(`\n📦 Update available for ${repoName}`);
-  console.log(`   Local:  ${localSha.slice(0, 12)}`);
-  console.log(`   Remote: ${remoteSha.slice(0, 12)}`);
-  console.log(`   View changes: ${getCompareUrl(ref, localSha, remoteSha)}`);
-  console.log("");
+  output(`📦 Update available for ${repoName}`);
+  output(`Local:  ${localSha.slice(0, 12)}`);
+  output(`Remote: ${remoteSha.slice(0, 12)}`);
+  output(`View changes: ${getCompareUrl(ref, localSha, remoteSha)}`);
 
   const choice = await select<UpdateChoice>({
     prompt: "What would you like to do?",
@@ -163,7 +162,7 @@ export async function checkForUpdates(
   // Network error - fallback to using cache with warning
   if (!remoteSha) {
     if (isTTY()) {
-      console.warn(
+      log.warn(
         `⚠️  Unable to check for updates (network error), using cached version`,
       );
     }
@@ -191,8 +190,8 @@ export async function checkForUpdates(
   // Update available - prompt user if in TTY mode
   if (!isTTY()) {
     // Non-interactive mode - log warning but use cached version
-    console.warn(
-      `[Warning] Update available for ${ref.owner}/${ref.repo}@${ref.ref} ` +
+    log.warn(
+      `Update available for ${ref.owner}/${ref.repo}@${ref.ref} ` +
         `(${localSha.slice(0, 12)} → ${remoteSha.slice(0, 12)}). ` +
         `Using cached version. Run 'kly run ${url} --force' to update.`,
     );

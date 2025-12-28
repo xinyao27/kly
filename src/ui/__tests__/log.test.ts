@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { log } from "../components/log";
+import { error, log } from "../components/log";
 
 describe("log", () => {
   it("has all log methods", () => {
@@ -7,8 +7,11 @@ describe("log", () => {
     expect(typeof log.success).toBe("function");
     expect(typeof log.step).toBe("function");
     expect(typeof log.warn).toBe("function");
-    expect(typeof log.error).toBe("function");
     expect(typeof log.message).toBe("function");
+  });
+
+  it("has standalone error function", () => {
+    expect(typeof error).toBe("function");
   });
 
   it("log.info can be called without error", () => {
@@ -27,11 +30,11 @@ describe("log", () => {
     expect(() => log.warn("Warning message")).not.toThrow();
   });
 
-  it("log.error can be called without error", () => {
-    expect(() => log.error("Error message")).not.toThrow();
-  });
-
   it("log.message can be called without error", () => {
     expect(() => log.message("General message")).not.toThrow();
+  });
+
+  it("error function can be called without error", () => {
+    expect(() => error("Error message")).not.toThrow();
   });
 });

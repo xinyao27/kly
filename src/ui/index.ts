@@ -12,7 +12,7 @@ export { confirm } from "./components/confirm";
 export { cancel, intro, isCancel, note, outro } from "./components/flow";
 export { type FormConfig, type FormField, form } from "./components/form";
 export { type InputConfig, input } from "./components/input";
-export { log } from "./components/log";
+export { error, help, log, output } from "./components/log";
 export {
   type MultiSelectConfig,
   type MultiSelectOption,
@@ -46,6 +46,5 @@ export {
   theme,
 } from "./utils/colors";
 
-// Output utilities
-export { error, help, output } from "./utils/output";
+// Utilities
 export { isTTY } from "./utils/tty";

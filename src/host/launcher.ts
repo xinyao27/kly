@@ -10,6 +10,7 @@ import {
   isExecutionCompleteMessage,
   isIPCRequest,
 } from "../shared/ipc-protocol";
+import { log } from "../ui";
 import { createResourceProvider } from "./resource-provider";
 
 export interface LaunchOptions {
@@ -61,20 +62,9 @@ export async function launchSandbox(
 
   // Show sandbox info
   if (!SandboxManager.isSandboxingEnabled()) {
-    console.warn("⚠️  Sandboxing is not supported on this platform.");
-    console.warn("   Running without OS-level isolation.");
-  } else {
-    console.log("🔒 Sandbox Configuration:");
-    console.log(
-      `   Read denied: ${sandboxConfig.filesystem.denyRead.length} paths`,
+    log.warn(
+      "Sandboxing is not supported on this platform. Running without OS-level isolation.",
     );
-    console.log(
-      `   Write allowed: ${sandboxConfig.filesystem.allowWrite.length} paths`,
-    );
-    console.log(
-      `   Network: ${sandboxConfig.network.allowedDomains.join(", ") || "none"}`,
-    );
-    console.log("");
   }
 
   // Create the command to run in sandbox

@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { ENV_VARS } from "../shared/constants";
-import { confirm } from "../ui";
+import { confirm, error, log, output } from "../ui";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
 import { calculateRepoHash } from "./integrity";
@@ -48,12 +48,12 @@ export async function runRemote(
     if (updateResult.hasUpdate && updateResult.shouldUpdate) {
       // User chose to update
       needsUpdate = true;
-      console.log(`Updating ${ref.owner}/${ref.repo}@${ref.ref}...`);
+      log.step(`Updating ${ref.owner}/${ref.repo}@${ref.ref}...`);
     } else if (updateResult.hasUpdate && !updateResult.shouldUpdate) {
       // User chose to use current version or cancelled
       if (updateResult.skipCheck === false) {
         // User explicitly cancelled - exit
-        console.log("Cancelled");
+        output("Cancelled");
         process.exit(0);
       }
       // Otherwise, continue with cached version
@@ -63,10 +63,10 @@ export async function runRemote(
   if (!cacheResult.valid || options.force || needsUpdate) {
     // 3. Clone repository
     if (options.force && cacheResult.exists) {
-      console.log(`Refreshing ${ref.owner}/${ref.repo}@${ref.ref}...`);
+      log.step(`Refreshing ${ref.owner}/${ref.repo}@${ref.ref}...`);
       invalidateCache(ref);
     } else {
-      console.log(`Fetching ${ref.owner}/${ref.repo}@${ref.ref}...`);
+      log.step(`Fetching ${ref.owner}/${ref.repo}@${ref.ref}...`);
     }
 
     await cloneRepo(ref);
@@ -81,7 +81,7 @@ export async function runRemote(
 
     // 5. Install dependencies
     if (!options.skipInstall) {
-      console.log("Installing dependencies...");
+      log.step("Installing dependencies...");
       await installDependencies(repoPath);
     }
 
@@ -98,7 +98,7 @@ export async function runRemote(
     const url = formatRepoUrl(ref);
     updateRepoRecord(url, commitSha, true);
 
-    console.log("Ready!\n");
+    log.success("Ready!");
   }
 
   // 7. Integrity verification
@@ -106,9 +106,7 @@ export async function runRemote(
     const integrityResult = await verifyIntegrity(ref, repoPath);
 
     if (!integrityResult.proceedWithExecution) {
-      console.error(
-        "\n❌ Execution cancelled due to integrity verification failure",
-      );
+      error("Execution cancelled due to integrity verification failure");
       process.exit(1);
     }
   }
@@ -166,11 +164,11 @@ async function verifyIntegrity(
 ): Promise<{ proceedWithExecution: boolean; result: IntegrityCheckResult }> {
   const url = formatRepoUrl(ref);
 
-  console.log("\n🔐 Verifying code integrity...");
+  log.step("🔐 Verifying code integrity...");
 
   // Calculate repository hash
   const hash = calculateRepoHash(repoPath);
-  console.log(`   Hash: ${hash.slice(0, 20)}...`);
+  output(`Hash: ${hash.slice(0, 20)}...`);
 
   // Check against lockfile
   const existingHash = getIntegrityHash(url);
@@ -194,16 +192,16 @@ async function verifyIntegrity(
   switch (verifyResult) {
     case "ok": {
       // Hash matches - code is trusted
-      console.log("   ✓ Integrity verified\n");
+      log.success("Integrity verified");
       return { proceedWithExecution: true, result };
     }
 
     case "new": {
       // First time running this version
-      console.log("\n⚠️  SECURITY NOTICE: First time running this tool\n");
-      console.log("   This code has not been verified before.");
-      console.log("   Please review the source code before proceeding:");
-      console.log(`   ${getRepoWebUrl(ref)}\n`);
+      log.warn("SECURITY NOTICE: First time running this tool");
+      output("This code has not been verified before.");
+      output("Please review the source code before proceeding:");
+      output(getRepoWebUrl(ref));
 
       const shouldTrust = await confirm(
         "Do you trust this code and want to proceed?",
@@ -211,11 +209,11 @@ async function verifyIntegrity(
 
       if (shouldTrust) {
         updateSecurityInfo(url, hash, true);
-        console.log("   ✓ Code trusted and added to lockfile\n");
+        log.success("Code trusted and added to lockfile");
         return { proceedWithExecution: true, result };
       }
 
-      console.log("\n   User declined to trust the code");
+      output("User declined to trust the code");
       return { proceedWithExecution: false, result };
     }
 
@@ -223,26 +221,21 @@ async function verifyIntegrity(
       // Hash doesn't match - code has changed!
       result.expectedHash = existingHash;
 
-      console.log("\n🚨 SECURITY WARNING: Code has been modified!\n");
-      console.log(
-        "   The code for this tool has changed since you last ran it.",
-      );
-      console.log("   This could indicate:");
-      console.log("   - A supply chain attack (code tampering)");
-      console.log("   - Maintainer account compromise");
-      console.log("   - Git history rewrite\n");
+      log.warn("SECURITY WARNING: Code has been modified!");
+      output("The code for this tool has changed since you last ran it.");
+      output("This could indicate:");
+      output("  - A supply chain attack (code tampering)");
+      output("  - Maintainer account compromise");
+      output("  - Git history rewrite");
 
-      console.log(
-        "   Expected hash:",
-        `${result.expectedHash?.slice(0, 40)}...`,
-      );
-      console.log("   Current hash: ", `${hash.slice(0, 40)}...\n`);
+      output(`Expected hash: ${result.expectedHash?.slice(0, 40)}...`);
+      output(`Current hash:  ${hash.slice(0, 40)}...`);
 
-      console.log("   Recommended actions:");
-      console.log("   1. Check the repository for official announcements");
-      console.log("   2. Contact the maintainer");
-      console.log("   3. Review code changes carefully");
-      console.log(`   4. Visit: ${getRepoWebUrl(ref, "commits")}\n`);
+      output("Recommended actions:");
+      output("  1. Check the repository for official announcements");
+      output("  2. Contact the maintainer");
+      output("  3. Review code changes carefully");
+      output(`  4. Visit: ${getRepoWebUrl(ref, "commits")}`);
 
       const shouldProceed = await confirm(
         "⚠️  Proceed anyway? (NOT RECOMMENDED)",
@@ -257,19 +250,19 @@ async function verifyIntegrity(
 
         if (shouldUpdate) {
           updateSecurityInfo(url, hash, true);
-          console.log("   ✓ Lockfile updated with new hash\n");
+          log.success("Lockfile updated with new hash");
         }
 
         return { proceedWithExecution: true, result };
       }
 
-      console.log("\n   Execution cancelled for safety");
+      output("Execution cancelled for safety");
       return { proceedWithExecution: false, result };
     }
 
     default: {
       // Should never reach here, but TypeScript requires it
-      console.error("Unknown verification result");
+      error("Unknown verification result");
       return { proceedWithExecution: false, result };
     }
   }
@@ -299,9 +292,7 @@ async function executeApp(
   if (config?.env && config.env.length > 0) {
     const missing = checkEnvVars(config.env);
     if (missing.length > 0) {
-      console.warn(
-        `Warning: Required environment variables not set: ${missing.join(", ")}`,
-      );
+      log.warn(`Required environment variables not set: ${missing.join(", ")}`);
     }
   }
 
@@ -333,24 +324,20 @@ async function executeApp(
     const appId = getAppIdentifier();
 
     // Extract declared permissions from the app
-    console.log("📋 Reading app permissions...");
     const declaredPermissions = await extractAppPermissions(absoluteEntryPath);
 
     // Show permission summary if declared
     if (declaredPermissions) {
       const summary = formatPermissionsSummary(declaredPermissions);
       if (summary.length > 0) {
-        console.log("\nThis app requests the following permissions:");
+        output("This app requests the following permissions:");
         for (const item of summary) {
-          console.log(item);
+          output(item);
         }
-        console.log("");
       }
     }
 
     // Check permissions based on what's declared
-    console.log("🔐 Checking permissions...");
-
     let allowApiKey = false;
     let sandboxConfig:
       | import("@anthropic-ai/sandbox-runtime").SandboxRuntimeConfig
@@ -361,7 +348,7 @@ async function executeApp(
       allowApiKey = await checkApiKeyPermission(appId);
 
       if (!allowApiKey) {
-        console.error("❌ Permission denied: API key access rejected");
+        error("Permission denied: API key access rejected");
         process.exit(1);
       }
     }
@@ -375,7 +362,7 @@ async function executeApp(
       sandboxConfig = await getAppSandboxConfig(appId);
 
       if (!sandboxConfig) {
-        console.error("❌ Permission denied: Sandbox configuration rejected");
+        error("Permission denied: Sandbox configuration rejected");
         process.exit(1);
       }
     }
@@ -390,7 +377,7 @@ async function executeApp(
     if (mcp) {
       // For MCP mode, we still need special handling
       // For now, just run directly without sandbox
-      console.warn(
+      log.warn(
         "⚠️  MCP mode with remote repos not yet fully supported in new architecture",
       );
       process.env[ENV_VARS.MCP_MODE] = "true";
@@ -410,7 +397,7 @@ async function executeApp(
     });
 
     if (result.error) {
-      console.error(`\n❌ Error: ${result.error}`);
+      error(result.error);
     }
 
     if (result.exitCode !== 0) {

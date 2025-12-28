@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import yaml from "js-yaml";
+import { log } from "../ui";
 import type { LockfileData, LockfileRepoRecord } from "./types";
 
 /**
@@ -45,8 +46,8 @@ export function readLockfile(): LockfileData {
 
     return data;
   } catch (error) {
-    console.warn(
-      `Warning: Failed to read lockfile (${error instanceof Error ? error.message : "unknown error"}), creating new one`,
+    log.warn(
+      `Failed to read lockfile (${error instanceof Error ? error.message : "unknown error"}), creating new one`,
     );
     return {
       lockfileVersion: 1,

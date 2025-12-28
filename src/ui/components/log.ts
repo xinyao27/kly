@@ -1,4 +1,5 @@
 import * as p from "@clack/prompts";
+import { formatText } from "../utils/colors";
 
 /**
  * Log utilities for consistent CLI output
@@ -55,18 +56,6 @@ export const log = {
   },
 
   /**
-   * Display an error message
-   *
-   * @example
-   * ```typescript
-   * log.error("Failed to connect to database");
-   * ```
-   */
-  error(message: string): void {
-    p.log.error(message);
-  },
-
-  /**
    * Display a general message
    *
    * @example
@@ -78,3 +67,66 @@ export const log = {
     p.log.message(message);
   },
 };
+
+/**
+ * Output a result to the console
+ *
+ * @param result - The result to display (string, object, etc.)
+ *
+ * @example
+ * ```typescript
+ * output("Hello, world!");
+ * output({ name: "John", age: 30 });
+ * ```
+ */
+export function output(result: unknown): void {
+  if (result === undefined || result === null) {
+    return;
+  }
+
+  if (typeof result === "string") {
+    p.log.message(result);
+  } else {
+    p.log.message(JSON.stringify(result, null, 2));
+  }
+}
+
+/**
+ * Display an error message with optional suggestions
+ *
+ * @param message - Error message
+ * @param suggestions - Optional suggestions for fixing the error
+ *
+ * @example
+ * ```typescript
+ * error("Failed to load config", [
+ *   "Check if config.json exists",
+ *   "Verify JSON syntax"
+ * ]);
+ * ```
+ */
+export function error(message: string, suggestions?: string[]): void {
+  p.log.error(message);
+
+  if (suggestions?.length) {
+    p.log.message("");
+    p.log.message(formatText("Suggestions:", { dim: true }));
+    for (const suggestion of suggestions) {
+      p.log.message(`  ${formatText("•", { dim: true })} ${suggestion}`);
+    }
+  }
+}
+
+/**
+ * Display help text
+ *
+ * @param content - Help text content
+ *
+ * @example
+ * ```typescript
+ * help("Usage: myapp <command> [options]");
+ * ```
+ */
+export function help(content: string): void {
+  p.log.message(content);
+}

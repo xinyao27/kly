@@ -23,8 +23,8 @@ export async function confirm(
   if (!isTTY()) {
     // In MCP mode, warn about using default value for confirmation
     if (isMCP()) {
-      console.warn(
-        `[MCP Warning] Interactive confirmation not available. Using default value (${defaultValue}) for: ${message}`,
+      p.log.warn(
+        `[MCP] Interactive confirmation not available. Using default value (${defaultValue}) for: ${message}`,
       );
     }
     return defaultValue;

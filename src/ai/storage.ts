@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { error } from "../ui";
 import type { LLMConfig, LLMProvider } from "./types";
 
 const CONFIG_DIR = join(homedir(), ".kly");
@@ -33,8 +34,8 @@ export function loadConfig(): KlyConfig {
   try {
     const content = readFileSync(CONFIG_FILE, "utf-8");
     return JSON.parse(content);
-  } catch (error) {
-    console.error("Failed to parse config file:", error);
+  } catch (err) {
+    error(`Failed to parse config file: ${err}`);
     return { models: {} };
   }
 }

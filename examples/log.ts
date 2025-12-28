@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineApp, tool } from "../src";
-import { intro, log, note, outro } from "../src/ui";
+import { error, intro, log, note, outro } from "../src/ui";
 
 const logTool = tool({
   name: "log-demo",
@@ -21,7 +21,7 @@ const logTool = tool({
         log.step("This is a step message");
         log.success("This is a success message");
         log.warn("This is a warning message");
-        log.error("This is an error message");
+        error("This is an error message");
 
         note("You can also display notes\nwith multiple lines", "Note Title");
 
@@ -54,7 +54,7 @@ const logTool = tool({
 
         log.info("Starting validation...");
         log.warn("Config file not found, using defaults");
-        log.error("Failed to connect to database");
+        error("Failed to connect to database");
         log.step("Retrying with fallback...");
         log.success("Connected to fallback database");
 

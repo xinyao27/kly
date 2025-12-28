@@ -28,6 +28,7 @@ import { generateText } from "ai";
 import { z } from "zod";
 import { defineApp, tool } from "../src";
 import type { ModelConfig } from "../src/types";
+import { log, output } from "../src/ui";
 
 const askAiTool = tool({
   name: "ask",
@@ -41,24 +42,23 @@ const askAiTool = tool({
   }),
   execute: async ({ question, modelName }, context) => {
     // 1. List all configured models (no permission needed)
-    console.log("\n📋 Configured models:");
+    output("📋 Configured models:");
     const models = context.models.list();
     for (const model of models) {
       const marker = model.isCurrent ? "✓" : " ";
-      console.log(
+      output(
         `  ${marker} ${model.name} - ${model.provider}${model.model ? ` (${model.model})` : ""}`,
       );
     }
-    console.log("");
 
     // 2. Get current model info (no permission needed)
     const current = context.models.getCurrent();
     if (current) {
-      console.log(`Current model: ${current.name} (${current.provider})\n`);
+      output(`Current model: ${current.name} (${current.provider})`);
     }
 
     // 3. Get full config including API key (requires permission)
-    console.log("🔐 Requesting access to API keys...");
+    log.step("Requesting access to API keys...");
     const config = await context.models.getConfigAsync(modelName);
 
     if (!config) {
@@ -72,21 +72,21 @@ const askAiTool = tool({
       );
     }
 
-    console.log(`✅ Permission granted! Using ${config.provider}\n`);
+    log.success(`Permission granted! Using ${config.provider}`);
 
     // 4. Create provider based on config
     const provider = createProviderFromConfig(config);
 
     // 5. Call the LLM
-    console.log(`❓ Question: ${question}\n`);
-    console.log("🤔 Thinking...\n");
+    output(`❓ Question: ${question}`);
+    log.step("Thinking...");
 
     const { text } = await generateText({
       model: provider,
       prompt: question,
     });
 
-    console.log(`💡 Answer: ${text}\n`);
+    output(`💡 Answer: ${text}`);
 
     return {
       question,

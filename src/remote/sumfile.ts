@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { error, log } from "../ui";
 
 /**
  * Sum file entry representing a trusted code hash
@@ -72,8 +73,8 @@ export class SumFileManager {
           this.entries.set(entry.url, entry);
         }
       }
-    } catch (error) {
-      console.warn(`Warning: Failed to load kly.sum: ${error}`);
+    } catch (err) {
+      log.warn(`Failed to load kly.sum: ${err}`);
     }
   }
 
@@ -145,9 +146,9 @@ export class SumFileManager {
 
       writeFileSync(this.sumFilePath, `${lines.join("\n")}\n`, "utf-8");
       this.dirty = false;
-    } catch (error) {
-      console.error(`Error: Failed to save kly.sum: ${error}`);
-      throw error;
+    } catch (err) {
+      error(`Failed to save kly.sum: ${err}`);
+      throw err;
     }
   }
 

@@ -36,6 +36,7 @@
 
 import { z } from "zod";
 import { defineApp, tool } from "../src";
+import { log, output } from "../src/ui";
 
 const demoTool = tool({
   name: "demo",
@@ -47,30 +48,29 @@ const demoTool = tool({
       .describe("Model name (uses current if not specified)"),
   }),
   execute: async ({ modelName }, context) => {
-    console.log("\n🔐 Permission Demo\n");
+    output("🔐 Permission Demo");
 
     // Note: In sandbox mode, synchronous methods like list() are not available
     // This is by design - all operations that might need host resources use async
 
     // Try to access API keys (requires permission)
-    console.log("🔑 Requesting access to API keys...");
-    console.log("   This requires user permission.\n");
+    log.step("Requesting access to API keys...");
 
     try {
       const config = await context.models.getConfigAsync(modelName);
 
       if (!config) {
-        console.log("❌ No model configured\n");
-        console.log("Run: bun run bin/kly.ts models\n");
+        output("No model configured");
+        output("Run: bun run bin/kly.ts models");
         return { success: false, error: "No model configured" };
       }
 
       // Successfully got permission!
-      console.log("✅ Permission granted!\n");
-      console.log(`Provider: ${config.provider}`);
-      console.log(`Model: ${config.model || "default"}`);
-      console.log(
-        `API Key: ${config.apiKey ? `${config.apiKey.slice(0, 4)}...${config.apiKey.slice(-4)}` : "not set"}\n`,
+      log.success("Permission granted!");
+      output(`Provider: ${config.provider}`);
+      output(`Model: ${config.model || "default"}`);
+      output(
+        `API Key: ${config.apiKey ? `${config.apiKey.slice(0, 4)}...${config.apiKey.slice(-4)}` : "not set"}`,
       );
 
       return {
@@ -78,14 +78,13 @@ const demoTool = tool({
         provider: config.provider,
         model: config.model,
       };
-    } catch (error) {
-      console.log("❌ Permission denied\n");
-      console.log(error instanceof Error ? error.message : "Permission denied");
-      console.log("");
+    } catch (err) {
+      output("Permission denied");
+      output(err instanceof Error ? err.message : "Permission denied");
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Permission denied",
+        error: err instanceof Error ? err.message : "Permission denied",
       };
     }
   },

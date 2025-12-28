@@ -8,6 +8,7 @@ import type {
   ModelConfigResponse,
   ModelInfoResponse,
 } from "../shared/ipc-protocol";
+import { error, log, output } from "../ui";
 
 export interface ResourceProviderOptions {
   appId: string;
@@ -162,13 +163,13 @@ export class ResourceProvider {
 
     switch (level) {
       case "info":
-        console.log(`${prefix} ${message}`);
+        log.info(`${prefix} ${message}`);
         break;
       case "warn":
-        console.warn(`${prefix} ${message}`);
+        log.warn(`${prefix} ${message}`);
         break;
       case "error":
-        console.error(`${prefix} ${message}`);
+        error(`${prefix} ${message}`);
         break;
     }
 
@@ -362,7 +363,7 @@ export class ResourceProvider {
     const result: Record<string, unknown> = {};
 
     if (payload.title) {
-      console.log(`\n${pc.bold(payload.title)}\n`);
+      output(pc.bold(payload.title));
     }
 
     for (const field of payload.fields) {

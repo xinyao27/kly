@@ -1,7 +1,7 @@
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { isTrustAll } from "../shared/runtime-mode";
 import type { AppPermissions } from "../types";
-import { select } from "../ui";
+import { error, output, select } from "../ui";
 import { isTTY } from "../ui/utils/tty";
 import { formatPermissionsSummary } from "./config-builder";
 import { getAppName, loadPermissions, savePermissions } from "./index";
@@ -71,10 +71,10 @@ export async function requestUnifiedPermission(
   // Check if running in TTY mode
   if (!isTTY()) {
     const appName = getAppName(appId);
-    console.error(
-      `\nPermission required: App "${appName}" (${appId}) requests permissions.`,
+    error(
+      `Permission required: App "${appName}" (${appId}) requests permissions.`,
     );
-    console.error(
+    error(
       "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
     );
     return false;
@@ -82,19 +82,15 @@ export async function requestUnifiedPermission(
 
   // Show unified prompt
   const appName = getAppName(appId);
-  console.log("");
-  console.log(`App "${appName}" requests the following permissions:`);
-  console.log("");
+  output(`App "${appName}" requests the following permissions:`);
 
   // Format and display permissions
   const summary = formatPermissionsSummary(appPermissions);
   for (const line of summary) {
-    console.log(`  ${line}`);
+    output(`  ${line}`);
   }
 
-  console.log("");
-  console.log(`Source: ${appId}`);
-  console.log("");
+  output(`Source: ${appId}`);
 
   // Ask user
   const choice = await select({

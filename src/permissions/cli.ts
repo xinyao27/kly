@@ -1,4 +1,4 @@
-import { confirm, output, select, table } from "../ui";
+import { confirm, log, select, table } from "../ui";
 import { clearAllPermissions, listPermissions, revokePermission } from ".";
 
 /**
@@ -46,11 +46,11 @@ async function listPermissionsAction(): Promise<void> {
   const permissions = listPermissions();
 
   if (permissions.length === 0) {
-    output("\nNo permissions granted yet.\n");
+    log.info("No permissions granted yet.");
     return;
   }
 
-  output("\n📋 Granted Permissions:\n");
+  log.info("📋 Granted Permissions:");
 
   table({
     columns: [
@@ -62,8 +62,6 @@ async function listPermissionsAction(): Promise<void> {
       grantedAt: new Date(p.timestamp).toLocaleString(),
     })),
   });
-
-  output("");
 }
 
 /**
@@ -73,7 +71,7 @@ async function revokePermissionAction(): Promise<void> {
   const permissions = listPermissions();
 
   if (permissions.length === 0) {
-    output("\nNo permissions to revoke.\n");
+    log.info("No permissions to revoke.");
     return;
   }
 
@@ -92,9 +90,9 @@ async function revokePermissionAction(): Promise<void> {
 
   if (confirmed) {
     revokePermission(appId);
-    output("\n✅ Permission revoked.\n");
+    log.success("Permission revoked.");
   } else {
-    output("\n❌ Cancelled.\n");
+    log.warn("Cancelled.");
   }
 }
 
@@ -108,8 +106,8 @@ async function clearAllPermissionsAction(): Promise<void> {
 
   if (confirmed) {
     clearAllPermissions();
-    output("\n✅ All permissions cleared.\n");
+    log.success("All permissions cleared.");
   } else {
-    output("\n❌ Cancelled.\n");
+    log.warn("Cancelled.");
   }
 }

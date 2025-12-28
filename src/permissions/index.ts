@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { PATHS } from "../shared/constants";
 import { getLocalRef, getRemoteRef, isTrustAll } from "../shared/runtime-mode";
-import { select } from "../ui";
+import { error, log, output, select } from "../ui";
 import { isTTY } from "../ui/utils/tty";
 
 const CONFIG_DIR = join(homedir(), PATHS.CONFIG_DIR);
@@ -97,8 +97,8 @@ export function loadPermissions(): PermissionsConfig {
   try {
     const content = readFileSync(PERMISSIONS_FILE, "utf-8");
     return JSON.parse(content);
-  } catch (error) {
-    console.error("Failed to parse permissions file:", error);
+  } catch (err) {
+    error(`Failed to parse permissions file: ${err}`);
     return { trustedApps: {} };
   }
 }
@@ -120,21 +120,18 @@ async function requestPermission(
 ): Promise<boolean> {
   // Check if running in TTY mode
   if (!isTTY()) {
-    console.error(
-      `\nPermission required: App "${appName}" (${appId}) wants to access your API keys.`,
+    error(
+      `Permission required: App "${appName}" (${appId}) wants to access your API keys.`,
     );
-    console.error(
+    error(
       "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
     );
     return false;
   }
 
-  console.log("");
-  console.log(`App "${appName}" is requesting access to your API keys.`);
-  console.log(`Source: ${appId}`);
-  console.log("");
-  console.log("This will allow the app to use your configured LLM models.");
-  console.log("");
+  output(`App "${appName}" is requesting access to your API keys.`);
+  output(`Source: ${appId}`);
+  output("This will allow the app to use your configured LLM models.");
 
   const choice = await select({
     prompt: "Do you want to allow this?",
@@ -235,8 +232,8 @@ async function requestSandboxConfig(
   appName: string,
 ): Promise<SandboxRuntimeConfig | null> {
   if (!isTTY()) {
-    console.error(`\nSandbox permission required for: "${appName}" (${appId})`);
-    console.error(
+    error(`Sandbox permission required for: "${appName}" (${appId})`);
+    error(
       "Set KLY_TRUST_ALL=true environment variable to run without sandboxing in non-interactive mode.",
     );
     return null;
@@ -245,12 +242,10 @@ async function requestSandboxConfig(
   const homeDir = homedir();
   const currentDir = process.cwd();
 
-  console.log("");
-  console.log(`🔐 Sandbox Permission Request from: ${appName}`);
-  console.log("");
+  output(`🔐 Sandbox Permission Request from: ${appName}`);
 
   // Ask for filesystem read permissions
-  console.log("📂 Filesystem Read Access:");
+  output("📂 Filesystem Read Access:");
   const fsReadChoice = await select({
     prompt: "Which files should be denied for reading?",
     options: [
@@ -288,8 +283,7 @@ async function requestSandboxConfig(
   // Note: Even if user chooses "none", .kly is still protected
 
   // Ask for filesystem write permissions
-  console.log("");
-  console.log("📝 Filesystem Write Access:");
+  output("📝 Filesystem Write Access:");
   const fsWriteChoice = await select({
     prompt: "Which directories should be allowed for writing?",
     options: [
@@ -328,8 +322,7 @@ async function requestSandboxConfig(
   ];
 
   // Ask for network permissions
-  console.log("");
-  console.log("🌐 Network Access:");
+  output("🌐 Network Access:");
   const networkChoice = await select({
     prompt: "Which network access should be allowed?",
     options: [
@@ -376,7 +369,6 @@ async function requestSandboxConfig(
   }
 
   // Ask how long to remember this choice
-  console.log("");
   const duration = await select({
     prompt: "How long should these permissions last?",
     options: [
@@ -427,8 +419,7 @@ async function requestSandboxConfig(
     savePermissions(config);
   }
 
-  console.log("");
-  console.log("✅ Sandbox permissions granted!");
+  log.success("Sandbox permissions granted!");
   return sandboxConfig;
 }
 

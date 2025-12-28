@@ -1,5 +1,6 @@
 import * as z from "zod";
 import type { StandardSchemaV1 } from "../types";
+import { log } from "../ui";
 
 /**
  * JSON Schema for MCP tool inputs
@@ -37,7 +38,7 @@ export function convertToJsonSchema(schema: StandardSchemaV1): JsonSchema {
 
   // For other StandardSchema implementations, try to extract schema info
   // This is a fallback that creates a basic JSON schema
-  console.warn(
+  log.warn(
     "Unknown schema type - using fallback conversion. Consider adding explicit support for your schema library.",
   );
 

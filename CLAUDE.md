@@ -87,6 +87,65 @@ if (command === "models") {
 - Large dependencies that are rarely used
 - Runtime-specific modules
 
+### Logging and Output
+
+**Always Use the `log` Utility Instead of `console`**
+
+This project uses a centralized logging system from `src/ui/components/log.ts` that leverages `@clack/prompts` for consistent, styled CLI output. Direct use of `console.*` methods is discouraged.
+
+**Available Logging Functions:**
+
+```typescript
+import { log, output, error, help } from "../ui";
+
+// Styled log messages (uses @clack/prompts)
+log.info("Processing files...");        // Info messages
+log.success("Build completed!");        // Success messages
+log.warn("Config not found");           // Warning messages
+log.step("Installing dependencies");    // Step indicators
+log.message("General message");         // General output
+
+// Output functions
+output("Hello, world!");                // Simple text or JSON output
+output({ name: "John", age: 30 });      // Auto-formats objects as JSON
+
+// Error handling (use error() function, not log.error)
+error("Failed to load config", [        // Error with suggestions
+  "Check if config.json exists",
+  "Verify JSON syntax"
+]);
+
+help("Usage: myapp <command>");         // Help text
+```
+
+**Bad Example:**
+```typescript
+console.log("Installing dependencies...");
+console.warn("Config file not found");
+console.error("Failed to load config");
+```
+
+**Good Example:**
+```typescript
+import { log, error } from "../ui";
+
+log.step("Installing dependencies...");
+log.warn("Config file not found");
+error("Failed to load config");
+```
+
+**Why Use `log` Instead of `console`:**
+- Consistent styling across the CLI using @clack/prompts
+- Better visual hierarchy with icons and colors
+- Centralized output management
+- Easier to test and mock
+- Better user experience
+
+**Exceptions:**
+- Test files may use `console` for debugging
+- When explicitly testing console output behavior
+- MCP mode error handlers (stderr only, as stdout is reserved for JSON-RPC)
+
 ## Project Structure
 
 - `src/` - Source TypeScript files (currently minimal starter code)

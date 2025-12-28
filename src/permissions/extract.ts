@@ -1,5 +1,6 @@
 import { ENV_VARS } from "../shared/constants";
 import type { AppPermissions } from "../types";
+import { log } from "../ui";
 
 /**
  * Extract permissions from a user's app script
@@ -35,11 +36,10 @@ export async function extractAppPermissions(
 
     // Return declared permissions
     return app.definition.permissions;
-  } catch (error) {
+  } catch (err) {
     // If extraction fails, we'll ask for permissions interactively
-    console.warn(
-      `Warning: Could not extract permissions from ${scriptPath}:`,
-      error instanceof Error ? error.message : String(error),
+    log.warn(
+      `Could not extract permissions from ${scriptPath}: ${err instanceof Error ? err.message : String(err)}`,
     );
     return undefined;
   }

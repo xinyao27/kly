@@ -116,14 +116,14 @@ export function defineApp<TTools extends AnyTool[]>(
   const mode = detectMode();
   if (mode === "cli") {
     runCli(app, definition).catch((err) => {
-      console.error("Fatal error:", err.message);
+      error("Fatal error:", [err.message]);
       process.exit(1);
     });
   } else if (mode === "mcp") {
     // Dynamically import MCP server to avoid bundling it in CLI mode
     import("./mcp").then(({ startMcpServer }) => {
       startMcpServer(app).catch((err) => {
-        console.error("MCP server error:", err.message);
+        error("MCP server error:", [err.message]);
         process.exit(1);
       });
     });
@@ -145,25 +145,25 @@ async function runCli<TTools extends AnyTool[]>(
   // Handle --help and --version without TUI
   if (isHelpRequested(argv)) {
     if (isSingleTool) {
-      console.log(generateSingleToolHelp(definition, definition.tools[0]!));
+      output(generateSingleToolHelp(definition, definition.tools[0]!));
     } else {
       const { subcommand } = parseSubcommand(argv);
       if (subcommand) {
         const tool = app.tools.get(subcommand);
         if (tool) {
-          console.log(generateToolHelp(definition.name, tool));
+          output(generateToolHelp(definition.name, tool));
         } else {
-          console.log(generateMultiToolsHelp(definition));
+          output(generateMultiToolsHelp(definition));
         }
       } else {
-        console.log(generateMultiToolsHelp(definition));
+        output(generateMultiToolsHelp(definition));
       }
     }
     return;
   }
 
   if (isVersionRequested(argv)) {
-    console.log(`${definition.name} v${definition.version}`);
+    output(`${definition.name} v${definition.version}`);
     return;
   }
 
