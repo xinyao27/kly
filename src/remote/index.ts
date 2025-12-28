@@ -1,7 +1,9 @@
 import { join } from "node:path";
 import { ENV_VARS } from "../shared/constants";
+import { confirm } from "../ui";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
+import { calculateRepoHash } from "./integrity";
 import { getRepoCachePath, parseRemoteRef } from "./parser";
 import {
   checkEnvVars,
@@ -9,7 +11,8 @@ import {
   resolveEntryPoint,
   validateVersion,
 } from "./resolver";
-import type { RepoRef, RunRemoteOptions } from "./types";
+import { SumFileManager } from "./sumfile";
+import type { IntegrityCheckResult, RepoRef, RunRemoteOptions } from "./types";
 
 /** Current clai CLI version */
 const CLAI_VERSION = "0.1.0";
@@ -69,8 +72,138 @@ export async function runRemote(
     console.log("Ready!\n");
   }
 
-  // 7. Validate and execute
+  // 7. Integrity verification
+  if (!options.skipIntegrityCheck) {
+    const integrityResult = await verifyIntegrity(ref, repoPath);
+
+    if (!integrityResult.proceedWithExecution) {
+      console.error(
+        "\n❌ Execution cancelled due to integrity verification failure",
+      );
+      process.exit(1);
+    }
+  }
+
+  // 8. Validate and execute
   await executeApp(ref, repoPath, options.args ?? [], options.mcp ?? false);
+}
+
+/**
+ * Verify repository integrity using clai.sum
+ *
+ * @param ref - Repository reference
+ * @param repoPath - Local path to repository
+ * @returns Object with integrity check result and whether to proceed with execution
+ */
+async function verifyIntegrity(
+  ref: RepoRef,
+  repoPath: string,
+): Promise<{ proceedWithExecution: boolean; result: IntegrityCheckResult }> {
+  const url = `github.com/${ref.owner}/${ref.repo}@${ref.ref}`;
+
+  console.log("\n🔐 Verifying code integrity...");
+
+  // Calculate repository hash
+  const hash = calculateRepoHash(repoPath);
+  console.log(`   Hash: ${hash.slice(0, 20)}...`);
+
+  // Check against clai.sum
+  const sumManager = new SumFileManager();
+  const verifyResult = sumManager.verify(url, hash);
+
+  const result: IntegrityCheckResult = {
+    status: verifyResult,
+    hash,
+    requiresTrust: verifyResult !== "ok",
+  };
+
+  switch (verifyResult) {
+    case "ok": {
+      // Hash matches - code is trusted
+      console.log("   ✓ Integrity verified\n");
+      return { proceedWithExecution: true, result };
+    }
+
+    case "new": {
+      // First time running this version
+      console.log("\n⚠️  SECURITY NOTICE: First time running this tool\n");
+      console.log("   This code has not been verified before.");
+      console.log("   Please review the source code before proceeding:");
+      console.log(
+        `   https://github.com/${ref.owner}/${ref.repo}/tree/${ref.ref}\n`,
+      );
+
+      const shouldTrust = await confirm(
+        "Do you trust this code and want to proceed?",
+      );
+
+      if (shouldTrust) {
+        sumManager.add(url, hash, true);
+        console.log("   ✓ Code trusted and added to clai.sum\n");
+        return { proceedWithExecution: true, result };
+      }
+
+      console.log("\n   User declined to trust the code");
+      return { proceedWithExecution: false, result };
+    }
+
+    case "mismatch": {
+      // Hash doesn't match - code has changed!
+      const existingEntry = sumManager.get(url);
+      result.expectedHash = existingEntry?.hash;
+
+      console.log("\n🚨 SECURITY WARNING: Code has been modified!\n");
+      console.log(
+        "   The code for this tool has changed since you last ran it.",
+      );
+      console.log("   This could indicate:");
+      console.log("   - A supply chain attack (code tampering)");
+      console.log("   - Maintainer account compromise");
+      console.log("   - Git history rewrite\n");
+
+      console.log(
+        "   Expected hash:",
+        `${result.expectedHash?.slice(0, 40)}...`,
+      );
+      console.log("   Current hash: ", `${hash.slice(0, 40)}...\n`);
+
+      console.log("   Recommended actions:");
+      console.log("   1. Check GitHub for official announcements");
+      console.log("   2. Contact the maintainer");
+      console.log("   3. Review code changes carefully");
+      console.log(
+        `   4. Visit: https://github.com/${ref.owner}/${ref.repo}/commits/${ref.ref}\n`,
+      );
+
+      const shouldProceed = await confirm(
+        "⚠️  Proceed anyway? (NOT RECOMMENDED)",
+        false,
+      );
+
+      if (shouldProceed) {
+        const shouldUpdate = await confirm(
+          "Update clai.sum with new hash?",
+          false,
+        );
+
+        if (shouldUpdate) {
+          sumManager.update(url, hash, true);
+          console.log("   ✓ clai.sum updated with new hash\n");
+        }
+
+        return { proceedWithExecution: true, result };
+      }
+
+      console.log("\n   Execution cancelled for safety");
+      return { proceedWithExecution: false, result };
+    }
+
+    default: {
+      // Should never reach here, but TypeScript requires it
+      console.error("Unknown verification result");
+      return { proceedWithExecution: false, result };
+    }
+  }
 }
 
 /**

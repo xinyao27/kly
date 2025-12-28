@@ -60,4 +60,20 @@ export interface RunRemoteOptions {
   args?: string[];
   /** Run in MCP mode */
   mcp?: boolean;
+  /** Skip integrity verification (dangerous, for testing only) */
+  skipIntegrityCheck?: boolean;
+}
+
+/**
+ * Integrity verification result
+ */
+export interface IntegrityCheckResult {
+  /** Verification status */
+  status: "ok" | "mismatch" | "new";
+  /** Calculated hash for the repository */
+  hash: string;
+  /** Expected hash from clai.sum (if exists) */
+  expectedHash?: string;
+  /** Whether user should be prompted to trust */
+  requiresTrust: boolean;
 }
