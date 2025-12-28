@@ -309,6 +309,12 @@ async function executeApp(
       }
     }
 
+    // Ensure remote app directory is accessible in sandbox
+    // This is needed for module resolution and file access
+    if (!sandboxConfig.filesystem.allowWrite.includes(repoPath)) {
+      sandboxConfig.filesystem.allowWrite.push(repoPath);
+    }
+
     // Handle MCP mode
     if (mcp) {
       // For MCP mode, we still need special handling

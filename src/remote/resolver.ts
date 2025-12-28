@@ -15,11 +15,22 @@ const ENTRY_CANDIDATES = [
 
 /**
  * Resolve entry point for a kly app
- * Priority: main field > convention candidates
+ * Priority: convention candidates > main field
+ *
+ * We prioritize convention-based source files over package.json main field
+ * because remote apps are run from source, not from built artifacts.
  */
 export function resolveEntryPoint(repoPath: string): string | null {
-  const pkgPath = join(repoPath, "package.json");
+  // First, try convention candidates (source files)
+  for (const candidate of ENTRY_CANDIDATES) {
+    const candidatePath = join(repoPath, candidate);
+    if (existsSync(candidatePath)) {
+      return candidate; // Return relative path
+    }
+  }
 
+  // Fallback to package.json main field
+  const pkgPath = join(repoPath, "package.json");
   if (existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
@@ -32,15 +43,7 @@ export function resolveEntryPoint(repoPath: string): string | null {
         }
       }
     } catch {
-      // Invalid package.json, continue to candidates
-    }
-  }
-
-  // Try convention candidates
-  for (const candidate of ENTRY_CANDIDATES) {
-    const candidatePath = join(repoPath, candidate);
-    if (existsSync(candidatePath)) {
-      return candidate; // Return relative path
+      // Invalid package.json, ignore
     }
   }
 

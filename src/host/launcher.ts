@@ -44,6 +44,10 @@ export async function launchSandbox(
 
   // Resolve paths
   const absoluteScriptPath = resolve(process.cwd(), scriptPath);
+  const _scriptDir = absoluteScriptPath.substring(
+    0,
+    absoluteScriptPath.lastIndexOf("/"),
+  );
 
   // Find executor path based on current location
   // Development: src/host/launcher.ts -> src/sandbox/executor.ts
@@ -80,6 +84,7 @@ export async function launchSandbox(
   const child = spawn(wrappedCommand, {
     shell: true,
     stdio: ["inherit", "inherit", "inherit", "ipc"], // Inherit to support raw mode
+    cwd: _scriptDir, // Set working directory to script's directory for module resolution
     env: {
       ...process.env,
       KLY_SANDBOX_MODE: "true",

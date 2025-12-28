@@ -126,6 +126,7 @@ async function executeUserScript(): Promise<void> {
 
     // Import and execute the user's script
     // The script should use defineApp which will auto-execute in CLI mode
+    // Bun will resolve modules relative to the script's directory automatically
     await import(scriptPath);
 
     // If we reach here without error, execution succeeded

@@ -9,13 +9,16 @@ import type { AppPermissions } from "../types";
  */
 const PROTECTED_PATHS = {
   alwaysDenyWrite: [
-    join(homedir(), ".kly"), // KLY config and permissions
+    join(homedir(), ".kly/config"), // KLY config directory
+    join(homedir(), ".kly/permissions.json"), // Permissions file
+    join(homedir(), ".kly/kly.sum"), // Integrity checksums
     join(homedir(), ".ssh"), // SSH keys
     join(homedir(), ".aws"), // AWS credentials
     join(homedir(), ".gnupg"), // GPG keys
   ],
   alwaysDenyRead: [
-    join(homedir(), ".kly"), // KLY config (prevent reading permissions.json)
+    join(homedir(), ".kly/config"), // KLY config directory
+    join(homedir(), ".kly/permissions.json"), // Permissions file (prevent reading)
   ],
 };
 
@@ -110,6 +113,7 @@ export function buildSandboxConfig(
       allowWrite,
       denyWrite: PROTECTED_PATHS.alwaysDenyWrite, // Always protected
     },
+    allowPty: true, // Enable pseudo-terminal support for interactive prompts
   };
 
   return config;
