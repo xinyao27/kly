@@ -19,27 +19,38 @@ const ENTRY_CANDIDATES = [
  *
  * We prioritize convention-based source files over package.json main field
  * because remote apps are run from source, not from built artifacts.
+ *
+ * @param repoPath - The root path of the cloned repository
+ * @param subpath - Optional subpath within the repository to search for entry point
  */
-export function resolveEntryPoint(repoPath: string): string | null {
+export function resolveEntryPoint(
+  repoPath: string,
+  subpath?: string,
+): string | null {
+  // If subpath is specified, search within that subpath
+  const searchPath = subpath ? join(repoPath, subpath) : repoPath;
+
   // First, try convention candidates (source files)
   for (const candidate of ENTRY_CANDIDATES) {
-    const candidatePath = join(repoPath, candidate);
+    const candidatePath = join(searchPath, candidate);
     if (existsSync(candidatePath)) {
-      return candidate; // Return relative path
+      // Return relative path from repo root
+      return subpath ? join(subpath, candidate) : candidate;
     }
   }
 
   // Fallback to package.json main field
-  const pkgPath = join(repoPath, "package.json");
+  const pkgPath = join(searchPath, "package.json");
   if (existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
 
       // Check main field (standard npm field)
       if (pkg.main && (pkg.main.endsWith(".ts") || pkg.main.endsWith(".js"))) {
-        const mainPath = join(repoPath, pkg.main);
+        const mainPath = join(searchPath, pkg.main);
         if (existsSync(mainPath)) {
-          return pkg.main; // Return relative path
+          // Return relative path from repo root
+          return subpath ? join(subpath, pkg.main) : pkg.main;
         }
       }
     } catch {

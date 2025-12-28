@@ -1,13 +1,22 @@
 /**
+ * Supported providers
+ */
+export type Provider = "github" | "gitlab" | "bitbucket" | "sourcehut";
+
+/**
  * Parsed remote repository reference
  */
 export interface RepoRef {
+  /** Provider (default: "github") */
+  provider: Provider;
   /** GitHub owner/org */
   owner: string;
   /** Repository name */
   repo: string;
   /** Git ref: branch, tag, or commit (default: "main") */
   ref: string;
+  /** Optional subpath within the repository */
+  subpath?: string;
 }
 
 /**

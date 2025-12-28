@@ -72,10 +72,10 @@ export async function runRemote(
     await cloneRepo(ref);
 
     // 4. Resolve entry point
-    const entryPoint = resolveEntryPoint(repoPath);
+    const entryPoint = resolveEntryPoint(repoPath, ref.subpath);
     if (!entryPoint) {
       throw new Error(
-        `No entry point found in ${ref.owner}/${ref.repo}. Set "main" in package.json or create index.ts`,
+        `No entry point found in ${ref.provider}:${ref.owner}/${ref.repo}${ref.subpath ? `/${ref.subpath}` : ""}. Set "main" in package.json or create index.ts`,
       );
     }
 
@@ -94,8 +94,8 @@ export async function runRemote(
       dependenciesInstalled: !options.skipInstall,
     });
 
-    // Update lockfile
-    const url = `github.com/${ref.owner}/${ref.repo}@${ref.ref}`;
+    // Update lockfile (use consistent URL format)
+    const url = formatRepoUrl(ref);
     updateRepoRecord(url, commitSha, true);
 
     console.log("Ready!\n");
@@ -118,6 +118,42 @@ export async function runRemote(
 }
 
 /**
+ * Format a repository reference as a URL string for lockfile
+ */
+function formatRepoUrl(ref: RepoRef): string {
+  const domain =
+    ref.provider === "github"
+      ? "github.com"
+      : ref.provider === "gitlab"
+        ? "gitlab.com"
+        : ref.provider === "bitbucket"
+          ? "bitbucket.org"
+          : "sr.ht";
+
+  const base = `${domain}/${ref.owner}/${ref.repo}@${ref.ref}`;
+  return ref.subpath ? `${base}/${ref.subpath}` : base;
+}
+
+/**
+ * Get the web URL for a repository (for viewing in browser)
+ */
+function getRepoWebUrl(
+  ref: RepoRef,
+  path: "tree" | "commits" = "tree",
+): string {
+  switch (ref.provider) {
+    case "github":
+      return `https://github.com/${ref.owner}/${ref.repo}/${path}/${ref.ref}`;
+    case "gitlab":
+      return `https://gitlab.com/${ref.owner}/${ref.repo}/-/${path}/${ref.ref}`;
+    case "bitbucket":
+      return `https://bitbucket.org/${ref.owner}/${ref.repo}/src/${ref.ref}`;
+    case "sourcehut":
+      return `https://git.sr.ht/~${ref.owner}/${ref.repo}/tree/${ref.ref}`;
+  }
+}
+
+/**
  * Verify repository integrity using lockfile
  *
  * @param ref - Repository reference
@@ -128,7 +164,7 @@ async function verifyIntegrity(
   ref: RepoRef,
   repoPath: string,
 ): Promise<{ proceedWithExecution: boolean; result: IntegrityCheckResult }> {
-  const url = `github.com/${ref.owner}/${ref.repo}@${ref.ref}`;
+  const url = formatRepoUrl(ref);
 
   console.log("\n🔐 Verifying code integrity...");
 
@@ -167,9 +203,7 @@ async function verifyIntegrity(
       console.log("\n⚠️  SECURITY NOTICE: First time running this tool\n");
       console.log("   This code has not been verified before.");
       console.log("   Please review the source code before proceeding:");
-      console.log(
-        `   https://github.com/${ref.owner}/${ref.repo}/tree/${ref.ref}\n`,
-      );
+      console.log(`   ${getRepoWebUrl(ref)}\n`);
 
       const shouldTrust = await confirm(
         "Do you trust this code and want to proceed?",
@@ -205,12 +239,10 @@ async function verifyIntegrity(
       console.log("   Current hash: ", `${hash.slice(0, 40)}...\n`);
 
       console.log("   Recommended actions:");
-      console.log("   1. Check GitHub for official announcements");
+      console.log("   1. Check the repository for official announcements");
       console.log("   2. Contact the maintainer");
       console.log("   3. Review code changes carefully");
-      console.log(
-        `   4. Visit: https://github.com/${ref.owner}/${ref.repo}/commits/${ref.ref}\n`,
-      );
+      console.log(`   4. Visit: ${getRepoWebUrl(ref, "commits")}\n`);
 
       const shouldProceed = await confirm(
         "⚠️  Proceed anyway? (NOT RECOMMENDED)",
@@ -274,15 +306,17 @@ async function executeApp(
   }
 
   // Resolve entry point
-  const entryPoint = resolveEntryPoint(repoPath);
+  const entryPoint = resolveEntryPoint(repoPath, ref.subpath);
   if (!entryPoint) {
-    throw new Error(`Cannot resolve entry point for ${ref.owner}/${ref.repo}`);
+    throw new Error(
+      `Cannot resolve entry point for ${ref.provider}:${ref.owner}/${ref.repo}`,
+    );
   }
 
   const absoluteEntryPath = join(repoPath, entryPoint);
 
   // Set remote ref environment variable for permission tracking
-  const remoteRef = `github.com/${ref.owner}/${ref.repo}`;
+  const remoteRef = formatRepoUrl(ref);
   const prevRemoteRef = process.env[ENV_VARS.REMOTE_REF];
   process.env[ENV_VARS.REMOTE_REF] = remoteRef;
 

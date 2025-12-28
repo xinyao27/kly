@@ -8,10 +8,26 @@ import type { RepoRef } from "./types";
 const execAsync = promisify(exec);
 
 /**
+ * Get the git repository URL for a given provider
+ */
+function getRepoUrl(ref: RepoRef): string {
+  switch (ref.provider) {
+    case "github":
+      return `https://github.com/${ref.owner}/${ref.repo}.git`;
+    case "gitlab":
+      return `https://gitlab.com/${ref.owner}/${ref.repo}.git`;
+    case "bitbucket":
+      return `https://bitbucket.org/${ref.owner}/${ref.repo}.git`;
+    case "sourcehut":
+      return `https://git.sr.ht/~${ref.owner}/${ref.repo}`;
+  }
+}
+
+/**
  * Clone a repository to cache
  */
 export async function cloneRepo(ref: RepoRef): Promise<void> {
-  const repoUrl = `https://github.com/${ref.owner}/${ref.repo}.git`;
+  const repoUrl = getRepoUrl(ref);
   const targetPath = getRepoCachePath(ref);
 
   // Remove existing cache if any
@@ -43,7 +59,7 @@ export async function cloneRepo(ref: RepoRef): Promise<void> {
       }
     }
     throw new Error(
-      `Failed to clone ${ref.owner}/${ref.repo}@${ref.ref}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to clone ${ref.provider}:${ref.owner}/${ref.repo}#${ref.ref}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

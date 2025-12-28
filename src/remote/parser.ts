@@ -1,45 +1,83 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { RepoRef } from "./types";
+import type { Provider, RepoRef } from "./types";
+
+/**
+ * Provider aliases (giget-style)
+ */
+const PROVIDER_ALIASES: Record<string, Provider> = {
+  gh: "github",
+  github: "github",
+  gitlab: "gitlab",
+  bitbucket: "bitbucket",
+  sourcehut: "sourcehut",
+};
 
 /**
  * Parse various remote formats into RepoRef
  *
- * Supported formats:
+ * Supported formats (giget-style):
+ * - gh:user/repo
+ * - gh:user/repo#branch
+ * - gh:user/repo/subpath
+ * - gh:user/repo/subpath#branch
+ * - gitlab:user/repo
+ * - bitbucket:user/repo
+ * - sourcehut:user/repo
+ *
+ * Legacy formats (backward compatible):
  * - user/repo
- * - user/repo@v1.0.0
  * - user/repo@branch
  * - github.com/user/repo
- * - github.com/user/repo@ref
  * - https://github.com/user/repo
  */
 export function parseRemoteRef(input: string): RepoRef | null {
   let normalized = input.trim();
+  let provider: Provider = "github";
+  let ref = "main";
+  let subpath: string | undefined;
 
-  // Remove https:// or http:// prefix
+  // First, remove https:// or http:// prefix if present
   normalized = normalized.replace(/^https?:\/\//, "");
 
-  // Remove github.com/ prefix
-  normalized = normalized.replace(/^github\.com\//, "");
-
-  // Extract ref if present (user/repo@ref or user/repo.git@ref)
-  let ref = "main";
-  const atIndex = normalized.indexOf("@");
-  if (atIndex !== -1) {
-    ref = normalized.slice(atIndex + 1);
-    normalized = normalized.slice(0, atIndex);
+  // Check for provider prefix (gh:, gitlab:, etc.)
+  const providerMatch = normalized.match(/^([a-z]+):/);
+  if (providerMatch?.[1]) {
+    const alias = providerMatch[1];
+    const matchedProvider = PROVIDER_ALIASES[alias];
+    if (matchedProvider) {
+      provider = matchedProvider;
+      normalized = normalized.slice(providerMatch[0].length);
+    }
   }
 
-  // Remove trailing .git (after @ extraction)
+  // Remove github.com/ prefix (legacy support)
+  normalized = normalized.replace(/^github\.com\//, "");
+
+  // Extract ref using # (giget-style: user/repo#ref)
+  const hashIndex = normalized.indexOf("#");
+  if (hashIndex !== -1) {
+    ref = normalized.slice(hashIndex + 1);
+    normalized = normalized.slice(0, hashIndex);
+  } else {
+    // Fallback to @ for backward compatibility (user/repo@ref)
+    const atIndex = normalized.indexOf("@");
+    if (atIndex !== -1) {
+      ref = normalized.slice(atIndex + 1);
+      normalized = normalized.slice(0, atIndex);
+    }
+  }
+
+  // Remove trailing .git (after ref extraction)
   normalized = normalized.replace(/\.git$/, "");
 
-  // Parse owner/repo
+  // Parse owner/repo/subpath
   const parts = normalized.split("/");
-  if (parts.length !== 2) {
+  if (parts.length < 2) {
     return null;
   }
 
-  const [owner, repo] = parts;
+  const [owner, repo, ...subpathParts] = parts;
 
   // Validate owner and repo names
   if (
@@ -51,7 +89,12 @@ export function parseRemoteRef(input: string): RepoRef | null {
     return null;
   }
 
-  return { owner, repo, ref };
+  // Extract subpath if present
+  if (subpathParts.length > 0) {
+    subpath = subpathParts.join("/");
+  }
+
+  return { provider, owner, repo, ref, subpath };
 }
 
 /**
@@ -73,10 +116,34 @@ export function getCacheDir(): string {
 }
 
 /**
+ * Get provider domain name
+ */
+function getProviderDomain(provider: Provider): string {
+  switch (provider) {
+    case "github":
+      return "github.com";
+    case "gitlab":
+      return "gitlab.com";
+    case "bitbucket":
+      return "bitbucket.org";
+    case "sourcehut":
+      return "sr.ht";
+  }
+}
+
+/**
  * Get the cache path for a specific repo ref
  */
 export function getRepoCachePath(ref: RepoRef): string {
-  return join(getCacheDir(), "github.com", ref.owner, ref.repo, ref.ref);
+  const domain = getProviderDomain(ref.provider);
+  const basePath = join(getCacheDir(), domain, ref.owner, ref.repo, ref.ref);
+
+  // Include subpath in cache key if present
+  if (ref.subpath) {
+    return join(basePath, ref.subpath);
+  }
+
+  return basePath;
 }
 
 /**

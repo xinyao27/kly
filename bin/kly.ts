@@ -121,7 +121,6 @@ async function runFile(filePath: string, appArgs: string[]) {
       sandboxConfig = buildSandboxConfig(appPermissions);
 
       // Show unified permission prompt
-      console.log("🔐 Checking permissions...");
       const allowed = await requestUnifiedPermission(
         appId,
         appPermissions,
