@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/xinyao27/kly/compare/0.1.0...0.1.1) (2025-12-28)
+
+
+### Bug Fixes
+
+* enhance permissions management by adding support for special filesystem path markers and improving permission extraction from remote apps; update sandbox configuration handling to utilize declared permissions effectively ([cf8dda5](https://github.com/xinyao27/kly/commit/cf8dda5774ffe31f91e1d4c38f0bca63b0ef2b98))
+
 # 0.1.0 (2025-12-28)
 
 
