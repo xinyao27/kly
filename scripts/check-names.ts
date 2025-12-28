@@ -8,161 +8,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-
-// ============ Configuration ============
-
-const NAMES_TO_CHECK = [
-  // CLI + AI combinations
-  "clai", // CLI + AI (current name)
-  "clia", // CLI + A
-  "aicli", // AI + CLI
-  "aic", // AI + Command
-  "cai", // Command + AI
-
-  // Unix/X style AI variants
-  "aix", // AI + X
-  "clix", // CLI + X
-  "claix", // CLI + AI + X
-
-  // Minimal (2-3 letters)
-  "lai", // Line + AI
-  "sai", // Shell + AI
-  "tai", // Terminal + AI
-  "vai", // V + AI
-  "zai", // Z + AI
-
-  // New: Phonetic CLI variants
-  "kli", // sounds like CLI
-  "klai", // K + L + AI
-  "qli", // Q (query) + LI
-
-  // New: [letter] + IA pattern
-  "lia", // Line Intelligence Assistant
-  "tia", // Terminal Intelligence Assistant
-  "sia", // Shell Intelligence Assistant
-  "ria", // Runtime Intelligence Assistant
-  "mia", // Machine Intelligence Assistant
-  "pia", // ? Intelligence Assistant
-  "nia", // ? Intelligence Assistant
-
-  // New: [letter] + AI pattern (more variants)
-  "kai", // K + AI
-  "jai", // J + AI
-  "rai", // R + AI
-  "wai", // W + AI
-  "xai", // X + AI (eXplainable AI)
-
-  // New: Minimal X combinations
-  "ix", // Intelligence + X
-  "cx", // Command + X
-  "ax", // AI + X
-  "lix", // Line + X
-  "pix", // ? + X
-  "mix", // Multi + X
-  "vix", // ? + X
-  "zix", // Z + X
-
-  // New: Two-letter + ai pattern
-  "hai", // Help + AI
-  "dai", // Dev + AI
-  "bai", // Build + AI
-  "fai", // Flow + AI
-  "gai", // Go + AI
-  "pai", // ? + AI
-  "mai", // ? + AI
-  "oai", // Open + AI
-  "uai", // Universal + AI
-  "qai", // Query + AI
-  "yai", // Your + AI
-
-  // New: Three-letter x endings (Unix style)
-  "cax", // Command + A + X
-  "dax", // Dev + A + X
-  "gax", // Go + A + X
-  "jax", // ? + X
-  "lax", // Line + A + X
-  "pax", // ? + X
-  "rax", // Run + A + X
-  "wax", // ? + X
-  "yax", // ? + X
-  "zax", // Z + A + X
-
-  // New: ai prefix variations
-  "aiq", // AI + Query
-  "aik", // AI + Kit
-  "aio", // AI + O
-  "aip", // AI + P
-  "ait", // AI + Terminal
-
-  // New: Ultra minimal (2 letters)
-  "qi", // 气 (Chinese: energy/qi)
-  "xi", // ξ (Greek letter)
-  "zo", // Z + O
-  "ko", // K + O
-
-  // New: CLI phonetic variants
-  "kly", // sounds like CLI
-  "cly", // variant of CLI
-  "kla", // K + LA
-
-  // Creative/Phonetic
-  "cliq", // sounds like "click"
-  "clasp", // CLI + ASP
-  "clue", // gives clues
-  "clio", // muse of history / CLI + O
-
-  // Original suggestions
-  "unitool",
-  "onecli",
-  "omnitool",
-  "trini",
-  "trifecta",
-  "prism",
-  "runkit",
-  "apprun",
-  "termbase",
-  "flux",
-  "apex",
-  "onyx",
-  "nexus",
-
-  // Unix/X style
-  "trinix", // trini + x (unix style)
-  "toolx", // tool + x
-  "kernix", // kernel + x
-  "basex", // base + x
-
-  // Trinity variants
-  "trikit", // trinity + kit
-  "trine", // variant of trinity
-  "trio", // three/trio
-  "tripod", // three-legged (stable)
-  "tribase", // trinity + base
-  "trimix", // trinity + mix
-
-  // Universal/Uni prefix
-  "unikit", // universal kit
-  "unibase", // universal base
-  "uniflow", // universal flow
-  "unify", // unification
-
-  // Kit/Tool suffix
-  "clikit", // cli kit
-
-  // Concept names
-  "vertex", // point of connection
-  "zenith", // peak/summit
-  "synth", // synthesis/combination
-  "forge", // tool builder
-  "craft", // building tools
-  "weave", // weaving capabilities together
-
-  // Meta/Core prefix
-  "metatool", // meta tool
-  "coretool", // core tool
-  "polytool", // poly (many) tool
-  "adaptool", // adaptive tool
-];
+import { NAMES_TO_CHECK } from "./.cache/names-to-check";
 
 const DOMAIN_SUFFIXES = [
   ".com",
@@ -173,6 +19,8 @@ const DOMAIN_SUFFIXES = [
   ".run",
   ".ai",
   ".tools",
+  ".so",
+  ".co",
 ];
 
 const CACHE_DIR = join(import.meta.dir, ".cache");
@@ -182,7 +30,7 @@ const CACHE_FILE = join(CACHE_DIR, "name-checks.json");
 
 interface CacheData {
   npm: Record<string, boolean>; // name -> isAvailable
-  domains: Record<string, boolean>; // domain -> isAvailable
+  domains: Record<string, boolean | null>; // domain -> isAvailable
   timestamp: number;
 }
 
