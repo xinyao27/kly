@@ -72,10 +72,12 @@ export function createSandboxedModelsContext(): ModelsContext {
  */
 export function getSandboxedContext(): {
   modelsContext: ModelsContext;
+  invokeDir?: string;
 } {
   const globalWithContext = global as {
     __KLY_SANDBOXED_CONTEXT__?: {
       modelsContext: ModelsContext;
+      invokeDir?: string;
     };
   };
 

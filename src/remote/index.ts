@@ -333,6 +333,7 @@ async function executeApp(
       scriptPath: absoluteEntryPath,
       args,
       appId,
+      invokeDir: process.cwd(), // Capture where kly run was invoked
       sandboxConfig,
       allowApiKey,
     });

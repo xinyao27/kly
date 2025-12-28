@@ -109,7 +109,7 @@ async function executeUserScript(): Promise<void> {
     throw new Error("No initialization message received");
   }
 
-  const { scriptPath, args } = initMessage;
+  const { scriptPath, args, invokeDir } = initMessage;
 
   try {
     // Set environment for the script
@@ -122,6 +122,7 @@ async function executeUserScript(): Promise<void> {
       global as { __KLY_SANDBOXED_CONTEXT__?: unknown }
     ).__KLY_SANDBOXED_CONTEXT__ = {
       modelsContext: createSandboxedModelsContext(),
+      invokeDir,
     };
 
     // Import and execute the user's script

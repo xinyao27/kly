@@ -16,6 +16,8 @@ export interface LaunchOptions {
   scriptPath: string;
   args: string[];
   appId: string;
+  /** Working directory where `kly run` was invoked */
+  invokeDir: string;
   sandboxConfig: SandboxRuntimeConfig;
   allowApiKey: boolean;
 }
@@ -37,7 +39,8 @@ export interface LaunchResult {
 export async function launchSandbox(
   options: LaunchOptions,
 ): Promise<LaunchResult> {
-  const { scriptPath, args, appId, sandboxConfig, allowApiKey } = options;
+  const { scriptPath, args, appId, invokeDir, sandboxConfig, allowApiKey } =
+    options;
 
   // Initialize sandbox manager
   await SandboxManager.initialize(sandboxConfig);
@@ -112,6 +115,7 @@ export async function launchSandbox(
     scriptPath: absoluteScriptPath,
     args,
     appId,
+    invokeDir,
     permissions: {
       allowApiKey,
       sandboxConfig,

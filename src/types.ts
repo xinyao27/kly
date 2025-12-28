@@ -156,6 +156,18 @@ export interface ExecuteContext {
    * ```
    */
   models: ModelsContext;
+  /**
+   * Working directory where `kly run` was invoked
+   * This is the directory from which the user ran the command,
+   * not the directory where the script is located
+   * @example
+   * ```typescript
+   * // User runs: cd /home/user/project && kly run /home/user/tools/my-tool.ts
+   * // context.invokeDir === "/home/user/project"
+   * // process.cwd() === "/home/user/tools" (script directory)
+   * ```
+   */
+  invokeDir?: string;
 }
 
 /**

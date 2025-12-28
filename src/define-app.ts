@@ -29,6 +29,19 @@ async function _getModelsContext() {
 }
 
 /**
+ * Get the invoke directory based on runtime environment
+ */
+async function _getInvokeDir(): Promise<string | undefined> {
+  if (isSandbox()) {
+    // In sandbox: get from sandboxed context
+    const m = await import("./sandbox/sandboxed-context");
+    return m.getSandboxedContext().invokeDir;
+  }
+  // Outside sandbox: not available (programmatic mode)
+  return undefined;
+}
+
+/**
  * Define a Kly app with tools
  *
  * @example
@@ -93,6 +106,7 @@ export function defineApp<TTools extends AnyTool[]>(
       const execResult = await tool.execute(result.value, {
         mode,
         models: await _getModelsContext(),
+        invokeDir: await _getInvokeDir(),
       });
       return execResult;
     },

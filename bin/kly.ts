@@ -91,6 +91,8 @@ async function main() {
 
 async function runFile(filePath: string, appArgs: string[]) {
   const absolutePath = resolve(process.cwd(), filePath);
+  // Capture the working directory where kly run was invoked
+  const invokeDir = process.cwd();
 
   // Set local file identifier for permission tracking
   const prevLocalRef = process.env.KLY_LOCAL_REF;
@@ -140,6 +142,7 @@ async function runFile(filePath: string, appArgs: string[]) {
       scriptPath: absolutePath,
       args: appArgs,
       appId,
+      invokeDir,
       sandboxConfig,
       allowApiKey,
     });

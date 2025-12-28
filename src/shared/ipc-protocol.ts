@@ -9,6 +9,8 @@ export interface SandboxInitMessage {
   scriptPath: string;
   args: string[];
   appId: string;
+  /** Working directory where `kly run` was invoked */
+  invokeDir: string;
   permissions: {
     allowApiKey: boolean;
     sandboxConfig: SandboxRuntimeConfig;
