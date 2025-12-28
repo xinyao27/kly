@@ -4,6 +4,11 @@ import { confirm } from "../ui";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
 import { calculateRepoHash } from "./integrity";
+import {
+  getIntegrityHash,
+  updateRepoRecord,
+  updateSecurityInfo,
+} from "./lockfile";
 import { getRepoCachePath, parseRemoteRef } from "./parser";
 import {
   checkEnvVars,
@@ -11,8 +16,8 @@ import {
   resolveEntryPoint,
   validateVersion,
 } from "./resolver";
-import { SumFileManager } from "./sumfile";
 import type { IntegrityCheckResult, RepoRef, RunRemoteOptions } from "./types";
+import { checkForUpdates } from "./update-checker";
 
 /** Current kly CLI version */
 const KLY_VERSION = "0.1.0";
@@ -35,7 +40,27 @@ export async function runRemote(
   // 2. Check cache
   const cacheResult = checkCache(ref);
 
-  if (!cacheResult.valid || options.force) {
+  // 2.5. Check for updates if cache is valid
+  let needsUpdate = false;
+  if (cacheResult.valid && !options.force && !options.skipUpdateCheck) {
+    const updateResult = await checkForUpdates(ref, cacheResult.metadata!);
+
+    if (updateResult.hasUpdate && updateResult.shouldUpdate) {
+      // User chose to update
+      needsUpdate = true;
+      console.log(`Updating ${ref.owner}/${ref.repo}@${ref.ref}...`);
+    } else if (updateResult.hasUpdate && !updateResult.shouldUpdate) {
+      // User chose to use current version or cancelled
+      if (updateResult.skipCheck === false) {
+        // User explicitly cancelled - exit
+        console.log("Cancelled");
+        process.exit(0);
+      }
+      // Otherwise, continue with cached version
+    }
+  }
+
+  if (!cacheResult.valid || options.force || needsUpdate) {
     // 3. Clone repository
     if (options.force && cacheResult.exists) {
       console.log(`Refreshing ${ref.owner}/${ref.repo}@${ref.ref}...`);
@@ -69,6 +94,10 @@ export async function runRemote(
       dependenciesInstalled: !options.skipInstall,
     });
 
+    // Update lockfile
+    const url = `github.com/${ref.owner}/${ref.repo}@${ref.ref}`;
+    updateRepoRecord(url, commitSha, true);
+
     console.log("Ready!\n");
   }
 
@@ -89,7 +118,7 @@ export async function runRemote(
 }
 
 /**
- * Verify repository integrity using kly.sum
+ * Verify repository integrity using lockfile
  *
  * @param ref - Repository reference
  * @param repoPath - Local path to repository
@@ -107,9 +136,18 @@ async function verifyIntegrity(
   const hash = calculateRepoHash(repoPath);
   console.log(`   Hash: ${hash.slice(0, 20)}...`);
 
-  // Check against kly.sum
-  const sumManager = new SumFileManager();
-  const verifyResult = sumManager.verify(url, hash);
+  // Check against lockfile
+  const existingHash = getIntegrityHash(url);
+
+  // Determine verification result
+  let verifyResult: "ok" | "mismatch" | "new";
+  if (!existingHash) {
+    verifyResult = "new";
+  } else if (existingHash === hash) {
+    verifyResult = "ok";
+  } else {
+    verifyResult = "mismatch";
+  }
 
   const result: IntegrityCheckResult = {
     status: verifyResult,
@@ -138,8 +176,8 @@ async function verifyIntegrity(
       );
 
       if (shouldTrust) {
-        sumManager.add(url, hash, true);
-        console.log("   ✓ Code trusted and added to kly.sum\n");
+        updateSecurityInfo(url, hash, true);
+        console.log("   ✓ Code trusted and added to lockfile\n");
         return { proceedWithExecution: true, result };
       }
 
@@ -149,8 +187,7 @@ async function verifyIntegrity(
 
     case "mismatch": {
       // Hash doesn't match - code has changed!
-      const existingEntry = sumManager.get(url);
-      result.expectedHash = existingEntry?.hash;
+      result.expectedHash = existingHash;
 
       console.log("\n🚨 SECURITY WARNING: Code has been modified!\n");
       console.log(
@@ -182,13 +219,13 @@ async function verifyIntegrity(
 
       if (shouldProceed) {
         const shouldUpdate = await confirm(
-          "Update kly.sum with new hash?",
+          "Update lockfile with new hash?",
           false,
         );
 
         if (shouldUpdate) {
-          sumManager.update(url, hash, true);
-          console.log("   ✓ kly.sum updated with new hash\n");
+          updateSecurityInfo(url, hash, true);
+          console.log("   ✓ Lockfile updated with new hash\n");
         }
 
         return { proceedWithExecution: true, result };

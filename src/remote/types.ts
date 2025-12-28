@@ -62,6 +62,8 @@ export interface RunRemoteOptions {
   mcp?: boolean;
   /** Skip integrity verification (dangerous, for testing only) */
   skipIntegrityCheck?: boolean;
+  /** Skip update check (use cached version without checking for updates) */
+  skipUpdateCheck?: boolean;
 }
 
 /**
@@ -76,4 +78,57 @@ export interface IntegrityCheckResult {
   expectedHash?: string;
   /** Whether user should be prompted to trust */
   requiresTrust: boolean;
+}
+
+/**
+ * User's choice when an update is available
+ */
+export type UpdateChoice = "update" | "use-current" | "cancel";
+
+/**
+ * Result of checking for updates
+ */
+export interface UpdateCheckResult {
+  /** Whether an update is available */
+  hasUpdate: boolean;
+  /** Local commit SHA */
+  localSha: string;
+  /** Remote commit SHA (if available) */
+  remoteSha?: string;
+  /** Whether to proceed with update based on user choice */
+  shouldUpdate: boolean;
+  /** Whether the check was skipped (e.g., for commit SHA refs or network errors) */
+  skipCheck?: boolean;
+}
+
+/**
+ * Single repository record in lockfile
+ * Combines version tracking and security information
+ */
+export interface LockfileRepoRecord {
+  // Version tracking
+  /** Git commit SHA */
+  commitSha: string;
+  /** When the record was last checked for updates (ISO timestamp) */
+  lastChecked: string;
+  /** When the repository was last updated/cloned (ISO timestamp) */
+  lastUpdated: string;
+
+  // Security tracking (from kly.sum)
+  /** Integrity hash of the repository content (SHA-384) */
+  integrityHash?: string;
+  /** Whether the user explicitly trusted this code */
+  trusted?: boolean;
+  /** When the code was trusted (ISO timestamp) */
+  trustedAt?: string;
+}
+
+/**
+ * Structure of kly.lock.yaml
+ */
+export interface LockfileData {
+  /** Lockfile format version */
+  lockfileVersion: number;
+  /** Repository records keyed by URL (e.g., "github.com/owner/repo@ref") */
+  repositories: Record<string, LockfileRepoRecord>;
 }

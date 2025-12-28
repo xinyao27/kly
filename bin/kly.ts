@@ -45,19 +45,23 @@ async function main() {
       process.exit(1);
     }
 
-    // Check for --force flag
+    // Check for flags
     const forceIndex = args.indexOf("--force");
     const force = forceIndex !== -1;
+    const noUpdateCheckIndex = args.indexOf("--no-update-check");
+    const skipUpdateCheck = noUpdateCheckIndex !== -1;
 
     // Find -- separator for app arguments
     const dashDashIndex = args.indexOf("--");
     const appArgs =
       dashDashIndex !== -1
         ? args.slice(dashDashIndex + 1)
-        : args.slice(2).filter((arg) => arg !== "--force");
+        : args
+            .slice(2)
+            .filter((arg) => arg !== "--force" && arg !== "--no-update-check");
 
     if (isRemoteRef(target)) {
-      await runRemote(target, { args: appArgs, force });
+      await runRemote(target, { args: appArgs, force, skipUpdateCheck });
     } else {
       await runFile(target, appArgs);
     }
@@ -72,12 +76,14 @@ async function main() {
       process.exit(1);
     }
 
-    // Check for --force flag
+    // Check for flags
     const forceIndex = args.indexOf("--force");
     const force = forceIndex !== -1;
+    const noUpdateCheckIndex = args.indexOf("--no-update-check");
+    const skipUpdateCheck = noUpdateCheckIndex !== -1;
 
     if (isRemoteRef(target)) {
-      await runRemote(target, { args: [], force, mcp: true });
+      await runRemote(target, { args: [], force, skipUpdateCheck, mcp: true });
     } else {
       await runFileAsMcp(target);
     }
@@ -197,9 +203,10 @@ Target can be:
   user/repo@branch       GitHub repo at specific branch
 
 Options:
-  --force        Force re-fetch remote repo (ignore cache)
-  --help, -h     Show help
-  --version, -v  Show version
+  --force              Force re-fetch remote repo (ignore cache)
+  --no-update-check    Skip checking for remote updates
+  --help, -h           Show help
+  --version, -v        Show version
 
 Examples:
   kly models
