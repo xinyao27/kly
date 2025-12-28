@@ -1,5 +1,17 @@
 # Changelog
 
+# [0.2.0](https://github.com/xinyao27/kly/compare/0.1.1...0.2.0) (2025-12-28)
+
+
+### Bug Fixes
+
+* improve package.json structure and enhance script execution context by setting working directory; update permissions management to clarify protected paths and enable pseudo-terminal support ([efdc9c2](https://github.com/xinyao27/kly/commit/efdc9c2f545e4e96ff758918982876caeb5b0a85))
+
+
+### Features
+
+* add invokeDir to execution context and update related interfaces to capture the working directory where kly run was invoked; enhance sandbox and remote execution handling for improved context management ([dd9a76c](https://github.com/xinyao27/kly/commit/dd9a76c4654ef3b6219ece1a63c06a54fcc0a48e))
+
 ## [0.1.1](https://github.com/xinyao27/kly/compare/0.1.0...0.1.1) (2025-12-28)
 
 
