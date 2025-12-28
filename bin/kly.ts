@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
+import * as p from "@clack/prompts";
 import { modelsCommand } from "../src/ai/models-command";
 import { launchSandbox } from "../src/host/launcher";
 import { getAppIdentifier } from "../src/permissions";
@@ -221,7 +222,7 @@ Examples:
 }
 
 function showVersion() {
-  console.log("0.1.0");
+  p.log.message(__VERSION__);
 }
 
 main().catch((err) => {

@@ -20,7 +20,7 @@ import type { IntegrityCheckResult, RepoRef, RunRemoteOptions } from "./types";
 import { checkForUpdates } from "./update-checker";
 
 /** Current kly CLI version */
-const KLY_VERSION = "0.1.0";
+const KLY_VERSION = __VERSION__;
 
 /**
  * Run a remote GitHub repository as a kly app
