@@ -254,24 +254,59 @@ async function executeApp(
     const { getAppIdentifier, checkApiKeyPermission, getAppSandboxConfig } =
       await import("../permissions");
     const { launchSandbox } = await import("../host/launcher");
+    const { buildSandboxConfig, formatPermissionsSummary } = await import(
+      "../permissions/config-builder"
+    );
+    const { extractAppPermissions } = await import("./permissions-extractor");
 
     const appId = getAppIdentifier();
 
-    // Check permissions
-    console.log("🔐 Checking permissions...");
-    const allowApiKey = await checkApiKeyPermission(appId);
+    // Extract declared permissions from the app
+    console.log("📋 Reading app permissions...");
+    const declaredPermissions = await extractAppPermissions(absoluteEntryPath);
 
-    if (!allowApiKey) {
-      console.error("❌ Permission denied: API key access rejected");
-      process.exit(1);
+    // Show permission summary if declared
+    if (declaredPermissions) {
+      const summary = formatPermissionsSummary(declaredPermissions);
+      if (summary.length > 0) {
+        console.log("\nThis app requests the following permissions:");
+        for (const item of summary) {
+          console.log(item);
+        }
+        console.log("");
+      }
     }
 
-    // Get sandbox configuration
-    const sandboxConfig = await getAppSandboxConfig(appId);
+    // Check permissions based on what's declared
+    console.log("🔐 Checking permissions...");
 
-    if (!sandboxConfig) {
-      console.error("❌ Permission denied: Sandbox configuration rejected");
-      process.exit(1);
+    let allowApiKey = false;
+    let sandboxConfig:
+      | import("@anthropic-ai/sandbox-runtime").SandboxRuntimeConfig
+      | null = null;
+
+    // Only ask for API key permission if the app declares it needs it
+    if (declaredPermissions?.apiKeys) {
+      allowApiKey = await checkApiKeyPermission(appId);
+
+      if (!allowApiKey) {
+        console.error("❌ Permission denied: API key access rejected");
+        process.exit(1);
+      }
+    }
+
+    // Build sandbox config from declared permissions, or ask interactively
+    if (declaredPermissions) {
+      // Use declared permissions to build sandbox config
+      sandboxConfig = buildSandboxConfig(declaredPermissions);
+    } else {
+      // Fall back to interactive prompt if no permissions declared
+      sandboxConfig = await getAppSandboxConfig(appId);
+
+      if (!sandboxConfig) {
+        console.error("❌ Permission denied: Sandbox configuration rejected");
+        process.exit(1);
+      }
     }
 
     // Handle MCP mode

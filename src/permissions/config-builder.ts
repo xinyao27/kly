@@ -20,13 +20,35 @@ const PROTECTED_PATHS = {
 };
 
 /**
+ * Resolve filesystem path with special marker support
+ *
+ * Special markers:
+ * - "*": User's home directory (allows access to all non-sensitive files)
+ * - Absolute paths: Used as-is
+ *
+ * @param path - Path to resolve (may contain special markers)
+ * @returns Resolved absolute path, or undefined if path is undefined
+ */
+function resolveFilesystemPath(path: string | undefined): string | undefined {
+  if (!path) return undefined;
+  if (path === "*") {
+    // Allow access to user's home directory (sensitive paths are always protected)
+    return homedir();
+  }
+  return path;
+}
+
+/**
  * Build a complete SandboxRuntimeConfig from declared app permissions
  *
  * This merges:
  * 1. Default safe configuration
  * 2. Automatic LLM domains (if apiKeys: true)
- * 3. User-declared sandbox config
+ * 3. User-declared sandbox config (with special marker support)
  * 4. Mandatory protections (always applied)
+ *
+ * Special markers in filesystem paths:
+ * - "*": Allows access to all files in user's home directory (except sensitive paths)
  *
  * @param permissions - Declared app permissions
  * @returns Complete sandbox configuration ready for SandboxManager
@@ -52,22 +74,27 @@ export function buildSandboxConfig(
 
     // Merge network config
     if (userSandbox.network?.allowedDomains) {
-      allowedDomains = [
-        ...allowedDomains,
-        ...userSandbox.network.allowedDomains,
-      ];
+      const domains = userSandbox.network.allowedDomains.filter(
+        (d): d is string => d !== undefined,
+      );
+      allowedDomains = [...allowedDomains, ...domains];
     }
 
     // Merge filesystem config
     if (userSandbox.filesystem) {
       if (userSandbox.filesystem.allowWrite) {
-        // Replace default with user's choice
-        allowWrite = userSandbox.filesystem.allowWrite;
+        // Replace default with user's choice, resolving special markers
+        allowWrite = userSandbox.filesystem.allowWrite
+          .map(resolveFilesystemPath)
+          .filter((p): p is string => p !== undefined);
       }
 
       if (userSandbox.filesystem.denyRead) {
-        // Add user's deny list
-        denyRead = [...denyRead, ...userSandbox.filesystem.denyRead];
+        // Add user's deny list, resolving special markers
+        const deniedPaths = userSandbox.filesystem.denyRead
+          .map(resolveFilesystemPath)
+          .filter((p): p is string => p !== undefined);
+        denyRead = [...denyRead, ...deniedPaths];
       }
     }
   }
@@ -126,15 +153,23 @@ export function formatPermissionsSummary(
       config.filesystem.allowWrite[0] !== currentDir);
 
   if (hasCustomWrite) {
-    const dirs = config.filesystem.allowWrite
-      .map((p) => (p === currentDir ? "current directory" : p))
-      .slice(0, 2)
-      .join(", ");
-    const more =
-      config.filesystem.allowWrite.length > 2
-        ? ` +${config.filesystem.allowWrite.length - 2} more`
-        : "";
-    summary.push(`• Filesystem write: ${dirs}${more}`);
+    // Check if home directory is allowed (via "*" marker)
+    const homeDir = homedir();
+    const allowsHomeDir = config.filesystem.allowWrite.includes(homeDir);
+
+    if (allowsHomeDir) {
+      summary.push("• Filesystem write: All non-sensitive directories");
+    } else {
+      const dirs = config.filesystem.allowWrite
+        .map((p) => (p === currentDir ? "current directory" : p))
+        .slice(0, 2)
+        .join(", ");
+      const more =
+        config.filesystem.allowWrite.length > 2
+          ? ` +${config.filesystem.allowWrite.length - 2} more`
+          : "";
+      summary.push(`• Filesystem write: ${dirs}${more}`);
+    }
   }
 
   // Show custom filesystem read restrictions if declared

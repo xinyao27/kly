@@ -1,6 +1,13 @@
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 
 /**
+ * Deep partial type - makes all properties optional recursively
+ */
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+/**
  * Standard Schema V1 interface (inlined to avoid external dependency)
  * @see https://github.com/standard-schema/standard-schema
  */
@@ -242,12 +249,25 @@ export interface AppPermissions {
    * - Filesystem: Current directory read/write only
    * - Protected: ~/.kly, ~/.ssh, ~/.aws, ~/.gnupg always denied
    *
+   * Special markers for filesystem paths:
+   * - "*": User's home directory (allows access to all non-sensitive files)
+   *        Use this for apps that need broad filesystem access (like project generators)
+   *
    * @example
    * ```typescript
    * // Minimal: just need GitHub API access
    * permissions: {
    *   sandbox: {
    *     network: { allowedDomains: ["api.github.com"] }
+   *   }
+   * }
+   *
+   * // Allow access to all non-sensitive directories
+   * permissions: {
+   *   sandbox: {
+   *     filesystem: {
+   *       allowWrite: ["*"] // Expands to user's home directory at runtime
+   *     }
    *   }
    * }
    *
@@ -266,7 +286,7 @@ export interface AppPermissions {
    * }
    * ```
    */
-  sandbox?: Partial<SandboxRuntimeConfig>;
+  sandbox?: DeepPartial<SandboxRuntimeConfig>;
 }
 
 export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]>
