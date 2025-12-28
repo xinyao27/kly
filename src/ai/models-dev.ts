@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { LLMProvider } from "./types";
 
 const MODELS_DEV_API = "https://models.dev/api.json";
-const CACHE_FILE = join(homedir(), ".clai", "models-cache.json");
+const CACHE_FILE = join(homedir(), ".kly", "models-cache.json");
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 /**

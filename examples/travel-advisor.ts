@@ -10,9 +10,9 @@ import { defineApp, tool } from "../src";
  *
  *   # Natural language mode (requires OPENAI_API_KEY or ANTHROPIC_API_KEY)
  *   export OPENAI_API_KEY=sk-...
- *   clai run examples/travel-advisor.ts "What should I pack for a week in Tokyo?"
- *   clai run examples/travel-advisor.ts "Is Paris cold in December?"
- *   clai run examples/travel-advisor.ts --budget=1000 "cheap trip to Bali"
+ *   kly run examples/travel-advisor.ts "What should I pack for a week in Tokyo?"
+ *   kly run examples/travel-advisor.ts "Is Paris cold in December?"
+ *   kly run examples/travel-advisor.ts --budget=1000 "cheap trip to Bali"
  */
 
 const adviseTool = tool({

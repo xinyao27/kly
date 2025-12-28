@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { getRepoCachePath } from "./parser";
 import type { CacheCheckResult, CacheMetadata, RepoRef } from "./types";
 
-const META_FILENAME = ".clai-meta.json";
+const META_FILENAME = ".kly-meta.json";
 
 /**
  * Check if cache exists and is valid

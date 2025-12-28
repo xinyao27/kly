@@ -10,7 +10,7 @@ import {
   parseSubcommand,
 } from "./cli";
 import { detectMode, isSandbox } from "./shared/runtime-mode";
-import type { AnyTool, AppDefinition, ClaiApp } from "./types";
+import type { AnyTool, AppDefinition, KlyApp } from "./types";
 import { ValidationError } from "./types";
 import { error, form, isTTY, output, select } from "./ui";
 
@@ -29,11 +29,11 @@ async function _getModelsContext() {
 }
 
 /**
- * Define a Clai app with tools
+ * Define a Kly app with tools
  *
  * @example
  * ```typescript
- * import { defineApp, tool } from "clai"
+ * import { defineApp, tool } from "kly"
  * import { z } from "zod"
  *
  * const helloTool = tool({
@@ -55,14 +55,14 @@ async function _getModelsContext() {
  */
 export function defineApp<TTools extends AnyTool[]>(
   definition: AppDefinition<TTools>,
-): ClaiApp<TTools> {
+): KlyApp<TTools> {
   // Build tools map
   const toolsMap = new Map<string, AnyTool>();
   for (const tool of definition.tools) {
     toolsMap.set(tool.name, tool);
   }
 
-  const app: ClaiApp<TTools> = {
+  const app: KlyApp<TTools> = {
     definition,
     tools: toolsMap,
 
@@ -122,7 +122,7 @@ export function defineApp<TTools extends AnyTool[]>(
  * Run app in CLI mode
  */
 async function runCli<TTools extends AnyTool[]>(
-  app: ClaiApp<TTools>,
+  app: KlyApp<TTools>,
   definition: AppDefinition<TTools>,
 ): Promise<void> {
   const argv = process.argv.slice(2);
@@ -167,7 +167,7 @@ async function runCli<TTools extends AnyTool[]>(
  * Run single tool app in CLI mode (no subcommand needed)
  */
 async function runSingleToolCli<TTools extends AnyTool[]>(
-  app: ClaiApp<TTools>,
+  app: KlyApp<TTools>,
   definition: AppDefinition<TTools>,
 ): Promise<void> {
   const argv = process.argv.slice(2);
@@ -209,7 +209,7 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
  * Run multi tools app in CLI mode (with subcommands)
  */
 async function runMultiToolsCli<TTools extends AnyTool[]>(
-  app: ClaiApp<TTools>,
+  app: KlyApp<TTools>,
   definition: AppDefinition<TTools>,
 ): Promise<void> {
   const argv = process.argv.slice(2);

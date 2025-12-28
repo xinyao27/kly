@@ -35,7 +35,7 @@ interface PermissionsConfig {
  * Get app identifier from script path
  */
 export function getAppIdentifier(): string {
-  // Check for explicit local file reference (set by clai run command)
+  // Check for explicit local file reference (set by kly run command)
   const localRef = getLocalRef();
   if (localRef) {
     return localRef;
@@ -124,7 +124,7 @@ async function requestPermission(
       `\nPermission required: App "${appName}" (${appId}) wants to access your API keys.`,
     );
     console.error(
-      "Set CLAI_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
+      "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
     );
     return false;
   }
@@ -237,7 +237,7 @@ async function requestSandboxConfig(
   if (!isTTY()) {
     console.error(`\nSandbox permission required for: "${appName}" (${appId})`);
     console.error(
-      "Set CLAI_TRUST_ALL=true environment variable to run without sandboxing in non-interactive mode.",
+      "Set KLY_TRUST_ALL=true environment variable to run without sandboxing in non-interactive mode.",
     );
     return null;
   }
@@ -257,7 +257,7 @@ async function requestSandboxConfig(
       {
         name: "Sensitive only",
         value: "sensitive",
-        description: "Deny access to ~/.clai, ~/.ssh, ~/.aws, etc.",
+        description: "Deny access to ~/.kly, ~/.ssh, ~/.aws, etc.",
       },
       {
         name: "All home directory",
@@ -267,17 +267,17 @@ async function requestSandboxConfig(
       {
         name: "None (allow all)",
         value: "none",
-        description: "No read restrictions (except ~/.clai)",
+        description: "No read restrictions (except ~/.kly)",
       },
     ],
   });
 
   // Always deny reading sensitive directories (hardcoded for security)
-  let denyRead: string[] = [join(homeDir, ".clai")];
+  let denyRead: string[] = [join(homeDir, ".kly")];
 
   if (fsReadChoice === "sensitive") {
     denyRead = [
-      join(homeDir, ".clai"),
+      join(homeDir, ".kly"),
       join(homeDir, ".ssh"),
       join(homeDir, ".aws"),
       join(homeDir, ".gnupg"),
@@ -285,7 +285,7 @@ async function requestSandboxConfig(
   } else if (fsReadChoice === "all-home") {
     denyRead = [homeDir];
   }
-  // Note: Even if user chooses "none", .clai is still protected
+  // Note: Even if user chooses "none", .kly is still protected
 
   // Ask for filesystem write permissions
   console.log("");
@@ -321,7 +321,7 @@ async function requestSandboxConfig(
 
   // Always deny writing to sensitive directories (hardcoded for security)
   const denyWrite = [
-    join(homeDir, ".clai"), // CLAI config and permissions
+    join(homeDir, ".kly"), // KLY config and permissions
     join(homeDir, ".ssh"), // SSH keys
     join(homeDir, ".aws"), // AWS credentials
     join(homeDir, ".gnupg"), // GPG keys
@@ -450,10 +450,10 @@ export async function getAppSandboxConfig(
     return {
       network: { allowedDomains: ["*"], deniedDomains: [] },
       filesystem: {
-        denyRead: [join(homeDir, ".clai")], // ALWAYS deny reading CLAI config
+        denyRead: [join(homeDir, ".kly")], // ALWAYS deny reading KLY config
         allowWrite: ["*"],
         denyWrite: [
-          join(homeDir, ".clai"), // CLAI config and permissions
+          join(homeDir, ".kly"), // KLY config and permissions
           join(homeDir, ".ssh"), // SSH keys
           join(homeDir, ".aws"), // AWS credentials
           join(homeDir, ".gnupg"), // GPG keys

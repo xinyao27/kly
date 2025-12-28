@@ -9,7 +9,7 @@
  * 3. Use the config to call LLM APIs
  *
  * Prerequisites:
- * - Configure a model: `bun run bin/clai.ts models`
+ * - Configure a model: `bun run bin/kly.ts models`
  *
  * Usage:
  * ```bash
@@ -17,7 +17,7 @@
  * bun run examples/use-model-config.ts
  *
  * # Skip permission prompt (for automation)
- * CLAI_TRUST_ALL=true bun run examples/use-model-config.ts
+ * KLY_TRUST_ALL=true bun run examples/use-model-config.ts
  * ```
  */
 
@@ -64,11 +64,11 @@ const askAiTool = tool({
     if (!config) {
       if (modelName) {
         throw new Error(
-          `Model '${modelName}' not found. Run 'bun run bin/clai.ts models' to configure.`,
+          `Model '${modelName}' not found. Run 'bun run bin/kly.ts models' to configure.`,
         );
       }
       throw new Error(
-        "No LLM model configured. Run 'bun run bin/clai.ts models' to set up.",
+        "No LLM model configured. Run 'bun run bin/kly.ts models' to set up.",
       );
     }
 

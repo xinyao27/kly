@@ -3,7 +3,7 @@ export function getNoLLMConfiguredMessage(): string {
 
 Run the following command to configure a model:
 
-  clai models
+  kly models
 
 This will guide you through selecting a provider and configuring your API key.`;
 }

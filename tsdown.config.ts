@@ -9,7 +9,7 @@ export default defineConfig([
     unbundle: true,
   },
   {
-    entry: ["bin/clai.ts"],
+    entry: ["bin/kly.ts"],
     outDir: "dist/bin",
     format: "esm",
   },

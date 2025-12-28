@@ -68,10 +68,10 @@ const PROVIDER_OPTIONS: Array<{
 ];
 
 /**
- * Main entry point for `clai models` command
+ * Main entry point for `kly models` command
  */
 export async function modelsCommand(): Promise<void> {
-  clack.intro(pc.bgCyan(pc.black(" clai models ")));
+  clack.intro(pc.bgCyan(pc.black(" kly models ")));
 
   const models = listModels();
 
@@ -124,7 +124,7 @@ async function listAction(): Promise<void> {
 
   if (models.length === 0) {
     clack.note(
-      "No models configured yet.\nRun 'clai models' and select 'Add a new model'",
+      "No models configured yet.\nRun 'kly models' and select 'Add a new model'",
     );
     return;
   }

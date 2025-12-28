@@ -17,8 +17,8 @@ const IGNORE_PATTERNS = [
   "dist",
   "build",
   "coverage",
-  ".clai",
-  ".clai-meta.json",
+  ".kly",
+  ".kly-meta.json",
   ".DS_Store",
   "*.log",
 ];

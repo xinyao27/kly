@@ -5,13 +5,13 @@
 
 ## Summary
 
-Implemented the `clai` CLI runner command, enabling users to run Clai apps via `clai run <file>`. Also updated documentation to remove OpenTUI references and replace with @clack/prompts.
+Implemented the `kly` CLI runner command, enabling users to run Kly apps via `kly run <file>`. Also updated documentation to remove OpenTUI references and replace with @clack/prompts.
 
 ## What We Did
 
 - Updated `docs/ARCHITECTURE.md` to remove all OpenTUI references, replaced with @clack/prompts
 - Analyzed current project state and identified Phase 1 (Protocol) as complete
-- Created `bin/clai.ts` - CLI entry point with `run`, `--help`, `--version` commands
+- Created `bin/kly.ts` - CLI entry point with `run`, `--help`, `--version` commands
 - Updated `tsdown.config.ts` to build bin entry as separate output
 - Updated `package.json` with bin configuration for npm distribution
 - Tested CLI runner with all example files (hello, weather)
@@ -27,15 +27,15 @@ Implemented the `clai` CLI runner command, enabling users to run Clai apps via `
 - 12 working examples
 
 **CLI Runner - Complete:**
-- `clai run <file>` executes local .ts/.js files
-- `clai --help` and `clai --version` work
-- Build outputs to `dist/bin/clai.mjs`
+- `kly run <file>` executes local .ts/.js files
+- `kly --help` and `kly --version` work
+- Build outputs to `dist/bin/kly.mjs`
 - Package configured for npm bin installation
 
 ## Next Steps
 
 - [ ] Implement MCP adapter (Claude Desktop/Code integration)
-- [ ] Add `clai run github.com/user/repo` for remote execution
+- [ ] Add `kly run github.com/user/repo` for remote execution
 - [ ] Write README documentation
 - [ ] Implement `ctx.infer` for AI parameter parsing
 - [ ] Add permission system (Phase 2)
@@ -43,7 +43,7 @@ Implemented the `clai` CLI runner command, enabling users to run Clai apps via `
 
 ## Key Files
 
-- `bin/clai.ts` - CLI entry point, handles run/help/version commands
+- `bin/kly.ts` - CLI entry point, handles run/help/version commands
 - `tsdown.config.ts` - Build configuration with bin entry
 - `package.json` - Added bin field for npm installation
 - `docs/ARCHITECTURE.md` - Updated to reflect @clack/prompts usage

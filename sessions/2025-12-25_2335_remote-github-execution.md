@@ -5,35 +5,35 @@
 
 ## Summary
 
-Implemented `clai run user/repo` functionality to run GitHub repositories as clai apps. The feature supports git clone with caching, automatic entry point resolution, and dependency installation via bun.
+Implemented `kly run user/repo` functionality to run GitHub repositories as kly apps. The feature supports git clone with caching, automatic entry point resolution, and dependency installation via bun.
 
 ## What We Did
 
-- Designed package.json schema for clai apps (`main` for entry, `clai.version` for compatibility, `clai.env` for required env vars)
+- Designed package.json schema for kly apps (`main` for entry, `kly.version` for compatibility, `kly.env` for required env vars)
 - Created `src/remote/` module with 6 files:
-  - `types.ts` - Type definitions (RepoRef, CacheMetadata, ClaiConfig, etc.)
+  - `types.ts` - Type definitions (RepoRef, CacheMetadata, KlyConfig, etc.)
   - `parser.ts` - URL parsing for various formats (user/repo, @version, @branch)
-  - `cache.ts` - Cache management (~/.clai/cache/)
+  - `cache.ts` - Cache management (~/.kly/cache/)
   - `fetcher.ts` - Git clone (shallow) + bun install
   - `resolver.ts` - Entry point resolution + version validation
   - `index.ts` - Main runRemote() API
-- Updated `bin/clai.ts` to detect remote refs vs local files
+- Updated `bin/kly.ts` to detect remote refs vs local files
 - Added 62 unit tests for parser and resolver
 - Fixed edge case: `.git` suffix with `@ref` (e.g., `user/repo.git@v1.0.0`)
-- Tested successfully with `xinyao27/up` repo (works without clai adaptation!)
+- Tested successfully with `xinyao27/up` repo (works without kly adaptation!)
 
 ## Current State
 
 Remote execution is fully functional:
 ```bash
-clai run user/repo              # main branch
-clai run user/repo@v1.0.0       # specific tag
-clai run user/repo@branch       # specific branch
-clai run user/repo --force      # force refresh cache
-clai run user/repo -- --arg     # pass args to app
+kly run user/repo              # main branch
+kly run user/repo@v1.0.0       # specific tag
+kly run user/repo@branch       # specific branch
+kly run user/repo --force      # force refresh cache
+kly run user/repo -- --arg     # pass args to app
 ```
 
-Cache stored at `~/.clai/cache/github.com/user/repo/ref/`
+Cache stored at `~/.kly/cache/github.com/user/repo/ref/`
 
 Key insight: Any TypeScript CLI project can run without `defineApp` adaptation - just needs a valid entry point.
 
@@ -55,7 +55,7 @@ Key insight: Any TypeScript CLI project can run without `defineApp` adaptation -
 - `src/remote/resolver.ts` - Entry resolution + version check
 - `src/remote/__tests__/parser.test.ts` - 50+ parser tests
 - `src/remote/__tests__/resolver.test.ts` - Version validation tests
-- `bin/clai.ts` - Updated CLI with remote support
+- `bin/kly.ts` - Updated CLI with remote support
 
 ## Notes
 

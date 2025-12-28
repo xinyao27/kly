@@ -114,13 +114,13 @@ async function executeUserScript(): Promise<void> {
   try {
     // Set environment for the script
     process.argv = ["bun", scriptPath, ...args];
-    process.env.CLAI_SANDBOX_MODE = "true";
+    process.env.KLY_SANDBOX_MODE = "true";
 
     // Inject sandboxed context into global scope
     // This allows defineApp to access the sandboxed context
     (
-      global as { __CLAI_SANDBOXED_CONTEXT__?: unknown }
-    ).__CLAI_SANDBOXED_CONTEXT__ = {
+      global as { __KLY_SANDBOXED_CONTEXT__?: unknown }
+    ).__KLY_SANDBOXED_CONTEXT__ = {
       modelsContext: createSandboxedModelsContext(),
     };
 
@@ -164,7 +164,7 @@ function sendExecutionComplete(
  */
 function main() {
   // Ensure we're in sandbox mode
-  if (process.env.CLAI_SANDBOX_MODE !== "true") {
+  if (process.env.KLY_SANDBOX_MODE !== "true") {
     console.error("Error: This script must be run in sandbox mode");
     process.exit(1);
   }

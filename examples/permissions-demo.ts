@@ -7,31 +7,31 @@
  * When you run this example, you'll be prompted to grant permission for API key access.
  *
  * Prerequisites:
- * - Configure a model: `bun run bin/clai.ts models`
+ * - Configure a model: `bun run bin/kly.ts models`
  *
  * Usage:
  * ```bash
  * # First run - will prompt for permission
- * bun run bin/clai.ts run examples/permissions-demo.ts
+ * bun run bin/kly.ts run examples/permissions-demo.ts
  *
  * # Skip permission prompt (for automation/testing)
- * CLAI_TRUST_ALL=true bun run bin/clai.ts run examples/permissions-demo.ts
+ * KLY_TRUST_ALL=true bun run bin/kly.ts run examples/permissions-demo.ts
  *
  * # Manage permissions
- * bun run bin/clai.ts permissions
+ * bun run bin/kly.ts permissions
  * ```
  *
  * Security Features:
  * - First run: User must grant permission for API key access
  * - Can choose: "once", "always allow", or "deny"
- * - Permissions stored in ~/.clai/permissions.json
- * - Can revoke anytime via `clai permissions` command
+ * - Permissions stored in ~/.kly/permissions.json
+ * - Can revoke anytime via `kly permissions` command
  *
  * Protected Directories (Sandbox):
- * - ~/.clai - ALWAYS denied for read AND write
+ * - ~/.kly - ALWAYS denied for read AND write
  * - ~/.ssh, ~/.aws, ~/.gnupg - Denied for write
  *
- * Try to read ~/.clai/permissions.json - you'll get "operation not permitted"!
+ * Try to read ~/.kly/permissions.json - you'll get "operation not permitted"!
  */
 
 import { z } from "zod";
@@ -61,7 +61,7 @@ const demoTool = tool({
 
       if (!config) {
         console.log("❌ No model configured\n");
-        console.log("Run: bun run bin/clai.ts models\n");
+        console.log("Run: bun run bin/kly.ts models\n");
         return { success: false, error: "No model configured" };
       }
 

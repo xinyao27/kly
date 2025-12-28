@@ -4,12 +4,12 @@ import { ENV_VARS, LLM_API_DOMAINS, PATHS, TIMEOUTS } from "../constants";
 describe("constants", () => {
   describe("ENV_VARS", () => {
     it("defines all expected environment variable names", () => {
-      expect(ENV_VARS.SANDBOX_MODE).toBe("CLAI_SANDBOX_MODE");
-      expect(ENV_VARS.MCP_MODE).toBe("CLAI_MCP_MODE");
-      expect(ENV_VARS.PROGRAMMATIC).toBe("CLAI_PROGRAMMATIC");
-      expect(ENV_VARS.TRUST_ALL).toBe("CLAI_TRUST_ALL");
-      expect(ENV_VARS.LOCAL_REF).toBe("CLAI_LOCAL_REF");
-      expect(ENV_VARS.REMOTE_REF).toBe("CLAI_REMOTE_REF");
+      expect(ENV_VARS.SANDBOX_MODE).toBe("KLY_SANDBOX_MODE");
+      expect(ENV_VARS.MCP_MODE).toBe("KLY_MCP_MODE");
+      expect(ENV_VARS.PROGRAMMATIC).toBe("KLY_PROGRAMMATIC");
+      expect(ENV_VARS.TRUST_ALL).toBe("KLY_TRUST_ALL");
+      expect(ENV_VARS.LOCAL_REF).toBe("KLY_LOCAL_REF");
+      expect(ENV_VARS.REMOTE_REF).toBe("KLY_REMOTE_REF");
     });
 
     it("is immutable via TypeScript const assertion", () => {
@@ -27,8 +27,8 @@ describe("constants", () => {
 
   describe("PATHS", () => {
     it("defines all expected path constants", () => {
-      expect(PATHS.CONFIG_DIR).toBe(".clai");
-      expect(PATHS.META_FILE).toBe(".clai-meta.json");
+      expect(PATHS.CONFIG_DIR).toBe(".kly");
+      expect(PATHS.META_FILE).toBe(".kly-meta.json");
       expect(PATHS.PERMISSIONS_FILE).toBe("permissions.json");
       expect(PATHS.CONFIG_FILE).toBe("config.json");
     });

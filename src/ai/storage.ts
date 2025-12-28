@@ -3,10 +3,10 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { LLMConfig, LLMProvider } from "./types";
 
-const CONFIG_DIR = join(homedir(), ".clai");
+const CONFIG_DIR = join(homedir(), ".kly");
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
-export interface ClaiConfig {
+export interface KlyConfig {
   currentModel?: string;
   models: Record<string, LLMConfig>;
 }
@@ -21,9 +21,9 @@ function ensureConfigDir(): void {
 }
 
 /**
- * Load configuration from ~/.clai/config.json
+ * Load configuration from ~/.kly/config.json
  */
-export function loadConfig(): ClaiConfig {
+export function loadConfig(): KlyConfig {
   ensureConfigDir();
 
   if (!existsSync(CONFIG_FILE)) {
@@ -40,9 +40,9 @@ export function loadConfig(): ClaiConfig {
 }
 
 /**
- * Save configuration to ~/.clai/config.json
+ * Save configuration to ~/.kly/config.json
  */
-export function saveConfig(config: ClaiConfig): void {
+export function saveConfig(config: KlyConfig): void {
   ensureConfigDir();
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
 }

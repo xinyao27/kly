@@ -7,18 +7,18 @@ import { calculateRepoHash } from "./integrity";
 import { getRepoCachePath, parseRemoteRef } from "./parser";
 import {
   checkEnvVars,
-  readClaiConfig,
+  readKlyConfig,
   resolveEntryPoint,
   validateVersion,
 } from "./resolver";
 import { SumFileManager } from "./sumfile";
 import type { IntegrityCheckResult, RepoRef, RunRemoteOptions } from "./types";
 
-/** Current clai CLI version */
-const CLAI_VERSION = "0.1.0";
+/** Current kly CLI version */
+const KLY_VERSION = "0.1.0";
 
 /**
- * Run a remote GitHub repository as a clai app
+ * Run a remote GitHub repository as a kly app
  */
 export async function runRemote(
   input: string,
@@ -89,7 +89,7 @@ export async function runRemote(
 }
 
 /**
- * Verify repository integrity using clai.sum
+ * Verify repository integrity using kly.sum
  *
  * @param ref - Repository reference
  * @param repoPath - Local path to repository
@@ -107,7 +107,7 @@ async function verifyIntegrity(
   const hash = calculateRepoHash(repoPath);
   console.log(`   Hash: ${hash.slice(0, 20)}...`);
 
-  // Check against clai.sum
+  // Check against kly.sum
   const sumManager = new SumFileManager();
   const verifyResult = sumManager.verify(url, hash);
 
@@ -139,7 +139,7 @@ async function verifyIntegrity(
 
       if (shouldTrust) {
         sumManager.add(url, hash, true);
-        console.log("   ✓ Code trusted and added to clai.sum\n");
+        console.log("   ✓ Code trusted and added to kly.sum\n");
         return { proceedWithExecution: true, result };
       }
 
@@ -182,13 +182,13 @@ async function verifyIntegrity(
 
       if (shouldProceed) {
         const shouldUpdate = await confirm(
-          "Update clai.sum with new hash?",
+          "Update kly.sum with new hash?",
           false,
         );
 
         if (shouldUpdate) {
           sumManager.update(url, hash, true);
-          console.log("   ✓ clai.sum updated with new hash\n");
+          console.log("   ✓ kly.sum updated with new hash\n");
         }
 
         return { proceedWithExecution: true, result };
@@ -207,7 +207,7 @@ async function verifyIntegrity(
 }
 
 /**
- * Execute the clai app
+ * Execute the kly app
  */
 async function executeApp(
   ref: RepoRef,
@@ -216,12 +216,12 @@ async function executeApp(
   mcp: boolean,
 ): Promise<void> {
   // Read config and validate
-  const config = readClaiConfig(repoPath);
+  const config = readKlyConfig(repoPath);
 
   if (config?.version) {
-    if (!validateVersion(config.version, CLAI_VERSION)) {
+    if (!validateVersion(config.version, KLY_VERSION)) {
       throw new Error(
-        `This app requires clai ${config.version}, but you have ${CLAI_VERSION}`,
+        `This app requires kly ${config.version}, but you have ${KLY_VERSION}`,
       );
     }
   }
@@ -318,7 +318,7 @@ export { clearAllCache, invalidateCache } from "./cache";
 export { isRemoteRef, parseRemoteRef } from "./parser";
 export type {
   CacheMetadata,
-  ClaiConfig,
+  KlyConfig,
   RepoRef,
   RunRemoteOptions,
 } from "./types";

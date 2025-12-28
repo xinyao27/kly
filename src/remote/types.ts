@@ -11,7 +11,7 @@ export interface RepoRef {
 }
 
 /**
- * Cache metadata stored in .clai-meta.json
+ * Cache metadata stored in .kly-meta.json
  */
 export interface CacheMetadata {
   /** Git commit SHA at time of clone */
@@ -25,10 +25,10 @@ export interface CacheMetadata {
 }
 
 /**
- * Clai configuration from package.json
+ * Kly configuration from package.json
  */
-export interface ClaiConfig {
-  /** Minimum clai CLI version required (semver range) */
+export interface KlyConfig {
+  /** Minimum kly CLI version required (semver range) */
   version?: string;
   /** Required environment variables */
   env?: string[];
@@ -72,7 +72,7 @@ export interface IntegrityCheckResult {
   status: "ok" | "mismatch" | "new";
   /** Calculated hash for the repository */
   hash: string;
-  /** Expected hash from clai.sum (if exists) */
+  /** Expected hash from kly.sum (if exists) */
   expectedHash?: string;
   /** Whether user should be prompted to trust */
   requiresTrust: boolean;

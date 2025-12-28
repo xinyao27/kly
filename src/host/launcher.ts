@@ -47,8 +47,8 @@ export async function launchSandbox(
 
   // Find executor path based on current location
   // Development: src/host/launcher.ts -> src/sandbox/executor.ts
-  // Production: dist/bin/clai.mjs (embedded) -> dist/sandbox/bundled-executor.mjs
-  // __dirname from dist/bin/clai.mjs is dist/bin, so ../sandbox resolves to dist/sandbox
+  // Production: dist/bin/kly.mjs (embedded) -> dist/sandbox/bundled-executor.mjs
+  // __dirname from dist/bin/kly.mjs is dist/bin, so ../sandbox resolves to dist/sandbox
   // Use bundled-executor to avoid circular dependency issues
   const executorPath = resolve(__dirname, "../sandbox/bundled-executor.mjs");
 
@@ -82,7 +82,7 @@ export async function launchSandbox(
     stdio: ["inherit", "inherit", "inherit", "ipc"], // Inherit to support raw mode
     env: {
       ...process.env,
-      CLAI_SANDBOX_MODE: "true",
+      KLY_SANDBOX_MODE: "true",
     },
   });
 

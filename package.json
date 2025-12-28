@@ -1,17 +1,17 @@
 {
-  "name": "clai",
+  "name": "kly",
   "version": "0.0.0",
   "description": "",
   "type": "module",
   "keywords": [],
   "license": "MIT",
-  "homepage": "https://github.com/xinyao27/clai#readme",
+  "homepage": "https://github.com/xinyao27/kly#readme",
   "bugs": {
-    "url": "https://github.com/xinyao27/clai/issues"
+    "url": "https://github.com/xinyao27/kly/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xinyao27/clai.git"
+    "url": "git+https://github.com/xinyao27/kly.git"
   },
   "author": {
     "name": "xinyao",
@@ -23,7 +23,7 @@
   },
   "files": ["dist/*"],
   "bin": {
-    "clai": "./dist/bin/clai.mjs"
+    "kly": "./dist/bin/kly.mjs"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",

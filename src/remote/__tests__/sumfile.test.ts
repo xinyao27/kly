@@ -10,8 +10,8 @@ describe("SumFileManager", () => {
 
   beforeEach(() => {
     // Create temp directory for each test
-    testDir = mkdtempSync(join(tmpdir(), "clai-test-"));
-    testSumFile = join(testDir, "clai.sum");
+    testDir = mkdtempSync(join(tmpdir(), "kly-test-"));
+    testSumFile = join(testDir, "kly.sum");
   });
 
   afterEach(() => {
@@ -30,7 +30,7 @@ describe("SumFileManager", () => {
     test("loads existing sum file", () => {
       // Create a sum file manually
       const content = [
-        "# clai.sum - Integrity verification database",
+        "# kly.sum - Integrity verification database",
         "github.com/user/repo@v1.0.0 sha384-ABC123 1704067200 trusted",
         "github.com/user/tool@main sha384-XYZ789 1704070800 untrusted",
       ].join("\n");
@@ -295,7 +295,7 @@ describe("SumFileManager", () => {
 
       expect(existsSync(testSumFile)).toBe(true);
       const content = readFileSync(testSumFile, "utf-8");
-      expect(content).toContain("# clai.sum");
+      expect(content).toContain("# kly.sum");
       expect(content).not.toContain("github.com/user/repo");
     });
   });
@@ -335,7 +335,7 @@ describe("SumFileManager", () => {
 
       const content = readFileSync(testSumFile, "utf-8");
 
-      expect(content).toContain("# clai.sum - Integrity verification database");
+      expect(content).toContain("# kly.sum - Integrity verification database");
       expect(content).toContain(
         "# Format: url hash timestamp trusted|untrusted",
       );

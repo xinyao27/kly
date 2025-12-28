@@ -9,13 +9,13 @@ import type { AppPermissions } from "../types";
  */
 const PROTECTED_PATHS = {
   alwaysDenyWrite: [
-    join(homedir(), ".clai"), // CLAI config and permissions
+    join(homedir(), ".kly"), // KLY config and permissions
     join(homedir(), ".ssh"), // SSH keys
     join(homedir(), ".aws"), // AWS credentials
     join(homedir(), ".gnupg"), // GPG keys
   ],
   alwaysDenyRead: [
-    join(homedir(), ".clai"), // CLAI config (prevent reading permissions.json)
+    join(homedir(), ".kly"), // KLY config (prevent reading permissions.json)
   ],
 };
 

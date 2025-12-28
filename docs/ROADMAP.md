@@ -1,7 +1,7 @@
-# Clai (Command Line AI) Project Roadmap
+# Kly (Command Line AI) Project Roadmap
 
 > **Mission:** Redefining the terminal experience where CLI meets AI.
-> **Core Identity:** Visual ambiguity logo (cli <-> ai) | Domain target: `clai.sh`
+> **Core Identity:** Visual ambiguity logo (cli <-> ai) | Domain target: `kly.sh`
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Goal:** Define the standard contract for "micro-apps" with Tool + App separation pattern.
 
-### 1.1 Build `@clai/kit` SDK
+### 1.1 Build `@kly/kit` SDK
 
 * **Architecture Core:** Based on **Bun** + **Standard Schema** + **TypeScript**.
 * **Two-Layer API Design:**
@@ -43,13 +43,13 @@
 
 * **MCP Compatibility:**
   * SDK natively exports `tools[]` array as MCP Tool list.
-  * Claude Desktop/Claude Code can directly invoke any Clai tool.
+  * Claude Desktop/Claude Code can directly invoke any Kly tool.
 
 ---
 
 ## Phase 2: The Runtime
 
-**Goal:** Implement `clai run` with context-aware execution modes.
+**Goal:** Implement `kly run` with context-aware execution modes.
 
 ### 2.1 Runtime Mode Detection
 
@@ -86,10 +86,10 @@
 
 * **Config Commands:** (Planned)
   ```bash
-  clai config set provider openai
-  clai config set openai.api_key sk-xxxx
-  clai config set provider ollama  # Local models
-  clai config set provider deepseek
+  kly config set provider openai
+  kly config set openai.api_key sk-xxxx
+  kly config set provider ollama  # Local models
+  kly config set provider deepseek
   ```
 
 * **Current Implementation:** Environment variable detection
@@ -119,13 +119,13 @@
 * **Execution Modes:**
   ```bash
   # Fully specified - no LLM needed
-  clai run weather.ts --city Beijing --days 7
+  kly run weather.ts --city Beijing --days 7
 
   # Fuzzy intent - uses configured LLM ✅
-  clai run weather.ts "Is Beijing cold tomorrow?"
+  kly run weather.ts "Is Beijing cold tomorrow?"
 
   # Mixed mode - AI fills in missing params ✅
-  clai run weather.ts --city Beijing "should I bring umbrella?"
+  kly run weather.ts --city Beijing "should I bring umbrella?"
   ```
 
 * **Features:**
@@ -146,32 +146,32 @@
 
 * **Supported Formats:**
   ```bash
-  clai run github.com/user/repo          # GitHub direct
-  clai run github.com/user/repo@v1.2.3   # Version pinning
-  clai run x/npm-updater                 # Short alias
-  clai run jack.clai.sh/hello            # Custom domain
-  clai run ./my-tool.ts                  # Local development
+  kly run github.com/user/repo          # GitHub direct
+  kly run github.com/user/repo@v1.2.3   # Version pinning
+  kly run x/npm-updater                 # Short alias
+  kly run jack.kly.sh/hello            # Custom domain
+  kly run ./my-tool.ts                  # Local development
   ```
 
 ### 4.2 Auto Alias Registration
 
 * **First Run Flow:**
   ```bash
-  npx clai run jack.clai.sh/hello  # Downloads and registers
+  npx kly run jack.kly.sh/hello  # Downloads and registers
   hello greet --name "World"       # Works directly after
   ```
 
-### 4.3 Integrity Verification (clai.sum)
+### 4.3 Integrity Verification (kly.sum)
 
 * **Security:**
   * Hash signature of code content + bun.lock.
-  * Prevent code tampering via `clai.sum` file.
+  * Prevent code tampering via `kly.sum` file.
 
 ### 4.4 Subdomain Mapping System
 
-* **Service Architecture:** Establish `clai.sh` domain service.
+* **Service Architecture:** Establish `kly.sh` domain service.
 * **Registration:** User submits PR to registry repo -> auto-deploy.
-* **Result:** `jack.clai.sh/tool` -> 302 -> `github.com/jack/tools/index.ts`
+* **Result:** `jack.kly.sh/tool` -> 302 -> `github.com/jack/tools/index.ts`
 
 ### 4.5 Acceleration Proxy
 
@@ -211,7 +211,7 @@
 ### 5.3 One-Click Publish Loop
 
 * **OAuth Integration:** Auto-create Gist or Repo in user's GitHub.
-* **Auto Domain Claim:** Auto-submit subdomain registration PR.
+* **Auto Domain Klym:** Auto-submit subdomain registration PR.
 
 ---
 
@@ -244,7 +244,7 @@
 * **Community (Free):**
   * Open source SDK
   * Public Proxy
-  * `.clai.sh` subdomain
+  * `.kly.sh` subdomain
 
 * **Pro (Developer):**
   * Private repository support
@@ -267,7 +267,7 @@
 |------|-------|-------------|
 | 1-2 | Core API | `tool()` + `defineApp()` with Standard Schema support |
 | 3-4 | UI Layer | @clack/prompts wrapper (`ctx.ui`) |
-| 5-6 | Runtime | `clai run ./local.ts` |
+| 5-6 | Runtime | `kly run ./local.ts` |
 | 7-8 | Network | GitHub URL parser + basic cache |
 | 9-10 | AI | `ctx.infer` + provider configuration + streaming |
 | 11-12 | MCP | MCP adapter for tools[] exposure |
@@ -291,7 +291,7 @@
 
 ## Architecture Positioning
 
-clai is the **"Terminal OS"** microkernel:
+kly is the **"Terminal OS"** microkernel:
 
 | Component | Role |
 |-----------|------|
@@ -299,7 +299,7 @@ clai is the **"Terminal OS"** microkernel:
 | Interface | Zod + tool() / defineApp() (type-safe) |
 | Brain | LLM (fuzzy intent handling) |
 | Peripherals | MCP / Skills (ecosystem integration) |
-| Address | clai.sh (decentralized distribution) |
+| Address | kly.sh (decentralized distribution) |
 
 ---
 

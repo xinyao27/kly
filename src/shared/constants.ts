@@ -1,5 +1,5 @@
 /**
- * Centralized constants for the CLAI project
+ * Centralized constants for the KLY project
  * Prevents magic strings and improves maintainability
  */
 
@@ -7,20 +7,20 @@
  * Environment variable names used throughout the application
  */
 export const ENV_VARS = {
-  SANDBOX_MODE: "CLAI_SANDBOX_MODE",
-  MCP_MODE: "CLAI_MCP_MODE",
-  PROGRAMMATIC: "CLAI_PROGRAMMATIC",
-  TRUST_ALL: "CLAI_TRUST_ALL",
-  LOCAL_REF: "CLAI_LOCAL_REF",
-  REMOTE_REF: "CLAI_REMOTE_REF",
+  SANDBOX_MODE: "KLY_SANDBOX_MODE",
+  MCP_MODE: "KLY_MCP_MODE",
+  PROGRAMMATIC: "KLY_PROGRAMMATIC",
+  TRUST_ALL: "KLY_TRUST_ALL",
+  LOCAL_REF: "KLY_LOCAL_REF",
+  REMOTE_REF: "KLY_REMOTE_REF",
 } as const;
 
 /**
  * File and directory paths used for configuration and caching
  */
 export const PATHS = {
-  CONFIG_DIR: ".clai",
-  META_FILE: ".clai-meta.json",
+  CONFIG_DIR: ".kly",
+  META_FILE: ".kly-meta.json",
   PERMISSIONS_FILE: "permissions.json",
   CONFIG_FILE: "config.json",
 } as const;

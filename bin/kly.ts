@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
+import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { modelsCommand } from "../src/ai/models-command";
 import { launchSandbox } from "../src/host/launcher";
 import { getAppIdentifier } from "../src/permissions";
@@ -40,7 +41,7 @@ async function main() {
     const target = args[1];
     if (!target) {
       console.error("Error: Missing file path or remote reference");
-      console.error("Usage: clai run <file|user/repo[@ref]>");
+      console.error("Usage: kly run <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -67,7 +68,7 @@ async function main() {
     const target = args[1];
     if (!target) {
       console.error("Error: Missing file path or remote reference");
-      console.error("Usage: clai mcp <file|user/repo[@ref]>");
+      console.error("Usage: kly mcp <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -84,7 +85,7 @@ async function main() {
   }
 
   console.error(`Unknown command: ${command}`);
-  console.error('Run "clai --help" for usage');
+  console.error('Run "kly --help" for usage');
   process.exit(1);
 }
 
@@ -92,8 +93,8 @@ async function runFile(filePath: string, appArgs: string[]) {
   const absolutePath = resolve(process.cwd(), filePath);
 
   // Set local file identifier for permission tracking
-  const prevLocalRef = process.env.CLAI_LOCAL_REF;
-  process.env.CLAI_LOCAL_REF = `local:${absolutePath}`;
+  const prevLocalRef = process.env.KLY_LOCAL_REF;
+  process.env.KLY_LOCAL_REF = `local:${absolutePath}`;
 
   try {
     // Get app identifier
@@ -101,7 +102,7 @@ async function runFile(filePath: string, appArgs: string[]) {
 
     // Check if permission already granted
     const storedConfig = checkStoredPermission(appId);
-    let sandboxConfig = storedConfig;
+    let sandboxConfig: SandboxRuntimeConfig;
     let allowApiKey = false;
 
     if (!storedConfig) {
@@ -127,7 +128,8 @@ async function runFile(filePath: string, appArgs: string[]) {
       // Set API key access based on declared permissions
       allowApiKey = appPermissions?.apiKeys ?? false;
     } else {
-      // Permission already granted, check stored config for apiKeys
+      // Permission already granted, use stored config
+      sandboxConfig = storedConfig;
       // We need to re-extract to determine if apiKeys was requested
       const appPermissions = await extractAppPermissions(absolutePath);
       allowApiKey = appPermissions?.apiKeys ?? false;
@@ -152,9 +154,9 @@ async function runFile(filePath: string, appArgs: string[]) {
   } finally {
     // Restore environment
     if (prevLocalRef === undefined) {
-      delete process.env.CLAI_LOCAL_REF;
+      delete process.env.KLY_LOCAL_REF;
     } else {
-      process.env.CLAI_LOCAL_REF = prevLocalRef;
+      process.env.KLY_LOCAL_REF = prevLocalRef;
     }
   }
 }
@@ -163,7 +165,7 @@ async function runFileAsMcp(filePath: string) {
   const absolutePath = resolve(process.cwd(), filePath);
 
   // Set MCP mode environment variable
-  process.env.CLAI_MCP_MODE = "true";
+  process.env.KLY_MCP_MODE = "true";
 
   // Modify process.argv
   process.argv = ["bun", absolutePath];
@@ -174,16 +176,16 @@ async function runFileAsMcp(filePath: string) {
 
 function showHelp() {
   console.log(`
-clai - Command Line AI
+kly - Command Line AI
 
 Usage:
-  clai <command> [options]
+  kly <command> [options]
 
 Commands:
   models         Manage LLM model configurations
   permissions    Manage app permissions
-  run <target>   Run a Clai app
-  mcp <target>   Start an MCP server for a Clai app
+  run <target>   Run a Kly app
+  mcp <target>   Start an MCP server for a Kly app
 
 Target can be:
   ./file.ts              Local file
@@ -197,15 +199,15 @@ Options:
   --version, -v  Show version
 
 Examples:
-  clai models
-  clai permissions
-  clai run ./my-tool.ts
-  clai run ./my-tool.ts --name=World
-  clai run user/weather-app
-  clai run user/weather-app@v1.0.0
-  clai run user/weather-app -- --city=Beijing
-  clai mcp ./my-tool.ts
-  clai mcp user/weather-app
+  kly models
+  kly permissions
+  kly run ./my-tool.ts
+  kly run ./my-tool.ts --name=World
+  kly run user/weather-app
+  kly run user/weather-app@v1.0.0
+  kly run user/weather-app -- --city=Beijing
+  kly mcp ./my-tool.ts
+  kly mcp user/weather-app
 `);
 }
 

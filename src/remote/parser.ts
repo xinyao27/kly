@@ -66,10 +66,10 @@ function isValidGitHubName(name: string): boolean {
 }
 
 /**
- * Get the clai cache directory
+ * Get the kly cache directory
  */
 export function getCacheDir(): string {
-  return join(homedir(), ".clai", "cache");
+  return join(homedir(), ".kly", "cache");
 }
 
 /**

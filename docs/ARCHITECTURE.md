@@ -1,4 +1,4 @@
-# Clai Architecture Design
+# Kly Architecture Design
 
 > **Core Philosophy**: Define the universal software unit for the AI era.
 > **Design Principle**: Write once, run everywhere (CLI / MCP / Skill).
@@ -7,7 +7,7 @@
 
 ## 1. The "Trinity" Architecture
 
-Clai apps can simultaneously serve as:
+Kly apps can simultaneously serve as:
 
 1. **CLI Tool** - Direct human interaction via terminal
 2. **MCP Tool** - AI agent capability (Claude Desktop, Claude Code)
@@ -35,10 +35,10 @@ Clai apps can simultaneously serve as:
 
 ### 2.1 Tool + App Separation Pattern
 
-Clai uses a two-layer architecture: **tool()** for individual capabilities, **defineApp()** for composition.
+Kly uses a two-layer architecture: **tool()** for individual capabilities, **defineApp()** for composition.
 
 ```typescript
-import { tool, defineApp } from "@clai/kit"
+import { tool, defineApp } from "@kly/kit"
 import { z } from "zod" // or valibot, arktype, etc.
 
 // Define individual tools
@@ -80,7 +80,7 @@ export default defineApp({
 
 ### 2.2 Standard Schema Compatibility
 
-Clai uses [Standard Schema](https://github.com/standard-schema/standard-schema) specification instead of binding to a specific validation library:
+Kly uses [Standard Schema](https://github.com/standard-schema/standard-schema) specification instead of binding to a specific validation library:
 
 - **Zod** - Most popular, great TypeScript inference
 - **Valibot** - Smaller bundle size, modular
@@ -105,7 +105,7 @@ const schema = type({ city: "string" })
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     clai run hello.ts                        │
+│                     kly run hello.ts                        │
 └─────────────────────────────────────────────────────────────┘
                               │
                     ┌─────────────────┐
@@ -148,15 +148,15 @@ const schema = type({ city: "string" })
 
 ```bash
 # Set provider and API keys
-clai config set provider openai
-clai config set openai.api_key sk-xxxx
+kly config set provider openai
+kly config set openai.api_key sk-xxxx
 
 # Use local models
-clai config set provider ollama
+kly config set provider ollama
 
 # Use DeepSeek
-clai config set provider deepseek
-clai config set deepseek.api_key xxx
+kly config set provider deepseek
+kly config set deepseek.api_key xxx
 ```
 
 ### 3.2 Cascading Inference Providers
@@ -164,7 +164,7 @@ clai config set deepseek.api_key xxx
 ```typescript
 const inferenceProviders = {
   // Level 1: MCP environment (free)
-  mcp: () => process.env.CLAI_MCP_MODE === "true",
+  mcp: () => process.env.KLY_MCP_MODE === "true",
 
   // Level 2: Local Ollama (free, requires install)
   ollama: () => canConnectTo("http://localhost:11434"),
@@ -185,13 +185,13 @@ Support "half fixed + half AI-generated" parameters:
 
 ```bash
 # Fully specified - no LLM needed
-clai run weather.ts --city Beijing --days 7
+kly run weather.ts --city Beijing --days 7
 
 # Fuzzy intent - uses configured LLM
-clai run weather.ts "Is Beijing cold tomorrow?"
+kly run weather.ts "Is Beijing cold tomorrow?"
 
 # Mixed mode - AI fills in missing params
-clai run weather.ts --city Beijing "should I bring umbrella?"
+kly run weather.ts --city Beijing "should I bring umbrella?"
 ```
 
 ### 3.4 Inference Cost Matrix
@@ -201,7 +201,7 @@ clai run weather.ts --city Beijing "should I bring umbrella?"
 | MCP Mode | Claude itself | Free | ~0ms |
 | CLI + Ollama | Local model | Free | ~500ms |
 | CLI + API Key | OpenAI/Anthropic/DeepSeek | User pays | ~1s |
-| CLI + Gateway | clai cloud | Limited free | ~1s |
+| CLI + Gateway | kly cloud | Limited free | ~1s |
 
 ---
 
@@ -211,32 +211,32 @@ clai run weather.ts --city Beijing "should I bring umbrella?"
 
 ```bash
 # GitHub direct
-clai run github.com/user/repo
+kly run github.com/user/repo
 
 # Version pinning (like Go)
-clai run github.com/user/repo@v1.2.3
+kly run github.com/user/repo@v1.2.3
 
 # Short alias (like deno.land/x)
-clai run x/npm-updater
+kly run x/npm-updater
 
 # Custom domain
-clai run jack.clai.sh/hello
+kly run jack.kly.sh/hello
 
 # Local development
-clai run ./my-tool.ts
+kly run ./my-tool.ts
 ```
 
 ### 4.2 Auto Alias Registration
 
 ```bash
 # First run
-npx clai run jack.clai.sh/hello  # Downloads and registers
+npx kly run jack.kly.sh/hello  # Downloads and registers
 
 # Subsequent runs - direct command
 hello greet --name "World"       # Works directly
 ```
 
-### 4.3 Integrity Verification (clai.sum)
+### 4.3 Integrity Verification (kly.sum)
 
 Using Subresource Integrity format:
 
@@ -248,7 +248,7 @@ github.com/user/repo@v1.1.0 sha384-Kx8Qp2mN5vRtYw...
 ### 4.4 Vanity URLs
 
 ```
-jack.clai.sh/weather → 302 → github.com/jack/clai-tools/weather.ts
+jack.kly.sh/weather → 302 → github.com/jack/kly-tools/weather.ts
 ```
 
 ---
@@ -260,7 +260,7 @@ jack.clai.sh/weather → 302 → github.com/jack/clai-tools/weather.ts
 Based on `@clack/prompts`:
 
 ```typescript
-interface ClaiUI {
+interface KlyUI {
   // Output
   text(content: string): void
   code(content: string, lang?: string): void
@@ -369,11 +369,11 @@ export default defineApp({
 
 ## 9. Architecture Positioning
 
-clai is the **"Terminal OS"** microkernel:
+kly is the **"Terminal OS"** microkernel:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        clai                                  │
+│                        kly                                  │
 │  ┌─────────────────────────────────────────────────────────┐│
 │  │  Kernel: Bun (extreme speed)                            ││
 │  ├─────────────────────────────────────────────────────────┤│
@@ -383,7 +383,7 @@ clai is the **"Terminal OS"** microkernel:
 │  ├─────────────────────────────────────────────────────────┤│
 │  │  Peripherals: MCP / Skills (ecosystem integration)      ││
 │  ├─────────────────────────────────────────────────────────┤│
-│  │  Address: clai.sh (decentralized distribution)          ││
+│  │  Address: kly.sh (decentralized distribution)          ││
 │  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -418,14 +418,14 @@ User Input: "What's the weather in Beijing?"
 ### 10.2 Provider Detection & Configuration
 
 ```typescript
-// Configuration from ~/.clai/config.json
+// Configuration from ~/.kly/config.json
 getCurrentModelConfig():
-  1. Read config from ~/.clai/config.json
+  1. Read config from ~/.kly/config.json
   2. Return current model configuration
-  3. null → Error: "Run 'clai models' to configure"
+  3. null → Error: "Run 'kly models' to configure"
 
 // Configuration managed via interactive command
-clai models:
+kly models:
   - Add new model configuration
   - Switch between configured models
   - List/remove models

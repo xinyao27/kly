@@ -4,19 +4,19 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { ClaiApp } from "../types";
+import type { KlyApp } from "../types";
 import { convertToJsonSchema } from "./schema-converter";
 
 /**
- * Start an MCP server for a Clai app
+ * Start an MCP server for a Kly app
  *
  * This makes all tools from the app available to Claude Desktop/Code via the MCP protocol.
  *
- * @param app - The Clai app instance returned by defineApp()
+ * @param app - The Kly app instance returned by defineApp()
  *
  * @example
  * ```typescript
- * import { defineApp, tool, startMcpServer } from "clai"
+ * import { defineApp, tool, startMcpServer } from "kly"
  * import { z } from "zod"
  *
  * const app = defineApp({
@@ -27,12 +27,12 @@ import { convertToJsonSchema } from "./schema-converter";
  * })
  *
  * // In MCP mode, start the server
- * if (process.env.CLAI_MCP_MODE === "true") {
+ * if (process.env.KLY_MCP_MODE === "true") {
  *   await startMcpServer(app)
  * }
  * ```
  */
-export async function startMcpServer(app: ClaiApp): Promise<void> {
+export async function startMcpServer(app: KlyApp): Promise<void> {
   const { definition } = app;
 
   // Create MCP server instance

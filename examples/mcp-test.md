@@ -1,10 +1,10 @@
 # Testing MCP Adapter with Claude Desktop
 
-This guide shows how to configure and test the clai MCP adapter with Claude Desktop or Claude Code.
+This guide shows how to configure and test the kly MCP adapter with Claude Desktop or Claude Code.
 
 ## Quick Start
 
-### 1. Build clai
+### 1. Build kly
 
 ```bash
 bun run build
@@ -17,31 +17,31 @@ Add to `~/.config/Claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%
 ```json
 {
   "mcpServers": {
-    "clai-hello": {
+    "kly-hello": {
       "command": "node",
       "args": [
         "-e",
-        "require('child_process').spawn('/absolute/path/to/clai/dist/bin/clai.mjs', ['mcp', '/absolute/path/to/clai/examples/hello.ts'], { stdio: 'inherit', shell: true })"
+        "require('child_process').spawn('/absolute/path/to/kly/dist/bin/kly.mjs', ['mcp', '/absolute/path/to/kly/examples/hello.ts'], { stdio: 'inherit', shell: true })"
       ]
     }
   }
 }
 ```
 
-Or if clai is globally installed:
+Or if kly is globally installed:
 
 ```json
 {
   "mcpServers": {
-    "clai-hello": {
-      "command": "clai",
+    "kly-hello": {
+      "command": "kly",
       "args": ["mcp", "./examples/hello.ts"],
       "env": {
         "PATH": "/usr/local/bin:/usr/bin:/bin"
       }
     },
-    "clai-weather": {
-      "command": "clai",
+    "kly-weather": {
+      "command": "kly",
       "args": ["mcp", "./examples/weather.ts"]
     }
   }
@@ -60,7 +60,7 @@ In Claude Desktop, try asking:
 - "What tools do you have available?"
 - "Get the current weather for San Francisco"
 
-Claude should be able to see and use the tools from your clai apps!
+Claude should be able to see and use the tools from your kly apps!
 
 ## Testing with Remote Repos
 
@@ -70,7 +70,7 @@ You can also expose GitHub repos as MCP servers:
 {
   "mcpServers": {
     "remote-weather": {
-      "command": "clai",
+      "command": "kly",
       "args": ["mcp", "xinyao27/weather-app"]
     }
   }
@@ -83,18 +83,18 @@ If the server doesn't appear in Claude:
 
 1. Check Claude Desktop logs (Help → Show Logs in Claude Desktop)
 2. Ensure the paths are absolute
-3. Verify the app runs with `clai run examples/hello.ts`
+3. Verify the app runs with `kly run examples/hello.ts`
 4. Test the MCP server manually:
 
 ```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | bun run dist/bin/clai.mjs mcp examples/hello.ts
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | bun run dist/bin/kly.mjs mcp examples/hello.ts
 ```
 
 ## How It Works
 
-1. `clai mcp <app>` starts the app in MCP mode
-2. `defineApp()` detects MCP mode via `process.env.CLAI_MCP_MODE`
-3. The MCP server automatically converts clai tools to MCP format:
+1. `kly mcp <app>` starts the app in MCP mode
+2. `defineApp()` detects MCP mode via `process.env.KLY_MCP_MODE`
+3. The MCP server automatically converts kly tools to MCP format:
    - Tool names → MCP tool names
    - Zod schemas → JSON Schema
    - Execute functions → MCP tool calls

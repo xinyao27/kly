@@ -74,16 +74,16 @@ export function getSandboxedContext(): {
   modelsContext: ModelsContext;
 } {
   const globalWithContext = global as {
-    __CLAI_SANDBOXED_CONTEXT__?: {
+    __KLY_SANDBOXED_CONTEXT__?: {
       modelsContext: ModelsContext;
     };
   };
 
-  if (!globalWithContext.__CLAI_SANDBOXED_CONTEXT__) {
+  if (!globalWithContext.__KLY_SANDBOXED_CONTEXT__) {
     throw new Error(
       "Sandboxed context not available. This should only be called from within the sandbox.",
     );
   }
 
-  return globalWithContext.__CLAI_SANDBOXED_CONTEXT__;
+  return globalWithContext.__KLY_SANDBOXED_CONTEXT__;
 }

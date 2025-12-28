@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ClaiConfig } from "./types";
+import type { KlyConfig } from "./types";
 
 /**
  * Entry point candidates to search for (in order)
@@ -14,7 +14,7 @@ const ENTRY_CANDIDATES = [
 ];
 
 /**
- * Resolve entry point for a clai app
+ * Resolve entry point for a kly app
  * Priority: main field > convention candidates
  */
 export function resolveEntryPoint(repoPath: string): string | null {
@@ -48,9 +48,9 @@ export function resolveEntryPoint(repoPath: string): string | null {
 }
 
 /**
- * Read clai configuration from package.json
+ * Read kly configuration from package.json
  */
-export function readClaiConfig(repoPath: string): ClaiConfig | null {
+export function readKlyConfig(repoPath: string): KlyConfig | null {
   const pkgPath = join(repoPath, "package.json");
 
   if (!existsSync(pkgPath)) {
@@ -59,14 +59,14 @@ export function readClaiConfig(repoPath: string): ClaiConfig | null {
 
   try {
     const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-    return pkg.clai ?? null;
+    return pkg.kly ?? null;
   } catch {
     return null;
   }
 }
 
 /**
- * Check if current clai version satisfies the required version
+ * Check if current kly version satisfies the required version
  * Simple semver check (supports >=x.y.z format)
  */
 export function validateVersion(required: string, current: string): boolean {

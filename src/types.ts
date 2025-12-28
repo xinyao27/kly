@@ -240,7 +240,7 @@ export interface AppPermissions {
    * Defaults when not specified:
    * - Network: No access (apiKeys=true adds LLM APIs automatically)
    * - Filesystem: Current directory read/write only
-   * - Protected: ~/.clai, ~/.ssh, ~/.aws, ~/.gnupg always denied
+   * - Protected: ~/.kly, ~/.ssh, ~/.aws, ~/.gnupg always denied
    *
    * @example
    * ```typescript
@@ -293,9 +293,9 @@ export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]>
 }
 
 /**
- * Clai app instance returned by defineApp
+ * Kly app instance returned by defineApp
  */
-export interface ClaiApp<TTools extends AnyTool[] = AnyTool[]> {
+export interface KlyApp<TTools extends AnyTool[] = AnyTool[]> {
   /** Original app configuration */
   readonly definition: AppDefinition<TTools>;
   /** Execute a specific tool by name */

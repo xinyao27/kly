@@ -18,7 +18,7 @@ interface ToolInput<TInput extends StandardSchemaV1, TResult = unknown>
  *
  * @example
  * ```typescript
- * import { tool } from "clai"
+ * import { tool } from "kly"
  * import { z } from "zod"
  *
  * const weatherTool = tool({

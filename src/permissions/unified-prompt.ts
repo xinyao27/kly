@@ -75,7 +75,7 @@ export async function requestUnifiedPermission(
       `\nPermission required: App "${appName}" (${appId}) requests permissions.`,
     );
     console.error(
-      "Set CLAI_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
+      "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
     );
     return false;
   }

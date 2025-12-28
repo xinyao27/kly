@@ -13,7 +13,7 @@ describe("integrity", () => {
 
   beforeEach(() => {
     // Create temp directory for each test
-    testDir = mkdtempSync(join(tmpdir(), "clai-test-"));
+    testDir = mkdtempSync(join(tmpdir(), "kly-test-"));
   });
 
   afterEach(() => {
