@@ -38,6 +38,30 @@ async function main() {
     return;
   }
 
+  if (command === "install") {
+    const { installCommand } = await import("../src/bin-registry/commands");
+    await installCommand(args.slice(1));
+    return;
+  }
+
+  if (command === "uninstall") {
+    const { uninstallCommand } = await import("../src/bin-registry/commands");
+    await uninstallCommand(args.slice(1));
+    return;
+  }
+
+  if (command === "link") {
+    const { linkCommand } = await import("../src/bin-registry/commands");
+    await linkCommand(args.slice(1));
+    return;
+  }
+
+  if (command === "list" || command === "ls") {
+    const { listCommand } = await import("../src/bin-registry/commands");
+    await listCommand();
+    return;
+  }
+
   if (command === "run") {
     const target = args[1];
     if (!target) {
@@ -157,6 +181,54 @@ async function runFile(filePath: string, appArgs: string[]) {
       error(result.error);
     }
 
+    if (result.exitCode === 0) {
+      // Auto-register bin commands for local projects
+      const { dirname } = await import("node:path");
+      const {
+        autoRegisterBins,
+        detectBins,
+        getCommand,
+        shouldReregisterLocal,
+      } = await import("../src/bin-registry");
+
+      const projectPath = dirname(absolutePath);
+      const detection = detectBins(projectPath);
+
+      if (detection.hasBin) {
+        // Check if any commands need re-registration (local project code changed)
+        let needsUpdate = false;
+        for (const [cmdName] of Object.entries(detection.bins)) {
+          if (shouldReregisterLocal(cmdName, projectPath)) {
+            needsUpdate = true;
+            break;
+          }
+        }
+
+        if (needsUpdate) {
+          // Auto-update without asking
+          await autoRegisterBins(projectPath, {
+            type: "local",
+            force: true,
+            skipConfirm: true,
+          });
+        } else {
+          // Check if this is the first time (not registered yet)
+          const firstBinCmd = Object.keys(detection.bins)[0];
+          if (firstBinCmd) {
+            const existing = getCommand(firstBinCmd);
+
+            if (!existing) {
+              // First time - ask user
+              await autoRegisterBins(projectPath, {
+                type: "local",
+                skipConfirm: false,
+              });
+            }
+          }
+        }
+      }
+    }
+
     if (result.exitCode !== 0) {
       process.exit(result.exitCode);
     }
@@ -190,10 +262,14 @@ Usage:
   kly <command> [options]
 
 Commands:
-  models         Manage LLM model configurations
-  permissions    Manage app permissions
-  run <target>   Run a Kly app
-  mcp <target>   Start an MCP server for a Kly app
+  models           Manage LLM model configurations
+  permissions      Manage app permissions
+  run <target>     Run a Kly app
+  mcp <target>     Start an MCP server for a Kly app
+  install <target> Install a Kly app as global command
+  uninstall <cmd>  Uninstall a registered global command
+  link [path]      Link a local project as global command
+  list             List all registered global commands
 
 Target can be:
   ./file.ts              Local file
@@ -216,7 +292,11 @@ Examples:
   kly run user/weather-app@v1.0.0
   kly run user/weather-app -- --city=Beijing
   kly mcp ./my-tool.ts
-  kly mcp user/weather-app`);
+  kly mcp user/weather-app
+  kly install user/awesome-cli
+  kly link ./my-tool
+  kly list
+  kly install --setup-path`);
 }
 
 function showVersion() {

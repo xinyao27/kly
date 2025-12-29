@@ -73,6 +73,8 @@ export interface RunRemoteOptions {
   skipIntegrityCheck?: boolean;
   /** Skip update check (use cached version without checking for updates) */
   skipUpdateCheck?: boolean;
+  /** Skip bin command registration (for install command control) */
+  skipRegister?: boolean;
 }
 
 /**

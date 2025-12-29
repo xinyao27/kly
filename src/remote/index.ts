@@ -85,6 +85,16 @@ export async function runRemote(
       await installDependencies(repoPath);
     }
 
+    // 5.5. Auto-register bin commands (if any)
+    if (!options.skipRegister) {
+      const { autoRegisterBins } = await import("../bin-registry");
+      await autoRegisterBins(repoPath, {
+        type: "remote",
+        remoteRef: formatRepoUrl(ref),
+        skipConfirm: false, // Always ask for remote projects
+      });
+    }
+
     // 6. Write metadata
     const commitSha = await getCommitSha(repoPath);
     writeMetadata(ref, {
