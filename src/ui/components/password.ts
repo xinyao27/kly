@@ -1,4 +1,5 @@
 import * as p from "@clack/prompts";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -46,10 +47,5 @@ export async function password(config: PasswordConfig): Promise<string> {
     validate: config.validate,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result;
+  return handleCancel(result);
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
-import * as p from "@clack/prompts";
 import { modelsCommand } from "../src/ai/models-command";
 import { launchSandbox } from "../src/host/launcher";
 import { getAppIdentifier } from "../src/permissions";
@@ -13,7 +12,7 @@ import {
   requestUnifiedPermission,
 } from "../src/permissions/unified-prompt";
 import { isRemoteRef, runRemote } from "../src/remote";
-import { error } from "../src/ui";
+import { cancel, error, log } from "../src/ui";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -43,7 +42,7 @@ async function main() {
     const target = args[1];
     if (!target) {
       error("Missing file path or remote reference");
-      p.cancel("Usage: kly run <file|user/repo[@ref]>");
+      cancel("Usage: kly run <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -74,7 +73,7 @@ async function main() {
     const target = args[1];
     if (!target) {
       error("Missing file path or remote reference");
-      p.cancel("Usage: kly mcp <file|user/repo[@ref]>");
+      cancel("Usage: kly mcp <file|user/repo[@ref]>");
       process.exit(1);
     }
 
@@ -93,7 +92,7 @@ async function main() {
   }
 
   error(`Unknown command: ${command}`);
-  p.cancel('Run "kly --help" for usage');
+  cancel('Run "kly --help" for usage');
   process.exit(1);
 }
 
@@ -130,7 +129,7 @@ async function runFile(filePath: string, appArgs: string[]) {
       );
 
       if (!allowed) {
-        p.cancel("❌ Permission denied");
+        cancel("❌ Permission denied");
         process.exit(1);
       }
 
@@ -185,7 +184,7 @@ async function runFileAsMcp(filePath: string) {
 }
 
 function showHelp() {
-  p.log.message(`kly - Command Line AI
+  log.message(`kly - Command Line AI
 
 Usage:
   kly <command> [options]
@@ -221,10 +220,10 @@ Examples:
 }
 
 function showVersion() {
-  p.log.message(__VERSION__);
+  log.message(__VERSION__);
 }
 
 main().catch((err) => {
-  p.cancel(err.message || err);
+  cancel(err.message || err);
   process.exit(1);
 });

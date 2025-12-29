@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
 import { sendIPCRequest } from "../../sandbox/ipc-client";
 import { isMCP, isSandbox } from "../../shared/runtime-mode";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -72,6 +73,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<T> {
     label: opt.name,
     value: opt.value as unknown,
     ...(opt.description && { hint: opt.description }),
+    ...(opt.disabled !== undefined && { disabled: opt.disabled }),
   }));
 
   const result = await p.select({
@@ -79,10 +81,5 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<T> {
     options: mappedOptions,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result as T;
+  return handleCancel(result) as T;
 }

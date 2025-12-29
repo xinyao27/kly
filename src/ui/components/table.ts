@@ -1,5 +1,13 @@
-import { formatText, pc } from "../utils/colors";
+import { colors, formatText } from "../utils/colors";
 import { isTTY } from "../utils/tty";
+
+/**
+ * Render table title lines
+ */
+function _renderTitle(title: string | undefined, styled: boolean): string[] {
+  if (!title) return [];
+  return ["", styled ? formatText(title, { bold: true }) : title, ""];
+}
 
 /**
  * Column alignment options
@@ -105,7 +113,7 @@ function formatCell<T>(value: unknown, row: T, column: TableColumn<T>): string {
   }
 
   if (value === null || value === undefined) {
-    return pc.dim("-");
+    return colors.dim("-");
   }
 
   return String(value);
@@ -128,11 +136,7 @@ function renderTTY<T>(config: TableConfig<T>): string {
   const widths = calculateColumnWidths(columns, rows, showHeader);
 
   // Title
-  if (title) {
-    lines.push("");
-    lines.push(formatText(`${title}`, { bold: true }));
-    lines.push("");
-  }
+  lines.push(..._renderTitle(title, true));
 
   // Header row
   if (showHeader) {
@@ -146,7 +150,7 @@ function renderTTY<T>(config: TableConfig<T>): string {
     // Header separator
     if (showBorders) {
       const separatorParts = widths.map((w) => "─".repeat(w));
-      lines.push(pc.gray(separatorParts.join("─")));
+      lines.push(colors.gray(separatorParts.join("─")));
     }
   }
 
@@ -164,7 +168,7 @@ function renderTTY<T>(config: TableConfig<T>): string {
   // Bottom border (optional)
   if (showBorders && rows.length > 0) {
     const separatorParts = widths.map((w) => "─".repeat(w));
-    lines.push(pc.gray(separatorParts.join("─")));
+    lines.push(colors.gray(separatorParts.join("─")));
   }
 
   return lines.join("\n");
@@ -181,11 +185,7 @@ function renderPlain<T>(config: TableConfig<T>): string {
   const widths = calculateColumnWidths(columns, rows, showHeader);
 
   // Title
-  if (title) {
-    lines.push("");
-    lines.push(title);
-    lines.push("");
-  }
+  lines.push(..._renderTitle(title, false));
 
   // Header row
   if (showHeader) {
@@ -223,7 +223,7 @@ function renderPlain<T>(config: TableConfig<T>): string {
  *     { key: "name", header: "Name" },
  *     { key: "age", header: "Age", align: "right" },
  *     { key: "status", header: "Status", formatter: (val) =>
- *       val === "active" ? pc.green("✓ Active") : pc.red("✗ Inactive")
+ *       val === "active" ? colors.green("✓ Active") : colors.red("✗ Inactive")
  *     },
  *   ],
  *   rows: [

@@ -1,4 +1,4 @@
-import pc from "picocolors";
+import colors from "picocolors";
 
 /**
  * Default color theme for UI components (hex values for reference)
@@ -37,6 +37,20 @@ export type AnsiColor =
   | "gray";
 
 /**
+ * Color mapping for formatText function
+ */
+const colorMap: Record<AnsiColor, (text: string) => string> = {
+  red: colors.red,
+  green: colors.green,
+  yellow: colors.yellow,
+  blue: colors.blue,
+  magenta: colors.magenta,
+  cyan: colors.cyan,
+  white: colors.white,
+  gray: colors.gray,
+};
+
+/**
  * Format text with picocolors
  */
 export function formatText(
@@ -53,42 +67,16 @@ export function formatText(
 
   // Apply color first
   if (options?.color) {
-    switch (options.color) {
-      case "red":
-        result = pc.red(result);
-        break;
-      case "green":
-        result = pc.green(result);
-        break;
-      case "yellow":
-        result = pc.yellow(result);
-        break;
-      case "blue":
-        result = pc.blue(result);
-        break;
-      case "magenta":
-        result = pc.magenta(result);
-        break;
-      case "cyan":
-        result = pc.cyan(result);
-        break;
-      case "white":
-        result = pc.white(result);
-        break;
-      case "gray":
-        result = pc.gray(result);
-        break;
-    }
+    result = colorMap[options.color](result);
   }
 
   // Apply styles
-  if (options?.bold) result = pc.bold(result);
-  if (options?.dim) result = pc.dim(result);
-  if (options?.italic) result = pc.italic(result);
-  if (options?.underline) result = pc.underline(result);
+  if (options?.bold) result = colors.bold(result);
+  if (options?.dim) result = colors.dim(result);
+  if (options?.italic) result = colors.italic(result);
+  if (options?.underline) result = colors.underline(result);
 
   return result;
 }
 
-// Re-export picocolors for direct usage
-export { pc };
+export { colors };

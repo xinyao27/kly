@@ -1,6 +1,4 @@
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
-import * as p from "@clack/prompts";
-import pc from "picocolors";
 import { getCurrentModelConfig, listModels } from "../ai/storage";
 import type {
   IPCRequest,
@@ -8,12 +6,53 @@ import type {
   ModelConfigResponse,
   ModelInfoResponse,
 } from "../shared/ipc-protocol";
-import { error, log, output } from "../ui";
+import {
+  colors,
+  error,
+  log,
+  output,
+  rawConfirm,
+  rawIsCancel,
+  rawMultiselect,
+  rawSelect,
+  rawText,
+} from "../ui";
 
 export interface ResourceProviderOptions {
   appId: string;
   allowApiKey: boolean;
   sandboxConfig: SandboxRuntimeConfig;
+}
+
+/**
+ * Helper to handle raw prompt results and convert to IPC responses
+ */
+function _handleRawPromptResult<T>(
+  requestId: string,
+  result: T | symbol,
+): IPCResponse<T> {
+  if (rawIsCancel(result)) {
+    return _cancelledResponse(requestId);
+  }
+
+  return {
+    type: "response",
+    id: requestId,
+    success: true,
+    data: result,
+  };
+}
+
+/**
+ * Helper to create a cancelled IPC response
+ */
+function _cancelledResponse<T>(requestId: string): IPCResponse<T> {
+  return {
+    type: "response",
+    id: requestId,
+    success: false,
+    error: "Operation cancelled by user",
+  };
 }
 
 /**
@@ -193,7 +232,7 @@ export class ResourceProvider {
       maxLength?: number;
     },
   ): Promise<IPCResponse<string>> {
-    const result = await p.text({
+    const result = await rawText({
       message: payload.prompt,
       defaultValue: payload.defaultValue,
       placeholder: payload.placeholder,
@@ -207,21 +246,7 @@ export class ResourceProvider {
         : undefined,
     });
 
-    if (p.isCancel(result)) {
-      return {
-        type: "response",
-        id: requestId,
-        success: false,
-        error: "Operation cancelled by user",
-      };
-    }
-
-    return {
-      type: "response",
-      id: requestId,
-      success: true,
-      data: result,
-    };
+    return _handleRawPromptResult(requestId, result);
   }
 
   /**
@@ -244,26 +269,12 @@ export class ResourceProvider {
       ...(opt.description && { hint: opt.description }),
     }));
 
-    const result = await p.select({
+    const result = await rawSelect({
       message: payload.prompt,
       options: mappedOptions,
     });
 
-    if (p.isCancel(result)) {
-      return {
-        type: "response",
-        id: requestId,
-        success: false,
-        error: "Operation cancelled by user",
-      };
-    }
-
-    return {
-      type: "response",
-      id: requestId,
-      success: true,
-      data: result as string,
-    };
+    return _handleRawPromptResult(requestId, result as string);
   }
 
   /**
@@ -276,26 +287,12 @@ export class ResourceProvider {
       defaultValue?: boolean;
     },
   ): Promise<IPCResponse<boolean>> {
-    const result = await p.confirm({
+    const result = await rawConfirm({
       message: payload.message,
       initialValue: payload.defaultValue,
     });
 
-    if (p.isCancel(result)) {
-      return {
-        type: "response",
-        id: requestId,
-        success: false,
-        error: "Operation cancelled by user",
-      };
-    }
-
-    return {
-      type: "response",
-      id: requestId,
-      success: true,
-      data: result,
-    };
+    return _handleRawPromptResult(requestId, result);
   }
 
   /**
@@ -319,27 +316,13 @@ export class ResourceProvider {
       ...(opt.description && { hint: opt.description }),
     }));
 
-    const result = await p.multiselect({
+    const result = await rawMultiselect({
       message: payload.prompt,
       options: mappedOptions,
       required: payload.required,
     });
 
-    if (p.isCancel(result)) {
-      return {
-        type: "response",
-        id: requestId,
-        success: false,
-        error: "Operation cancelled by user",
-      };
-    }
-
-    return {
-      type: "response",
-      id: requestId,
-      success: true,
-      data: result as string[],
-    };
+    return _handleRawPromptResult(requestId, result as string[]);
   }
 
   /**
@@ -363,7 +346,7 @@ export class ResourceProvider {
     const result: Record<string, unknown> = {};
 
     if (payload.title) {
-      output(pc.bold(payload.title));
+      output(colors.bold(payload.title));
     }
 
     for (const field of payload.fields) {
@@ -372,23 +355,18 @@ export class ResourceProvider {
         : field.label;
 
       if (field.type === "boolean") {
-        const value = await p.confirm({
+        const value = await rawConfirm({
           message: label,
           initialValue: field.defaultValue as boolean | undefined,
         });
 
-        if (p.isCancel(value)) {
-          return {
-            type: "response",
-            id: requestId,
-            success: false,
-            error: "Operation cancelled by user",
-          };
+        if (rawIsCancel(value)) {
+          return _cancelledResponse(requestId);
         }
 
         result[field.name] = value;
       } else if (field.type === "enum" && field.enumValues?.length) {
-        const value = await p.select({
+        const value = await rawSelect({
           message: label,
           options: field.enumValues.map((v) => ({
             label: v,
@@ -396,18 +374,13 @@ export class ResourceProvider {
           })),
         });
 
-        if (p.isCancel(value)) {
-          return {
-            type: "response",
-            id: requestId,
-            success: false,
-            error: "Operation cancelled by user",
-          };
+        if (rawIsCancel(value)) {
+          return _cancelledResponse(requestId);
         }
 
         result[field.name] = value;
       } else if (field.type === "number") {
-        const strValue = await p.text({
+        const strValue = await rawText({
           message: label,
           defaultValue: field.defaultValue?.toString(),
           validate: (value) => {
@@ -418,29 +391,19 @@ export class ResourceProvider {
           },
         });
 
-        if (p.isCancel(strValue)) {
-          return {
-            type: "response",
-            id: requestId,
-            success: false,
-            error: "Operation cancelled by user",
-          };
+        if (rawIsCancel(strValue)) {
+          return _cancelledResponse(requestId);
         }
 
         result[field.name] = Number.parseFloat(strValue);
       } else {
-        const value = await p.text({
+        const value = await rawText({
           message: label,
           defaultValue: field.defaultValue as string | undefined,
         });
 
-        if (p.isCancel(value)) {
-          return {
-            type: "response",
-            id: requestId,
-            success: false,
-            error: "Operation cancelled by user",
-          };
+        if (rawIsCancel(value)) {
+          return _cancelledResponse(requestId);
         }
 
         result[field.name] = value;

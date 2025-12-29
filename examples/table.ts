@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { color, defineApp, table, tool } from "../src";
+import { colors, defineApp, table, tool } from "../src";
 
 const showUsersTool = tool({
   name: "users",
@@ -40,8 +40,8 @@ const showUsersTool = tool({
             header: "Status",
             formatter: (val: unknown) =>
               val === "active"
-                ? color.green("● Active")
-                : color.red("○ Inactive"),
+                ? colors.green("● Active")
+                : colors.red("○ Inactive"),
           },
         ],
         rows: users,
@@ -93,9 +93,9 @@ const showStatsTool = tool({
           formatter: (val: unknown) => {
             const str = String(val);
             return str.startsWith("+")
-              ? color.green(str)
+              ? colors.green(str)
               : str.startsWith("-")
-                ? color.red(str)
+                ? colors.red(str)
                 : str;
           },
         },

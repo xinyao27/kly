@@ -1,4 +1,5 @@
 import * as p from "@clack/prompts";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -67,10 +68,5 @@ export async function autocomplete<T = string>(
     maxItems: config.maxItems ?? 10,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result as T;
+  return handleCancel(result) as T;
 }

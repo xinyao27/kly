@@ -1,4 +1,4 @@
-import pc from "picocolors";
+import { colors } from "../utils/colors";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -49,8 +49,8 @@ export function createProgress(config: ProgressConfig = {}): ProgressHandle {
     const filled = Math.round((percentage / 100) * width);
     const empty = width - filled;
 
-    const bar = `${pc.green("█".repeat(filled))}${pc.dim("░".repeat(empty))}`;
-    return `${bar} ${pc.cyan(`${percentage}%`)}`;
+    const bar = `${colors.green("█".repeat(filled))}${colors.dim("░".repeat(empty))}`;
+    return `${bar} ${colors.cyan(`${percentage}%`)}`;
   };
 
   const render = (current: number, message?: string) => {
@@ -60,7 +60,7 @@ export function createProgress(config: ProgressConfig = {}): ProgressHandle {
 
     const msg = message ?? currentMessage;
     const bar = renderBar(current);
-    const output = msg ? `${bar} ${pc.dim(msg)}` : bar;
+    const output = msg ? `${bar} ${colors.dim(msg)}` : bar;
 
     // Clear previous line and write new one
     if (lastOutput) {
@@ -85,7 +85,7 @@ export function createProgress(config: ProgressConfig = {}): ProgressHandle {
       process.stdout.write("\r\x1b[K");
       const bar = renderBar(total);
       const msg = message ?? "Complete";
-      console.log(`${bar} ${pc.green("✓")} ${msg}`);
+      console.log(`${bar} ${colors.green("✓")} ${msg}`);
     },
 
     fail(message?: string) {
@@ -94,7 +94,7 @@ export function createProgress(config: ProgressConfig = {}): ProgressHandle {
       }
       process.stdout.write("\r\x1b[K");
       const msg = message ?? "Failed";
-      console.log(`${pc.red("✗")} ${msg}`);
+      console.log(`${colors.red("✗")} ${msg}`);
     },
   };
 }

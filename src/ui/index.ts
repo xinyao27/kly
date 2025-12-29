@@ -24,6 +24,15 @@ export {
   type ProgressConfig,
   type ProgressHandle,
 } from "./components/progress";
+// Raw prompts for manual cancel handling (e.g., IPC handlers)
+export {
+  isCancel as rawIsCancel,
+  rawConfirm,
+  rawMultiselect,
+  rawPassword,
+  rawSelect,
+  rawText,
+} from "./components/prompts";
 export {
   type SelectConfig,
   type SelectOption,
@@ -37,12 +46,13 @@ export {
   table,
 } from "./components/table";
 export { type Task, type TaskResult, tasks } from "./components/tasks";
+export { type TextConfig, text } from "./components/text";
 
 // Utilities
 export {
   type AnsiColor,
+  colors,
   formatText,
-  pc as color,
   theme,
 } from "./utils/colors";
 

@@ -32,7 +32,7 @@ export type {
   TableConfig,
 } from "./ui";
 export {
-  color,
+  colors,
   confirm,
   error,
   form,

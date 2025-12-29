@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
 import { sendIPCRequest } from "../../sandbox/ipc-client";
 import { isSandbox } from "../../shared/runtime-mode";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -76,10 +77,5 @@ export async function multiselect<T = string>(
     required: config.required,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result as T[];
+  return handleCancel(result) as T[];
 }

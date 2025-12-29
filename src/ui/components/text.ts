@@ -5,34 +5,41 @@ import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
- * Configuration for input component
+ * Configuration for text component (compatible with @clack/prompts text)
  */
-export interface InputConfig {
+export interface TextConfig {
   /** Prompt message */
-  prompt: string;
+  message: string;
   /** Default value */
   defaultValue?: string;
   /** Placeholder text */
   placeholder?: string;
-  /** Maximum input length */
-  maxLength?: number;
+  /** Validation function */
+  validate?: (value: string | undefined) => string | Error | undefined;
 }
 
 /**
- * Prompt for text input
+ * Prompt for text input (compatible with @clack/prompts text API)
  *
  * @example
  * ```typescript
- * const name = await input({
- *   prompt: "What's your name?",
- *   defaultValue: "Anonymous"
+ * const name = await text({
+ *   message: "What's your name?",
+ *   defaultValue: "Anonymous",
+ *   validate: (value) => {
+ *     if (!value) return "Name is required";
+ *   }
  * });
  * ```
  */
-export async function input(config: InputConfig): Promise<string> {
+export async function text(config: TextConfig): Promise<string> {
   // Sandbox mode: use IPC to request input from host
   if (isSandbox()) {
-    return sendIPCRequest<string>("prompt:input", config);
+    return sendIPCRequest<string>("prompt:input", {
+      prompt: config.message,
+      defaultValue: config.defaultValue,
+      placeholder: config.placeholder,
+    });
   }
 
   // Non-TTY fallback: return default or throw
@@ -44,7 +51,7 @@ export async function input(config: InputConfig): Promise<string> {
     // Provide MCP-specific error message
     if (isMCP()) {
       throw new Error(
-        `Interactive input not available in MCP mode. All parameters must be defined in the tool's inputSchema. Missing parameter: ${config.prompt}`,
+        `Interactive input not available in MCP mode. All parameters must be defined in the tool's inputSchema. Missing parameter: ${config.message}`,
       );
     }
 
@@ -54,17 +61,10 @@ export async function input(config: InputConfig): Promise<string> {
   }
 
   const result = await p.text({
-    message: config.prompt,
+    message: config.message,
     defaultValue: config.defaultValue,
     placeholder: config.placeholder,
-    validate: config.maxLength
-      ? (value) => {
-          if (value && value.length > config.maxLength!) {
-            return `Input must be ${config.maxLength} characters or less`;
-          }
-          return undefined;
-        }
-      : undefined,
+    validate: config.validate,
   });
 
   return handleCancel(result);

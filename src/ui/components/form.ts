@@ -1,7 +1,8 @@
 import * as p from "@clack/prompts";
-import pc from "picocolors";
 import { sendIPCRequest } from "../../sandbox/ipc-client";
 import { isMCP, isSandbox } from "../../shared/runtime-mode";
+import { handleCancel } from "../utils/cancel";
+import { colors } from "../utils/colors";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -61,12 +62,11 @@ export async function form(
 
   const result: Record<string, unknown> = {};
 
-  if (config.title) {
-    p.log.message(pc.bold(config.title));
-  }
-
   // Non-TTY fallback: return defaults or throw in MCP mode
   if (!isTTY()) {
+    if (config.title) {
+      console.log(colors.bold(config.title));
+    }
     // In MCP mode, interactive forms are not allowed
     if (isMCP()) {
       const requiredFields = config.fields
@@ -86,66 +86,59 @@ export async function form(
     return result;
   }
 
+  // TTY mode: display styled title
+  if (config.title) {
+    p.log.message(colors.bold(config.title));
+  }
+
   for (const field of config.fields) {
     const label = field.description
       ? `${field.label} (${field.description})`
       : field.label;
 
     if (field.type === "boolean") {
-      const value = await p.confirm({
-        message: label,
-        initialValue: field.defaultValue as boolean | undefined,
-      });
-
-      if (p.isCancel(value)) {
-        p.cancel("Operation cancelled");
-        process.exit(0);
-      }
+      const value = handleCancel(
+        await p.confirm({
+          message: label,
+          initialValue: field.defaultValue as boolean | undefined,
+        }),
+      );
 
       result[field.name] = value;
     } else if (field.type === "enum" && field.enumValues?.length) {
-      const value = await p.select({
-        message: label,
-        options: field.enumValues.map((v) => ({
-          label: v,
-          value: v,
-        })),
-      });
-
-      if (p.isCancel(value)) {
-        p.cancel("Operation cancelled");
-        process.exit(0);
-      }
+      const value = handleCancel(
+        await p.select({
+          message: label,
+          options: field.enumValues.map((v) => ({
+            label: v,
+            value: v,
+          })),
+        }),
+      );
 
       result[field.name] = value;
     } else if (field.type === "number") {
-      const strValue = await p.text({
-        message: label,
-        defaultValue: field.defaultValue?.toString(),
-        validate: (value) => {
-          if (value && Number.isNaN(Number.parseFloat(value))) {
-            return "Please enter a valid number";
-          }
-          return undefined;
-        },
-      });
-
-      if (p.isCancel(strValue)) {
-        p.cancel("Operation cancelled");
-        process.exit(0);
-      }
+      const strValue = handleCancel(
+        await p.text({
+          message: label,
+          defaultValue: field.defaultValue?.toString(),
+          validate: (value) => {
+            if (value && Number.isNaN(Number.parseFloat(value))) {
+              return "Please enter a valid number";
+            }
+            return undefined;
+          },
+        }),
+      );
 
       result[field.name] = Number.parseFloat(strValue);
     } else {
-      const value = await p.text({
-        message: label,
-        defaultValue: field.defaultValue as string | undefined,
-      });
-
-      if (p.isCancel(value)) {
-        p.cancel("Operation cancelled");
-        process.exit(0);
-      }
+      const value = handleCancel(
+        await p.text({
+          message: label,
+          defaultValue: field.defaultValue as string | undefined,
+        }),
+      );
 
       result[field.name] = value;
     }

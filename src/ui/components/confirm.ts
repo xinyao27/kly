@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
 import { sendIPCRequest } from "../../sandbox/ipc-client";
 import { isMCP, isSandbox } from "../../shared/runtime-mode";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -35,10 +36,5 @@ export async function confirm(
     initialValue: defaultValue,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result;
+  return handleCancel(result);
 }

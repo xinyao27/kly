@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import pc from "picocolors";
+import colors from "picocolors";
 import { formatText, theme } from "../utils/colors";
 
 describe("theme", () => {
@@ -17,37 +17,37 @@ describe("formatText", () => {
   });
 
   it("applies bold formatting", () => {
-    expect(formatText("hello", { bold: true })).toBe(pc.bold("hello"));
+    expect(formatText("hello", { bold: true })).toBe(colors.bold("hello"));
   });
 
   it("applies dim formatting", () => {
-    expect(formatText("hello", { dim: true })).toBe(pc.dim("hello"));
+    expect(formatText("hello", { dim: true })).toBe(colors.dim("hello"));
   });
 
   it("applies italic formatting", () => {
-    expect(formatText("hello", { italic: true })).toBe(pc.italic("hello"));
+    expect(formatText("hello", { italic: true })).toBe(colors.italic("hello"));
   });
 
   it("applies underline formatting", () => {
     expect(formatText("hello", { underline: true })).toBe(
-      pc.underline("hello"),
+      colors.underline("hello"),
     );
   });
 
   it("applies color formatting", () => {
-    expect(formatText("hello", { color: "red" })).toBe(pc.red("hello"));
-    expect(formatText("hello", { color: "cyan" })).toBe(pc.cyan("hello"));
+    expect(formatText("hello", { color: "red" })).toBe(colors.red("hello"));
+    expect(formatText("hello", { color: "cyan" })).toBe(colors.cyan("hello"));
   });
 
   it("applies multiple formats", () => {
     expect(formatText("hello", { bold: true, italic: true })).toBe(
-      pc.italic(pc.bold("hello")),
+      colors.italic(colors.bold("hello")),
     );
   });
 
   it("applies color with styles", () => {
     expect(formatText("hello", { color: "green", bold: true })).toBe(
-      pc.bold(pc.green("hello")),
+      colors.bold(colors.green("hello")),
     );
   });
 });

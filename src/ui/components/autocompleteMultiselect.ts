@@ -1,4 +1,5 @@
 import * as p from "@clack/prompts";
+import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 import type { AutocompleteOption } from "./autocomplete";
 
@@ -59,10 +60,5 @@ export async function autocompleteMultiselect<T = string>(
     required: config.required,
   });
 
-  if (p.isCancel(result)) {
-    p.cancel("Operation cancelled");
-    process.exit(0);
-  }
-
-  return result as T[];
+  return handleCancel(result) as T[];
 }
