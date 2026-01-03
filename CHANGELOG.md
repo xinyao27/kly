@@ -1,5 +1,12 @@
 # Changelog
 
+# [0.3.0](https://github.com/xinyao27/kly/compare/0.2.0...0.3.0) (2026-01-03)
+
+
+### Features
+
+* add commands for install, uninstall, link, and list to enhance CLI functionality; implement auto-registration of bin commands for local and remote projects ([4a94f20](https://github.com/xinyao27/kly/commit/4a94f20c159e25c20e90dbfe16a71d7c2a8557ce))
+
 # [0.2.0](https://github.com/xinyao27/kly/compare/0.1.1...0.2.0) (2025-12-28)
 
 
