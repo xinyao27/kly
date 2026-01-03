@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
-import { isRemoteRef } from "../remote";
+import { isRemoteRef, runRemote } from "../remote";
+import { checkCache } from "../remote/cache";
+import { getRepoCachePath, parseRemoteRef } from "../remote/parser";
 import { ExitError } from "../shared/errors";
 import { log } from "../ui";
 import {
@@ -27,7 +29,6 @@ export async function installCommand(args: string[]): Promise<void> {
 
   // Install is essentially "run + force register"
   if (isRemoteRef(target)) {
-    const { runRemote } = await import("../remote");
     await runRemote(target, {
       args: args.slice(1),
       skipRegister: false, // Ensure registration happens
@@ -68,25 +69,60 @@ export async function uninstallCommand(args: string[]): Promise<void> {
 }
 
 export async function linkCommand(args: string[]): Promise<void> {
-  // Link is for local development - like npm link
-  const targetPath = args[0] || process.cwd();
-  const absolutePath = resolve(process.cwd(), targetPath);
+  const target = args[0] || process.cwd();
 
-  const detection = detectBins(absolutePath);
+  // Check if it's a remote reference
+  if (isRemoteRef(target)) {
+    const ref = parseRemoteRef(target);
+    if (!ref) {
+      throw new ExitError(`Invalid remote reference: ${target}`);
+    }
 
-  if (!detection.hasBin) {
-    throw new ExitError("No bin field found in package.json");
+    const repoPath = getRepoCachePath(ref);
+    const cacheResult = checkCache(ref);
+
+    if (!cacheResult.valid) {
+      throw new ExitError(
+        `Remote package not cached. Run 'kly run ${target}' first to download it.`,
+      );
+    }
+
+    const detection = detectBins(repoPath);
+
+    if (!detection.hasBin) {
+      throw new ExitError("No bin field found in package.json");
+    }
+
+    log.step(`Linking ${detection.projectName}...`);
+
+    await autoRegisterBins(repoPath, {
+      type: "remote",
+      remoteRef: target,
+      force: true,
+      skipConfirm: true,
+    });
+
+    log.success("Linked successfully!");
+  } else {
+    // Link is for local development - like npm link
+    const absolutePath = resolve(process.cwd(), target);
+
+    const detection = detectBins(absolutePath);
+
+    if (!detection.hasBin) {
+      throw new ExitError("No bin field found in package.json");
+    }
+
+    log.step(`Linking ${detection.projectName}...`);
+
+    await autoRegisterBins(absolutePath, {
+      type: "local",
+      force: true,
+      skipConfirm: true, // Link is explicit, no need to ask
+    });
+
+    log.success("Linked successfully!");
   }
-
-  log.step(`Linking ${detection.projectName}...`);
-
-  await autoRegisterBins(absolutePath, {
-    type: "local",
-    force: true,
-    skipConfirm: true, // Link is explicit, no need to ask
-  });
-
-  log.success("Linked successfully!");
 }
 
 export async function listCommand(): Promise<void> {
