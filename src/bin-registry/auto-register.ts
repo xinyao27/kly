@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import * as p from "@clack/prompts";
+import { ExitWarning } from "../shared/errors";
 import { log } from "../ui";
 import { detectBins, isCommandAvailable } from "./bin-detector";
 import { addCommand, getCommand, removeCommand } from "./registry-manager";
@@ -81,9 +82,9 @@ export async function autoRegisterBins(
 
   // Show what will be registered
   if (!options.skipConfirm) {
-    p.log.info(`\nThis project provides ${binEntries.length} command(s):`);
+    log.info(`\nThis project provides ${binEntries.length} command(s):`);
     for (const [cmdName, binPath] of binEntries) {
-      p.log.message(`  • ${cmdName} (${binPath})`);
+      log.message(`  • ${cmdName} (${binPath})`);
     }
 
     const shouldRegister = await p.confirm({
@@ -118,9 +119,9 @@ export async function autoRegisterBins(
   }
 
   if (registered.length > 0) {
-    p.log.info("\nCommands are now available globally!");
-    p.log.message("Make sure ~/.kly/bin is in your PATH.");
-    p.log.message("Run 'kly install --setup-path' to configure automatically.");
+    log.info("\nCommands are now available globally!");
+    log.message("Make sure ~/.kly/bin is in your PATH.");
+    log.message("Run 'kly install --setup-path' to configure automatically.");
   }
 
   return { registered, skipped, errors };
@@ -159,7 +160,7 @@ async function registerSingleCommand(
       });
 
       if (p.isCancel(shouldOverride) || !shouldOverride) {
-        throw new Error("Registration cancelled by user");
+        throw new ExitWarning("Registration cancelled");
       }
     }
   }
@@ -173,7 +174,7 @@ async function registerSingleCommand(
     });
 
     if (p.isCancel(shouldContinue) || !shouldContinue) {
-      throw new Error("Registration cancelled by user");
+      throw new ExitWarning("Registration cancelled");
     }
   }
 
@@ -223,7 +224,7 @@ export async function unregisterCommand(
     });
 
     if (p.isCancel(shouldUnregister) || !shouldUnregister) {
-      p.log.message("Cancelled");
+      log.message("Cancelled");
       return false;
     }
   }

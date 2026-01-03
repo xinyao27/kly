@@ -9,10 +9,12 @@ import {
   parseCliArgs,
   parseSubcommand,
 } from "./cli";
+import { EXIT_CODES } from "./shared/constants";
+import { ExitError, ExitWarning } from "./shared/errors";
 import { detectMode, isSandbox } from "./shared/runtime-mode";
 import type { AnyTool, AppDefinition, KlyApp } from "./types";
 import { ValidationError } from "./types";
-import { error, form, isTTY, output, select } from "./ui";
+import { cancel, error, form, isTTY, output, select } from "./ui";
 
 /**
  * Get the appropriate models context based on runtime environment
@@ -69,14 +71,24 @@ async function _getInvokeDir(): Promise<string | undefined> {
 export function defineApp<TTools extends AnyTool[]>(
   definition: AppDefinition<TTools>,
 ): KlyApp<TTools> {
+  // Normalize definition with defaults
+  const fullDefinition: AppDefinition<TTools> = {
+    name: definition.name ?? "unknown",
+    version: definition.version ?? "0.0.0",
+    description: definition.description ?? "",
+    tools: definition.tools,
+    instructions: definition.instructions,
+    permissions: definition.permissions,
+  };
+
   // Build tools map
   const toolsMap = new Map<string, AnyTool>();
-  for (const tool of definition.tools) {
+  for (const tool of fullDefinition.tools) {
     toolsMap.set(tool.name, tool);
   }
 
   const app: KlyApp<TTools> = {
-    definition,
+    definition: fullDefinition,
     tools: toolsMap,
 
     async execute(
@@ -115,15 +127,40 @@ export function defineApp<TTools extends AnyTool[]>(
   // Auto-run based on mode
   const mode = detectMode();
   if (mode === "cli") {
-    runCli(app, definition).catch((err) => {
-      error("Fatal error:", [err.message]);
-      process.exit(1);
+    runCli(app, fullDefinition).catch((err) => {
+      // Check for ExitWarning (user cancellation - graceful exit)
+      const isExitWarning =
+        err instanceof ExitWarning || err?.name === "ExitWarning";
+      if (isExitWarning) {
+        if (err.message) {
+          cancel(err.message);
+        }
+        process.exit(EXIT_CODES.CANCELLED);
+      }
+
+      // Check for ExitError
+      const isExitError = err instanceof ExitError || err?.name === "ExitError";
+      const exitCode = isExitError ? (err.exitCode ?? 1) : 1;
+      const message =
+        typeof err === "string" ? err : err?.message || String(err);
+
+      if (isExitError) {
+        if (message) {
+          error(message);
+        }
+      } else {
+        error("Fatal error:", [message]);
+      }
+
+      process.exit(exitCode);
     });
   } else if (mode === "mcp") {
     // Dynamically import MCP server to avoid bundling it in CLI mode
     import("./mcp").then(({ startMcpServer }) => {
       startMcpServer(app).catch((err) => {
-        error("MCP server error:", [err.message]);
+        const message =
+          typeof err === "string" ? err : err?.message || String(err);
+        error("MCP server error:", [message]);
         process.exit(1);
       });
     });
@@ -151,7 +188,7 @@ async function runCli<TTools extends AnyTool[]>(
       if (subcommand) {
         const tool = app.tools.get(subcommand);
         if (tool) {
-          output(generateToolHelp(definition.name, tool));
+          output(generateToolHelp(definition.name ?? "unknown", tool));
         } else {
           output(generateMultiToolsHelp(definition));
         }
@@ -163,7 +200,7 @@ async function runCli<TTools extends AnyTool[]>(
   }
 
   if (isVersionRequested(argv)) {
-    output(`${definition.name} v${definition.version}`);
+    output(`${definition.name ?? "unknown"} v${definition.version ?? "0.0.0"}`);
     return;
   }
 
@@ -212,8 +249,9 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
     }
   } catch (err) {
     if (err instanceof ValidationError) {
-      error(err.message, [`Run with --help for usage information.`]);
-      process.exit(1);
+      throw new ExitError(
+        `${err.message}\nRun with --help for usage information.`,
+      );
     }
     throw err;
   }
@@ -248,11 +286,9 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
         prompt: `${definition.name} - Select a command`,
       });
     } else {
-      error("No subcommand provided.", [
-        `Available commands: ${definition.tools.map((t) => t.name).join(", ")}`,
-        `Run '${definition.name} --help' for usage.`,
-      ]);
-      process.exit(1);
+      throw new ExitError(
+        `No subcommand provided.\nAvailable commands: ${definition.tools.map((t) => t.name).join(", ")}\nRun '${definition.name} --help' for usage.`,
+      );
     }
   }
 
@@ -261,11 +297,9 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
 
   const tool = app.tools.get(selectedCommand);
   if (!tool) {
-    error(`Unknown command '${selectedCommand}'.`, [
-      `Available commands: ${definition.tools.map((t) => t.name).join(", ")}`,
-      `Run '${definition.name} --help' for usage.`,
-    ]);
-    process.exit(1);
+    throw new ExitError(
+      `Unknown command '${selectedCommand}'.\nAvailable commands: ${definition.tools.map((t) => t.name).join(", ")}\nRun '${definition.name} --help' for usage.`,
+    );
   }
 
   // Parse args
@@ -292,10 +326,9 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
     }
   } catch (err) {
     if (err instanceof ValidationError) {
-      error(err.message, [
-        `Run '${definition.name} ${selectedCommand} --help' for usage.`,
-      ]);
-      process.exit(1);
+      throw new ExitError(
+        `${err.message}\nRun '${definition.name} ${selectedCommand} --help' for usage.`,
+      );
     }
     throw err;
   }

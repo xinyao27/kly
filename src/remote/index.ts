@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { ENV_VARS } from "../shared/constants";
+import { ExitError, ExitWarning } from "../shared/errors";
 import { confirm, error, log, output } from "../ui";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
@@ -53,8 +54,7 @@ export async function runRemote(
       // User chose to use current version or cancelled
       if (updateResult.skipCheck === false) {
         // User explicitly cancelled - exit
-        output("Cancelled");
-        process.exit(0);
+        throw new ExitWarning("Cancelled");
       }
       // Otherwise, continue with cached version
     }
@@ -116,8 +116,9 @@ export async function runRemote(
     const integrityResult = await verifyIntegrity(ref, repoPath);
 
     if (!integrityResult.proceedWithExecution) {
-      error("Execution cancelled due to integrity verification failure");
-      process.exit(1);
+      throw new ExitError(
+        "Execution cancelled due to integrity verification failure",
+      );
     }
   }
 
@@ -126,18 +127,20 @@ export async function runRemote(
 }
 
 /**
+ * Provider to domain mapping
+ */
+const PROVIDER_DOMAINS: Record<RepoRef["provider"], string> = {
+  github: "github.com",
+  gitlab: "gitlab.com",
+  bitbucket: "bitbucket.org",
+  sourcehut: "sr.ht",
+};
+
+/**
  * Format a repository reference as a URL string for lockfile
  */
 function formatRepoUrl(ref: RepoRef): string {
-  const domain =
-    ref.provider === "github"
-      ? "github.com"
-      : ref.provider === "gitlab"
-        ? "gitlab.com"
-        : ref.provider === "bitbucket"
-          ? "bitbucket.org"
-          : "sr.ht";
-
+  const domain = PROVIDER_DOMAINS[ref.provider];
   const base = `${domain}/${ref.owner}/${ref.repo}@${ref.ref}`;
   return ref.subpath ? `${base}/${ref.subpath}` : base;
 }
@@ -174,7 +177,7 @@ async function verifyIntegrity(
 ): Promise<{ proceedWithExecution: boolean; result: IntegrityCheckResult }> {
   const url = formatRepoUrl(ref);
 
-  log.step("🔐 Verifying code integrity...");
+  log.step("Verifying code integrity...");
 
   // Calculate repository hash
   const hash = calculateRepoHash(repoPath);
@@ -358,8 +361,7 @@ async function executeApp(
       allowApiKey = await checkApiKeyPermission(appId);
 
       if (!allowApiKey) {
-        error("Permission denied: API key access rejected");
-        process.exit(1);
+        throw new ExitError("Permission denied: API key access rejected");
       }
     }
 
@@ -372,8 +374,9 @@ async function executeApp(
       sandboxConfig = await getAppSandboxConfig(appId);
 
       if (!sandboxConfig) {
-        error("Permission denied: Sandbox configuration rejected");
-        process.exit(1);
+        throw new ExitError(
+          "Permission denied: Sandbox configuration rejected",
+        );
       }
     }
 
@@ -411,7 +414,7 @@ async function executeApp(
     }
 
     if (result.exitCode !== 0) {
-      process.exit(result.exitCode);
+      throw new ExitError("", result.exitCode);
     }
   } finally {
     // Restore environment

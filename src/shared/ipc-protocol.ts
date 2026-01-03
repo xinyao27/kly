@@ -111,6 +111,8 @@ export type IPCResponse<T = unknown> =
       id: string;
       success: false;
       error: string;
+      /** True if this is a user cancellation, not an error */
+      cancelled?: boolean;
     };
 
 /**

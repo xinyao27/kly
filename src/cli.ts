@@ -260,9 +260,9 @@ export function generateSingleToolHelp(
   const lines: string[] = [];
 
   // Header
-  lines.push(`${config.name} v${config.version}`);
+  lines.push(`${config.name ?? "unknown"} v${config.version ?? "0.0.0"}`);
   lines.push("");
-  lines.push(config.description);
+  lines.push(config.description ?? "");
   lines.push("");
 
   // Try to extract JSON Schema for dynamic help
@@ -302,9 +302,9 @@ export function generateMultiToolsHelp(config: AppDefinition): string {
   const lines: string[] = [];
 
   // Header
-  lines.push(`${config.name} v${config.version}`);
+  lines.push(`${config.name ?? "unknown"} v${config.version ?? "0.0.0"}`);
   lines.push("");
-  lines.push(config.description);
+  lines.push(config.description ?? "");
   lines.push("");
 
   // Usage

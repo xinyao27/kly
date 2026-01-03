@@ -36,6 +36,14 @@ export const TIMEOUTS = {
 } as const;
 
 /**
+ * Exit codes
+ */
+export const EXIT_CODES = {
+  /** User cancelled operation (similar to SIGINT) */
+  CANCELLED: 130,
+} as const;
+
+/**
  * LLM API domains for network permission configuration
  */
 export const LLM_API_DOMAINS = [

@@ -208,14 +208,15 @@ export type AnyTool = Tool<StandardSchemaV1, unknown>;
 
 /**
  * Base app metadata
+ * All fields are optional - defaults will be used if not provided
  */
 export interface AppMetadata {
-  /** App name */
-  name: string;
-  /** Semantic version */
-  version: string;
-  /** App description */
-  description: string;
+  /** App name (defaults to "unknown" if not provided) */
+  name?: string;
+  /** Semantic version (defaults to "0.0.0" if not provided) */
+  version?: string;
+  /** App description (defaults to "" if not provided) */
+  description?: string;
 }
 
 /**

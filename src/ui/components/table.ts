@@ -1,4 +1,4 @@
-import { colors, formatText } from "../utils/colors";
+import { colors } from "../utils/colors";
 import { isTTY } from "../utils/tty";
 
 /**
@@ -6,7 +6,7 @@ import { isTTY } from "../utils/tty";
  */
 function _renderTitle(title: string | undefined, styled: boolean): string[] {
   if (!title) return [];
-  return ["", styled ? formatText(title, { bold: true }) : title, ""];
+  return ["", styled ? colors.bold(title) : title, ""];
 }
 
 /**
@@ -141,7 +141,7 @@ function renderTTY<T>(config: TableConfig<T>): string {
   // Header row
   if (showHeader) {
     const headerCells = columns.map((col, i) => {
-      const text = formatText(col.header, { bold: true, color: "cyan" });
+      const text = colors.cyan(colors.bold(col.header));
       return alignText(text, widths[i]!, col.align ?? "left");
     });
 

@@ -51,7 +51,8 @@ function _cancelledResponse<T>(requestId: string): IPCResponse<T> {
     type: "response",
     id: requestId,
     success: false,
-    error: "Operation cancelled by user",
+    error: "Operation cancelled",
+    cancelled: true,
   };
 }
 

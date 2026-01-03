@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { cancel, intro, isCancel, note, outro } from "../components/flow";
+import { cancel, intro, isCancel, note, outro } from "../components/log";
 
 describe("flow components", () => {
   it("intro can be called without error", () => {

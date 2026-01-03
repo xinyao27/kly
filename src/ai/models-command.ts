@@ -1,5 +1,5 @@
+import { ExitWarning } from "../shared/errors";
 import {
-  cancel,
   colors,
   confirm,
   intro,
@@ -271,8 +271,7 @@ async function removeAction(): Promise<void> {
   );
 
   if (!confirmed) {
-    cancel("Operation cancelled");
-    process.exit(0);
+    throw new ExitWarning();
   }
 
   removeModelConfig(modelName);

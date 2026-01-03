@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import colors from "picocolors";
+import * as colors from "xycolors";
 import { formatText, theme } from "../utils/colors";
 
 describe("theme", () => {

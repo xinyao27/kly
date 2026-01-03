@@ -9,10 +9,19 @@ export {
   autocompleteMultiselect,
 } from "./components/autocompleteMultiselect";
 export { confirm } from "./components/confirm";
-export { cancel, intro, isCancel, note, outro } from "./components/flow";
 export { type FormConfig, type FormField, form } from "./components/form";
 export { type InputConfig, input } from "./components/input";
-export { error, help, log, output } from "./components/log";
+export {
+  cancel,
+  error,
+  help,
+  intro,
+  isCancel,
+  log,
+  note,
+  output,
+  outro,
+} from "./components/log";
 export {
   type MultiSelectConfig,
   type MultiSelectOption,
@@ -55,6 +64,4 @@ export {
   formatText,
   theme,
 } from "./utils/colors";
-
-// Utilities
 export { isTTY } from "./utils/tty";

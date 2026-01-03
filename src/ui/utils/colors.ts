@@ -1,4 +1,4 @@
-import colors from "picocolors";
+import * as colors from "xycolors";
 
 /**
  * Default color theme for UI components (hex values for reference)
@@ -51,7 +51,7 @@ const colorMap: Record<AnsiColor, (text: string) => string> = {
 };
 
 /**
- * Format text with picocolors
+ * Format text with xycolors
  */
 export function formatText(
   text: string,

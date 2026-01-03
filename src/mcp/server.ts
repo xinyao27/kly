@@ -39,8 +39,8 @@ export async function startMcpServer(app: KlyApp): Promise<void> {
   // Create MCP server instance
   const server = new Server(
     {
-      name: definition.name,
-      version: definition.version,
+      name: definition.name ?? "unknown",
+      version: definition.version ?? "0.0.0",
     },
     {
       capabilities: {

@@ -1,4 +1,5 @@
 import { TIMEOUTS } from "../shared/constants";
+import { ExitWarning } from "../shared/errors";
 import type { IPCRequest, IPCResponse } from "../shared/ipc-protocol";
 
 /**
@@ -37,6 +38,8 @@ export async function sendIPCRequest<T>(
         const response = message as IPCResponse<T>;
         if (response.success) {
           resolve(response.data);
+        } else if (response.cancelled) {
+          reject(new ExitWarning(response.error));
         } else {
           reject(new Error(response.error));
         }

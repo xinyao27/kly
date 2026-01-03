@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
-import * as p from "@clack/prompts";
 import { isRemoteRef } from "../remote";
+import { ExitError } from "../shared/errors";
 import { log } from "../ui";
 import {
   autoRegisterBins,
@@ -15,10 +15,9 @@ export async function installCommand(args: string[]): Promise<void> {
   const target = args[0];
 
   if (!target) {
-    p.log.error("Missing target");
-    p.log.message("Usage: kly install <file|user/repo[@ref]>");
-    p.log.message("   or: kly install --setup-path");
-    process.exit(1);
+    throw new ExitError(
+      "Missing target\nUsage: kly install <file|user/repo[@ref]>\n   or: kly install --setup-path",
+    );
   }
 
   if (target === "--setup-path") {
@@ -39,8 +38,8 @@ export async function installCommand(args: string[]): Promise<void> {
     const detection = detectBins(absolutePath);
 
     if (!detection.hasBin) {
-      p.log.warn("No bin field found in package.json");
-      p.log.message("This project cannot be installed as a command");
+      log.warn("No bin field found in package.json");
+      log.message("This project cannot be installed as a command");
       return;
     }
 
@@ -60,9 +59,9 @@ export async function uninstallCommand(args: string[]): Promise<void> {
   const commandName = args[0];
 
   if (!commandName) {
-    p.log.error("Missing command name");
-    p.log.message("Usage: kly uninstall <command-name>");
-    process.exit(1);
+    throw new ExitError(
+      "Missing command name\nUsage: kly uninstall <command-name>",
+    );
   }
 
   await unregisterCommand(commandName, { skipConfirm: false });
@@ -76,8 +75,7 @@ export async function linkCommand(args: string[]): Promise<void> {
   const detection = detectBins(absolutePath);
 
   if (!detection.hasBin) {
-    p.log.error("No bin field found in package.json");
-    process.exit(1);
+    throw new ExitError("No bin field found in package.json");
   }
 
   log.step(`Linking ${detection.projectName}...`);
@@ -95,21 +93,21 @@ export async function listCommand(): Promise<void> {
   const commands = listCommands();
 
   if (commands.length === 0) {
-    p.log.message("No commands registered");
-    p.log.info("\nRun 'kly install <target>' to register commands");
+    log.message("No commands registered");
+    log.info("\nRun 'kly install <target>' to register commands");
     return;
   }
 
-  p.log.info(`\nRegistered commands (${commands.length}):\n`);
+  log.info(`\nRegistered commands (${commands.length}):\n`);
 
   for (const cmd of commands) {
     const source = cmd.type === "remote" ? cmd.remoteRef : cmd.localPath;
 
-    p.log.message(
+    log.message(
       `  ${cmd.commandName.padEnd(20)} ${cmd.projectName}@${cmd.projectVersion}`,
     );
-    p.log.message(`  ${" ".repeat(20)} ${source}`);
-    p.log.message("");
+    log.message(`  ${" ".repeat(20)} ${source}`);
+    log.message("");
   }
 
   checkPathSetup();

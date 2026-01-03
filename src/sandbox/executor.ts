@@ -10,6 +10,7 @@
  */
 
 import { TIMEOUTS } from "../shared/constants";
+import { ExitWarning } from "../shared/errors";
 import type {
   ExecutionCompleteMessage,
   IPCResponse,
@@ -81,6 +82,8 @@ export function sendIPCRequest<T>(type: string, payload: unknown): Promise<T> {
       resolve: (response: IPCResponse) => {
         if (response.success) {
           resolve(response.data as T);
+        } else if (response.cancelled) {
+          reject(new ExitWarning(response.error));
         } else {
           reject(new Error(response.error));
         }

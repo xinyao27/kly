@@ -1,7 +1,19 @@
 #!/usr/bin/env bun
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { modelsCommand } from "../src/ai/models-command";
+import {
+  autoRegisterBins,
+  detectBins,
+  getCommand,
+  shouldReregisterLocal,
+} from "../src/bin-registry";
+import {
+  installCommand,
+  linkCommand,
+  listCommand,
+  uninstallCommand,
+} from "../src/bin-registry/commands";
 import { launchSandbox } from "../src/host/launcher";
 import { getAppIdentifier } from "../src/permissions";
 import { permissionsCommand } from "../src/permissions/cli";
@@ -12,12 +24,18 @@ import {
   requestUnifiedPermission,
 } from "../src/permissions/unified-prompt";
 import { isRemoteRef, runRemote } from "../src/remote";
-import { cancel, error, log } from "../src/ui";
+import { EXIT_CODES } from "../src/shared/constants";
+import { ExitError, ExitWarning } from "../src/shared/errors";
+import { cancel, colors, error, intro, log, outro } from "../src/ui";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 async function main() {
+  intro(
+    `${colors.bgHex("#dc7702")(colors.black(` Kly ${colors.italic(__VERSION__)} `))}`,
+  );
+
   if (!command || command === "--help" || command === "-h") {
     showHelp();
     return;
@@ -39,25 +57,21 @@ async function main() {
   }
 
   if (command === "install") {
-    const { installCommand } = await import("../src/bin-registry/commands");
     await installCommand(args.slice(1));
     return;
   }
 
   if (command === "uninstall") {
-    const { uninstallCommand } = await import("../src/bin-registry/commands");
     await uninstallCommand(args.slice(1));
     return;
   }
 
   if (command === "link") {
-    const { linkCommand } = await import("../src/bin-registry/commands");
     await linkCommand(args.slice(1));
     return;
   }
 
   if (command === "list" || command === "ls") {
-    const { listCommand } = await import("../src/bin-registry/commands");
     await listCommand();
     return;
   }
@@ -65,9 +79,9 @@ async function main() {
   if (command === "run") {
     const target = args[1];
     if (!target) {
-      error("Missing file path or remote reference");
-      cancel("Usage: kly run <file|user/repo[@ref]>");
-      process.exit(1);
+      throw new ExitError(
+        "Missing file path or remote reference\nUsage: kly run <file|user/repo[@ref]>",
+      );
     }
 
     // Check for flags
@@ -96,9 +110,9 @@ async function main() {
   if (command === "mcp") {
     const target = args[1];
     if (!target) {
-      error("Missing file path or remote reference");
-      cancel("Usage: kly mcp <file|user/repo[@ref]>");
-      process.exit(1);
+      throw new ExitError(
+        "Missing file path or remote reference\nUsage: kly mcp <file|user/repo[@ref]>",
+      );
     }
 
     // Check for flags
@@ -115,9 +129,9 @@ async function main() {
     return;
   }
 
-  error(`Unknown command: ${command}`);
-  cancel('Run "kly --help" for usage');
-  process.exit(1);
+  throw new ExitError(
+    `Unknown command: ${command}\nRun "kly --help" for usage`,
+  );
 }
 
 async function runFile(filePath: string, appArgs: string[]) {
@@ -153,8 +167,7 @@ async function runFile(filePath: string, appArgs: string[]) {
       );
 
       if (!allowed) {
-        cancel("❌ Permission denied");
-        process.exit(1);
+        throw new ExitError("Permission denied");
       }
 
       // Set API key access based on declared permissions
@@ -183,14 +196,6 @@ async function runFile(filePath: string, appArgs: string[]) {
 
     if (result.exitCode === 0) {
       // Auto-register bin commands for local projects
-      const { dirname } = await import("node:path");
-      const {
-        autoRegisterBins,
-        detectBins,
-        getCommand,
-        shouldReregisterLocal,
-      } = await import("../src/bin-registry");
-
       const projectPath = dirname(absolutePath);
       const detection = detectBins(projectPath);
 
@@ -229,8 +234,13 @@ async function runFile(filePath: string, appArgs: string[]) {
       }
     }
 
+    if (result.exitCode === EXIT_CODES.CANCELLED) {
+      // User cancelled in sandbox - propagate as ExitWarning (no message since sandbox already showed it)
+      throw new ExitWarning("");
+    }
+
     if (result.exitCode !== 0) {
-      process.exit(result.exitCode);
+      throw new ExitError("", result.exitCode);
     }
   } finally {
     // Restore environment
@@ -256,9 +266,7 @@ async function runFileAsMcp(filePath: string) {
 }
 
 function showHelp() {
-  log.message(`kly - Command Line AI
-
-Usage:
+  log.message(`Usage:
   kly <command> [options]
 
 Commands:
@@ -303,7 +311,30 @@ function showVersion() {
   log.message(__VERSION__);
 }
 
-main().catch((err) => {
-  cancel(err.message || err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    outro(`ヾ(￣▽￣)Bye~`);
+    process.exit(0);
+  })
+  .catch((err) => {
+    // Check for ExitWarning (user cancellation - graceful exit)
+    const isExitWarning =
+      err instanceof ExitWarning || err?.name === "ExitWarning";
+    if (isExitWarning) {
+      if (err.message) {
+        cancel(err.message);
+      }
+      process.exit(0);
+    }
+
+    // Check for ExitError
+    const isExitError = err instanceof ExitError || err?.name === "ExitError";
+    const exitCode = isExitError ? (err.exitCode ?? 1) : 1;
+
+    const message = typeof err === "string" ? err : err?.message || String(err);
+    if (message) {
+      error(message);
+    }
+
+    process.exit(exitCode);
+  });
