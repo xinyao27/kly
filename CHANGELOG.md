@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/xinyao27/kly/compare/0.3.0...0.3.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* enhance link command to support remote references with caching validation and improved error handling ([6975016](https://github.com/xinyao27/kly/commit/6975016d470bb7818ce0c7a38a53df5dcc7b2740))
+
 # [0.3.0](https://github.com/xinyao27/kly/compare/0.2.0...0.3.0) (2026-01-03)
 
 ### Features
