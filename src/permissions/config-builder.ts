@@ -62,7 +62,10 @@ export function buildSandboxConfig(
   const currentDir = process.cwd();
 
   // Start with defaults
-  let allowedDomains: string[] = [];
+  // Use undefined to indicate "no network restriction" (allow all)
+  // Use empty array [] to indicate "block all network"
+  // Use array with domains to indicate "allow only these domains"
+  let allowedDomains: string[] | undefined = [];
   let allowWrite: string[] = [currentDir]; // Allow current directory by default
   let denyRead: string[] = [...PROTECTED_PATHS.alwaysDenyRead];
 
@@ -80,7 +83,14 @@ export function buildSandboxConfig(
       const domains = userSandbox.network.allowedDomains.filter(
         (d): d is string => d !== undefined,
       );
-      allowedDomains = [...allowedDomains, ...domains];
+
+      // Special handling: "*" means allow all network access (no restriction)
+      // In sandbox-runtime, setting allowedDomains to undefined disables network filtering
+      if (domains.includes("*")) {
+        allowedDomains = undefined; // No network restriction
+      } else {
+        allowedDomains = [...(allowedDomains ?? []), ...domains];
+      }
     }
 
     // Merge filesystem config
@@ -103,11 +113,17 @@ export function buildSandboxConfig(
   }
 
   // Build final config
+  // Note: When allowedDomains is undefined, we use type assertion to bypass
+  // TypeScript's requirement. This is intentional - sandbox-runtime treats
+  // undefined allowedDomains as "no network restriction" (allow all).
   const config: SandboxRuntimeConfig = {
-    network: {
-      allowedDomains,
-      deniedDomains: [],
-    },
+    network:
+      allowedDomains === undefined
+        ? ({ deniedDomains: [] } as unknown as SandboxRuntimeConfig["network"])
+        : {
+            allowedDomains,
+            deniedDomains: [],
+          },
     filesystem: {
       denyRead,
       allowWrite,
@@ -136,18 +152,16 @@ export function formatPermissionsSummary(
   const config = buildSandboxConfig(permissions);
   const currentDir = process.cwd();
 
-  // Network - only show if non-default (not empty)
-  if (config.network.allowedDomains.length > 0) {
-    if (config.network.allowedDomains.includes("*")) {
-      summary.push("• Network: All domains");
-    } else {
-      const domains = config.network.allowedDomains.slice(0, 3).join(", ");
-      const more =
-        config.network.allowedDomains.length > 3
-          ? ` +${config.network.allowedDomains.length - 3} more`
-          : "";
-      summary.push(`• Network: ${domains}${more}`);
-    }
+  // Network - show if non-default
+  // undefined allowedDomains means "allow all" (no restriction)
+  const allowedDomains = config.network.allowedDomains;
+  if (allowedDomains === undefined) {
+    summary.push("• Network: All domains (unrestricted)");
+  } else if (allowedDomains.length > 0) {
+    const domains = allowedDomains.slice(0, 3).join(", ");
+    const more =
+      allowedDomains.length > 3 ? ` +${allowedDomains.length - 3} more` : "";
+    summary.push(`• Network: ${domains}${more}`);
   }
 
   // Filesystem - only show if custom (not just current directory)

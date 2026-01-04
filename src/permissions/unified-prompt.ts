@@ -20,8 +20,11 @@ function needsPermissionPrompt(
     return true;
   }
 
-  // If custom network access requested (not empty), prompt
-  if (sandboxConfig.network.allowedDomains.length > 0) {
+  // If custom network access requested, prompt
+  // undefined allowedDomains means "allow all" (requires prompt)
+  // empty array means "block all" (default, no prompt needed)
+  const allowedDomains = sandboxConfig.network.allowedDomains;
+  if (allowedDomains === undefined || allowedDomains.length > 0) {
     return true;
   }
 
