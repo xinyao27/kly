@@ -5,18 +5,9 @@ import { confirm, error, log, output } from "../ui";
 import { checkCache, invalidateCache, writeMetadata } from "./cache";
 import { cloneRepo, getCommitSha, installDependencies } from "./fetcher";
 import { calculateRepoHash } from "./integrity";
-import {
-  getIntegrityHash,
-  updateRepoRecord,
-  updateSecurityInfo,
-} from "./lockfile";
+import { getIntegrityHash, updateRepoRecord, updateSecurityInfo } from "./lockfile";
 import { getRepoCachePath, parseRemoteRef } from "./parser";
-import {
-  checkEnvVars,
-  readKlyConfig,
-  resolveEntryPoint,
-  validateVersion,
-} from "./resolver";
+import { checkEnvVars, readKlyConfig, resolveEntryPoint, validateVersion } from "./resolver";
 import type { IntegrityCheckResult, RepoRef, RunRemoteOptions } from "./types";
 import { checkForUpdates } from "./update-checker";
 
@@ -26,10 +17,7 @@ const KLY_VERSION = __VERSION__;
 /**
  * Run a remote GitHub repository as a kly app
  */
-export async function runRemote(
-  input: string,
-  options: RunRemoteOptions = {},
-): Promise<void> {
+export async function runRemote(input: string, options: RunRemoteOptions = {}): Promise<void> {
   // 1. Parse input
   const ref = parseRemoteRef(input);
   if (!ref) {
@@ -116,9 +104,7 @@ export async function runRemote(
     const integrityResult = await verifyIntegrity(ref, repoPath);
 
     if (!integrityResult.proceedWithExecution) {
-      throw new ExitError(
-        "Execution cancelled due to integrity verification failure",
-      );
+      throw new ExitError("Execution cancelled due to integrity verification failure");
     }
   }
 
@@ -148,10 +134,7 @@ function formatRepoUrl(ref: RepoRef): string {
 /**
  * Get the web URL for a repository (for viewing in browser)
  */
-function getRepoWebUrl(
-  ref: RepoRef,
-  path: "tree" | "commits" = "tree",
-): string {
+function getRepoWebUrl(ref: RepoRef, path: "tree" | "commits" = "tree"): string {
   switch (ref.provider) {
     case "github":
       return `https://github.com/${ref.owner}/${ref.repo}/${path}/${ref.ref}`;
@@ -216,9 +199,7 @@ async function verifyIntegrity(
       output("Please review the source code before proceeding:");
       output(getRepoWebUrl(ref));
 
-      const shouldTrust = await confirm(
-        "Do you trust this code and want to proceed?",
-      );
+      const shouldTrust = await confirm("Do you trust this code and want to proceed?");
 
       if (shouldTrust) {
         updateSecurityInfo(url, hash, true);
@@ -250,16 +231,10 @@ async function verifyIntegrity(
       output("  3. Review code changes carefully");
       output(`  4. Visit: ${getRepoWebUrl(ref, "commits")}`);
 
-      const shouldProceed = await confirm(
-        "⚠️  Proceed anyway? (NOT RECOMMENDED)",
-        false,
-      );
+      const shouldProceed = await confirm("⚠️  Proceed anyway? (NOT RECOMMENDED)", false);
 
       if (shouldProceed) {
-        const shouldUpdate = await confirm(
-          "Update lockfile with new hash?",
-          false,
-        );
+        const shouldUpdate = await confirm("Update lockfile with new hash?", false);
 
         if (shouldUpdate) {
           updateSecurityInfo(url, hash, true);
@@ -295,9 +270,7 @@ async function executeApp(
 
   if (config?.version) {
     if (!validateVersion(config.version, KLY_VERSION)) {
-      throw new Error(
-        `This app requires kly ${config.version}, but you have ${KLY_VERSION}`,
-      );
+      throw new Error(`This app requires kly ${config.version}, but you have ${KLY_VERSION}`);
     }
   }
 
@@ -312,9 +285,7 @@ async function executeApp(
   // Resolve entry point
   const entryPoint = resolveEntryPoint(repoPath, ref.subpath);
   if (!entryPoint) {
-    throw new Error(
-      `Cannot resolve entry point for ${ref.provider}:${ref.owner}/${ref.repo}`,
-    );
+    throw new Error(`Cannot resolve entry point for ${ref.provider}:${ref.owner}/${ref.repo}`);
   }
 
   const absoluteEntryPath = join(repoPath, entryPoint);
@@ -329,9 +300,8 @@ async function executeApp(
     const { getAppIdentifier, checkApiKeyPermission, getAppSandboxConfig } =
       await import("../permissions");
     const { launchSandbox } = await import("../host/launcher");
-    const { buildSandboxConfig, formatPermissionsSummary } = await import(
-      "../permissions/config-builder"
-    );
+    const { buildSandboxConfig, formatPermissionsSummary } =
+      await import("../permissions/config-builder");
     const { extractAppPermissions } = await import("./permissions-extractor");
 
     const appId = getAppIdentifier();
@@ -352,9 +322,7 @@ async function executeApp(
 
     // Check permissions based on what's declared
     let allowApiKey = false;
-    let sandboxConfig:
-      | import("@anthropic-ai/sandbox-runtime").SandboxRuntimeConfig
-      | null = null;
+    let sandboxConfig: import("@anthropic-ai/sandbox-runtime").SandboxRuntimeConfig | null = null;
 
     // Only ask for API key permission if the app declares it needs it
     if (declaredPermissions?.apiKeys) {
@@ -374,9 +342,7 @@ async function executeApp(
       sandboxConfig = await getAppSandboxConfig(appId);
 
       if (!sandboxConfig) {
-        throw new ExitError(
-          "Permission denied: Sandbox configuration rejected",
-        );
+        throw new ExitError("Permission denied: Sandbox configuration rejected");
       }
     }
 
@@ -390,9 +356,7 @@ async function executeApp(
     if (mcp) {
       // For MCP mode, we still need special handling
       // For now, just run directly without sandbox
-      log.warn(
-        "⚠️  MCP mode with remote repos not yet fully supported in new architecture",
-      );
+      log.warn("⚠️  MCP mode with remote repos not yet fully supported in new architecture");
       process.env[ENV_VARS.MCP_MODE] = "true";
       process.argv = ["bun", absoluteEntryPath];
       await import(absoluteEntryPath);
@@ -429,9 +393,4 @@ async function executeApp(
 export { clearAllCache, invalidateCache } from "./cache";
 // Re-export utilities
 export { isRemoteRef, parseRemoteRef } from "./parser";
-export type {
-  CacheMetadata,
-  KlyConfig,
-  RepoRef,
-  RunRemoteOptions,
-} from "./types";
+export type { CacheMetadata, KlyConfig, RepoRef, RunRemoteOptions } from "./types";

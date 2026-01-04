@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import yaml from "js-yaml";
@@ -117,9 +111,7 @@ export function updateLastUsed(commandName: string): void {
   }
 }
 
-export function listCommands(): Array<
-  BinRegistryEntry & { commandName: string }
-> {
+export function listCommands(): Array<BinRegistryEntry & { commandName: string }> {
   const registry = readRegistry();
   return Object.entries(registry.commands).map(([name, entry]) => ({
     ...entry,

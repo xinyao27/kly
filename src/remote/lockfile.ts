@@ -103,11 +103,7 @@ export function getRepoRecord(url: string): LockfileRepoRecord | undefined {
 /**
  * Update or add version information for a repository
  */
-export function updateRepoRecord(
-  url: string,
-  commitSha: string,
-  isUpdate = false,
-): void {
+export function updateRepoRecord(url: string, commitSha: string, isUpdate = false): void {
   const lockfile = readLockfile();
   const now = new Date().toISOString();
   const existing = lockfile.repositories[url];
@@ -129,11 +125,7 @@ export function updateRepoRecord(
 /**
  * Update security information for a repository
  */
-export function updateSecurityInfo(
-  url: string,
-  integrityHash: string,
-  trusted: boolean,
-): void {
+export function updateSecurityInfo(url: string, integrityHash: string, trusted: boolean): void {
   const lockfile = readLockfile();
   const existing = lockfile.repositories[url];
   const now = new Date().toISOString();

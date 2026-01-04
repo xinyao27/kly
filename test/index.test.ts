@@ -33,13 +33,7 @@ describe("parseCliArgs", () => {
   });
 
   it("handles mixed arguments", () => {
-    const result = parseCliArgs([
-      "--name=World",
-      "--excited",
-      "--count",
-      "5",
-      "--no-verbose",
-    ]);
+    const result = parseCliArgs(["--name=World", "--excited", "--count", "5", "--no-verbose"]);
     expect(result).toEqual({
       name: "World",
       excited: true,

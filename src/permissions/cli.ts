@@ -84,9 +84,7 @@ async function revokePermissionAction(): Promise<void> {
     })),
   });
 
-  const confirmed = await confirm(
-    "Are you sure you want to revoke this permission?",
-  );
+  const confirmed = await confirm("Are you sure you want to revoke this permission?");
 
   if (confirmed) {
     revokePermission(appId);
@@ -100,9 +98,7 @@ async function revokePermissionAction(): Promise<void> {
  * Clear all permissions
  */
 async function clearAllPermissionsAction(): Promise<void> {
-  const confirmed = await confirm(
-    "Are you sure you want to clear ALL permissions?",
-  );
+  const confirmed = await confirm("Are you sure you want to clear ALL permissions?");
 
   if (confirmed) {
     clearAllPermissions();

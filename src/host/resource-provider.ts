@@ -27,10 +27,7 @@ export interface ResourceProviderOptions {
 /**
  * Helper to handle raw prompt results and convert to IPC responses
  */
-function _handleRawPromptResult<T>(
-  requestId: string,
-  result: T | symbol,
-): IPCResponse<T> {
+function _handleRawPromptResult<T>(requestId: string, result: T | symbol): IPCResponse<T> {
   if (rawIsCancel(result)) {
     return _cancelledResponse(requestId);
   }
@@ -77,11 +74,7 @@ export class ResourceProvider {
           return this.handleGetModelConfig(request.id, request.payload.name);
 
         case "log":
-          return this.handleLog(
-            request.id,
-            request.payload.level,
-            request.payload.message,
-          );
+          return this.handleLog(request.id, request.payload.level, request.payload.message);
 
         case "prompt:input":
           return this.handlePromptInput(request.id, request.payload);
@@ -121,9 +114,7 @@ export class ResourceProvider {
   /**
    * Handle: List available models (no permission required)
    */
-  private handleListModels(
-    requestId: string,
-  ): IPCResponse<ModelInfoResponse[]> {
+  private handleListModels(requestId: string): IPCResponse<ModelInfoResponse[]> {
     const models = listModels();
     const response: ModelInfoResponse[] = models.map((m) => ({
       name: m.name,
@@ -351,9 +342,7 @@ export class ResourceProvider {
     }
 
     for (const field of payload.fields) {
-      const label = field.description
-        ? `${field.label} (${field.description})`
-        : field.label;
+      const label = field.description ? `${field.label} (${field.description})` : field.label;
 
       if (field.type === "boolean") {
         const value = await rawConfirm({
@@ -423,8 +412,6 @@ export class ResourceProvider {
 /**
  * Factory function to create a resource provider
  */
-export function createResourceProvider(
-  options: ResourceProviderOptions,
-): ResourceProvider {
+export function createResourceProvider(options: ResourceProviderOptions): ResourceProvider {
   return new ResourceProvider(options);
 }

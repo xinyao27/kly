@@ -67,9 +67,7 @@ const askAiTool = tool({
           `Model '${modelName}' not found. Run 'bun run bin/kly.ts models' to configure.`,
         );
       }
-      throw new Error(
-        "No LLM model configured. Run 'bun run bin/kly.ts models' to set up.",
-      );
+      throw new Error("No LLM model configured. Run 'bun run bin/kly.ts models' to set up.");
     }
 
     log.success(`Permission granted! Using ${config.provider}`);

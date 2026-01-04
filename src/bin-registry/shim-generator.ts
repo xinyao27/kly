@@ -1,10 +1,4 @@
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { log } from "../ui";
@@ -18,10 +12,7 @@ export function generateShimPath(commandName: string): string {
   return join(getShimDir(), commandName);
 }
 
-export function createShim(
-  commandName: string,
-  entry: BinRegistryEntry,
-): string {
+export function createShim(commandName: string, entry: BinRegistryEntry): string {
   const shimPath = generateShimPath(commandName);
 
   // Ensure directory exists
@@ -42,13 +33,9 @@ export function createShim(
   return shimPath;
 }
 
-function generateShimContent(
-  commandName: string,
-  entry: BinRegistryEntry,
-): string {
+function generateShimContent(commandName: string, entry: BinRegistryEntry): string {
   const timestamp = new Date().toISOString();
-  const sourceDisplay =
-    entry.type === "remote" ? entry.remoteRef : entry.localPath;
+  const sourceDisplay = entry.type === "remote" ? entry.remoteRef : entry.localPath;
 
   if (entry.type === "remote") {
     return `#!/usr/bin/env bun

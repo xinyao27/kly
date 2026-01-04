@@ -60,9 +60,7 @@ export async function uninstallCommand(args: string[]): Promise<void> {
   const commandName = args[0];
 
   if (!commandName) {
-    throw new ExitError(
-      "Missing command name\nUsage: kly uninstall <command-name>",
-    );
+    throw new ExitError("Missing command name\nUsage: kly uninstall <command-name>");
   }
 
   await unregisterCommand(commandName, { skipConfirm: false });
@@ -139,9 +137,7 @@ export async function listCommand(): Promise<void> {
   for (const cmd of commands) {
     const source = cmd.type === "remote" ? cmd.remoteRef : cmd.localPath;
 
-    log.message(
-      `  ${cmd.commandName.padEnd(20)} ${cmd.projectName}@${cmd.projectVersion}`,
-    );
+    log.message(`  ${cmd.commandName.padEnd(20)} ${cmd.projectName}@${cmd.projectVersion}`);
     log.message(`  ${" ".repeat(20)} ${source}`);
     log.message("");
   }

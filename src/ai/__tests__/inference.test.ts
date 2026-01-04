@@ -62,10 +62,7 @@ describe("parseNaturalLanguage", () => {
 
   test("should throw error when no LLM is configured", async () => {
     // Mock getCurrentModelConfig to return null
-    mockGetCurrentModelConfig = spyOn(
-      storage,
-      "getCurrentModelConfig",
-    ).mockReturnValue(null);
+    mockGetCurrentModelConfig = spyOn(storage, "getCurrentModelConfig").mockReturnValue(null);
 
     const mockSchema = {
       "~standard": {
@@ -76,9 +73,9 @@ describe("parseNaturalLanguage", () => {
       },
     };
 
-    await expect(
-      parseNaturalLanguage("test input", mockSchema as any),
-    ).rejects.toThrow("Natural language mode requires a configured LLM model");
+    await expect(parseNaturalLanguage("test input", mockSchema as any)).rejects.toThrow(
+      "Natural language mode requires a configured LLM model",
+    );
   });
 
   // Note: Full integration tests with actual LLM calls are performed

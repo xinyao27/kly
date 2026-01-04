@@ -47,9 +47,7 @@ export interface MultiSelectConfig<T> {
  * });
  * ```
  */
-export async function multiselect<T = string>(
-  config: MultiSelectConfig<T>,
-): Promise<T[]> {
+export async function multiselect<T = string>(config: MultiSelectConfig<T>): Promise<T[]> {
   // Sandbox mode: use IPC to request multiselect from host
   if (isSandbox()) {
     return sendIPCRequest<T[]>("prompt:multiselect", {

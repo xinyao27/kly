@@ -3,8 +3,10 @@ import type { StandardSchemaV1, Tool, ToolDefinition } from "./types";
 /**
  * Tool definition input with required name
  */
-interface ToolInput<TInput extends StandardSchemaV1, TResult = unknown>
-  extends ToolDefinition<TInput, TResult> {
+interface ToolInput<TInput extends StandardSchemaV1, TResult = unknown> extends ToolDefinition<
+  TInput,
+  TResult
+> {
   /** Tool name (used as subcommand in CLI, tool name in MCP) */
   name: string;
 }

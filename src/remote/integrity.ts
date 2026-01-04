@@ -1,11 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  type Stats,
-  statSync,
-} from "node:fs";
+import { existsSync, readdirSync, readFileSync, type Stats, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 /**
@@ -26,15 +20,7 @@ const IGNORE_PATTERNS = [
 /**
  * File extensions to include in hash calculation
  */
-const SOURCE_EXTENSIONS = [
-  ".ts",
-  ".js",
-  ".tsx",
-  ".jsx",
-  ".json",
-  ".md",
-  ".txt",
-];
+const SOURCE_EXTENSIONS = [".ts", ".js", ".tsx", ".jsx", ".json", ".md", ".txt"];
 
 /**
  * Calculate integrity hash for a cloned repository
@@ -160,9 +146,7 @@ function shouldIncludeFile(name: string): boolean {
  * @param hashString - Hash in format "sha384-base64..."
  * @returns Parsed components or null if invalid
  */
-export function parseHashString(
-  hashString: string,
-): { algorithm: string; digest: string } | null {
+export function parseHashString(hashString: string): { algorithm: string; digest: string } | null {
   const match = hashString.match(/^(sha256|sha384|sha512)-(.+)$/);
   if (!match) {
     return null;

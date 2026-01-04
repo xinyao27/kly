@@ -43,9 +43,7 @@ export interface AutocompleteConfig<T> {
  * });
  * ```
  */
-export async function autocomplete<T = string>(
-  config: AutocompleteConfig<T>,
-): Promise<T> {
+export async function autocomplete<T = string>(config: AutocompleteConfig<T>): Promise<T> {
   // Non-TTY fallback: return first option
   if (!isTTY()) {
     const firstOption = config.options[0];

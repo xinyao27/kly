@@ -7,11 +7,7 @@ import { log } from "../ui";
 import { detectBins, isCommandAvailable } from "./bin-detector";
 import { addCommand, getCommand, removeCommand } from "./registry-manager";
 import { createShim, removeShim } from "./shim-generator";
-import type {
-  BinDetectionResult,
-  BinRegistryEntry,
-  UnregisterOptions,
-} from "./types";
+import type { BinDetectionResult, BinRegistryEntry, UnregisterOptions } from "./types";
 
 /**
  * Calculate content hash for a project directory
@@ -179,8 +175,7 @@ async function registerSingleCommand(
   }
 
   // Calculate content hash (for local projects)
-  const contentHash =
-    type === "local" ? calculateProjectHash(projectPath) : null;
+  const contentHash = type === "local" ? calculateProjectHash(projectPath) : null;
 
   // Create registry entry
   const entry: BinRegistryEntry = {
@@ -242,10 +237,7 @@ export async function unregisterCommand(
 /**
  * Check if local project needs re-registration (content changed)
  */
-export function shouldReregisterLocal(
-  commandName: string,
-  projectPath: string,
-): boolean {
+export function shouldReregisterLocal(commandName: string, projectPath: string): boolean {
   const existing = getCommand(commandName);
 
   if (!existing || existing.type !== "local") {

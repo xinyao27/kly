@@ -3,12 +3,7 @@ import { promisify } from "node:util";
 import { log, output, select } from "../ui";
 import { isTTY } from "../ui/utils/tty";
 import { updateRepoRecord } from "./lockfile";
-import type {
-  CacheMetadata,
-  RepoRef,
-  UpdateCheckResult,
-  UpdateChoice,
-} from "./types";
+import type { CacheMetadata, RepoRef, UpdateCheckResult, UpdateChoice } from "./types";
 
 const execAsync = promisify(exec);
 
@@ -162,9 +157,7 @@ export async function checkForUpdates(
   // Network error - fallback to using cache with warning
   if (!remoteSha) {
     if (isTTY()) {
-      log.warn(
-        `⚠️  Unable to check for updates (network error), using cached version`,
-      );
+      log.warn(`⚠️  Unable to check for updates (network error), using cached version`);
     }
     return {
       hasUpdate: false,

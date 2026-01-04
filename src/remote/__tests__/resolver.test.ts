@@ -97,18 +97,11 @@ describe("checkEnvVars", () => {
   });
 
   test("non-existing env var → in missing list", () => {
-    expect(checkEnvVars(["DEFINITELY_NOT_EXISTS_12345"])).toEqual([
-      "DEFINITELY_NOT_EXISTS_12345",
-    ]);
+    expect(checkEnvVars(["DEFINITELY_NOT_EXISTS_12345"])).toEqual(["DEFINITELY_NOT_EXISTS_12345"]);
   });
 
   test("mixed existing and non-existing → only non-existing in result", () => {
-    const result = checkEnvVars([
-      "PATH",
-      "MISSING_VAR_1",
-      "HOME",
-      "MISSING_VAR_2",
-    ]);
+    const result = checkEnvVars(["PATH", "MISSING_VAR_1", "HOME", "MISSING_VAR_2"]);
     expect(result).toEqual(["MISSING_VAR_1", "MISSING_VAR_2"]);
   });
 });

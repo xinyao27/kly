@@ -69,8 +69,6 @@ export function getProviderDocURL(provider: LLMProvider): string | undefined {
 /**
  * Get provider description
  */
-export function getProviderDescription(
-  provider: LLMProvider,
-): string | undefined {
+export function getProviderDescription(provider: LLMProvider): string | undefined {
   return PROVIDER_CONFIGS[provider]?.description;
 }

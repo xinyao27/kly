@@ -77,10 +77,7 @@ async function saveCache(cache: CacheData): Promise<void> {
 
 // ============ NPM Checker ============
 
-async function checkNpmAvailability(
-  name: string,
-  cache: CacheData,
-): Promise<boolean | null> {
+async function checkNpmAvailability(name: string, cache: CacheData): Promise<boolean | null> {
   // Check cache first
   if (name in cache.npm) {
     console.log(`  [NPM] ${name} (cached)`);
@@ -96,9 +93,7 @@ async function checkNpmAvailability(
     const isAvailable = response.status === 404;
     cache.npm[name] = isAvailable;
 
-    console.log(
-      `  [NPM] ${name} - ${isAvailable ? "✅ Available" : "❌ Taken"}`,
-    );
+    console.log(`  [NPM] ${name} - ${isAvailable ? "✅ Available" : "❌ Taken"}`);
     return isAvailable;
   } catch (error) {
     console.error(`  [NPM] ${name} - ⚠️  Error checking:`, error);
@@ -108,10 +103,7 @@ async function checkNpmAvailability(
 
 // ============ Domain Checker ============
 
-async function checkDomainAvailability(
-  domain: string,
-  cache: CacheData,
-): Promise<boolean | null> {
+async function checkDomainAvailability(domain: string, cache: CacheData): Promise<boolean | null> {
   // Check cache first
   if (domain in cache.domains) {
     return cache.domains[domain] ?? null;
@@ -161,14 +153,10 @@ async function checkDomainAvailability(
     ];
 
     // Check if domain is available
-    const isAvailable = availablePatterns.some((pattern) =>
-      outputLower.includes(pattern),
-    );
+    const isAvailable = availablePatterns.some((pattern) => outputLower.includes(pattern));
 
     // Double check if domain is taken
-    const isTaken = takenPatterns.some((pattern) =>
-      outputLower.includes(pattern),
-    );
+    const isTaken = takenPatterns.some((pattern) => outputLower.includes(pattern));
 
     // If we found clear evidence, use it
     let result: boolean | null = null;
@@ -211,8 +199,7 @@ async function checkDomainsForName(
       process.stdout.write(`\r${" ".repeat(60)}\r`);
 
       // Show result
-      const status =
-        available === true ? "✅" : available === false ? "❌" : "⚠️";
+      const status = available === true ? "✅" : available === false ? "❌" : "⚠️";
       console.log(`  [Domain] ${domain} - ${status}`);
 
       results.push({ domain, available });
@@ -254,19 +241,13 @@ function printResults(results: CheckResult[]): void {
     const unknownDomains = result.domains.filter((d) => d.available === null);
 
     if (availableDomains.length > 0) {
-      console.log(
-        `      ✅ Available: ${availableDomains.map((d) => d.domain).join(", ")}`,
-      );
+      console.log(`      ✅ Available: ${availableDomains.map((d) => d.domain).join(", ")}`);
     }
     if (takenDomains.length > 0) {
-      console.log(
-        `      ❌ Taken: ${takenDomains.map((d) => d.domain).join(", ")}`,
-      );
+      console.log(`      ❌ Taken: ${takenDomains.map((d) => d.domain).join(", ")}`);
     }
     if (unknownDomains.length > 0) {
-      console.log(
-        `      ⚠️  Unknown: ${unknownDomains.map((d) => d.domain).join(", ")}`,
-      );
+      console.log(`      ⚠️  Unknown: ${unknownDomains.map((d) => d.domain).join(", ")}`);
     }
     console.log();
   }

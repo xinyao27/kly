@@ -78,10 +78,7 @@ export function setCurrentModel(modelName: string): void {
 /**
  * Add or update a model configuration
  */
-export function saveModelConfig(
-  modelName: string,
-  modelConfig: LLMConfig,
-): void {
+export function saveModelConfig(modelName: string, modelConfig: LLMConfig): void {
   const config = loadConfig();
 
   config.models[modelName] = modelConfig;

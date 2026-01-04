@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  calculateRepoHash,
-  compareHashes,
-  parseHashString,
-} from "../integrity";
+import { calculateRepoHash, compareHashes, parseHashString } from "../integrity";
 
 describe("integrity", () => {
   let testDir: string;
@@ -27,10 +23,7 @@ describe("integrity", () => {
     test("calculates consistent hash for same content", () => {
       // Create test files
       writeFileSync(join(testDir, "index.ts"), 'export const foo = "bar";');
-      writeFileSync(
-        join(testDir, "utils.ts"),
-        'export function greet() { return "hello"; }',
-      );
+      writeFileSync(join(testDir, "utils.ts"), 'export function greet() { return "hello"; }');
 
       const hash1 = calculateRepoHash(testDir);
       const hash2 = calculateRepoHash(testDir);
@@ -64,10 +57,7 @@ describe("integrity", () => {
       const hash1 = calculateRepoHash(testDir);
 
       mkdirSync(join(testDir, "node_modules"));
-      writeFileSync(
-        join(testDir, "node_modules", "lib.js"),
-        "// This should be ignored",
-      );
+      writeFileSync(join(testDir, "node_modules", "lib.js"), "// This should be ignored");
       const hash2 = calculateRepoHash(testDir);
 
       expect(hash1).toBe(hash2);
@@ -114,10 +104,7 @@ describe("integrity", () => {
       writeFileSync(join(testDir, "index.ts"), 'export const foo = "bar";');
       const hash1 = calculateRepoHash(testDir);
 
-      writeFileSync(
-        join(testDir, "package.json"),
-        JSON.stringify({ name: "test" }),
-      );
+      writeFileSync(join(testDir, "package.json"), JSON.stringify({ name: "test" }));
       const hash2 = calculateRepoHash(testDir);
 
       expect(hash1).not.toBe(hash2);
@@ -138,10 +125,7 @@ describe("integrity", () => {
       const hash1 = calculateRepoHash(testDir);
 
       // Create a dummy lock file
-      writeFileSync(
-        join(testDir, "bun.lockb"),
-        Buffer.from([0x01, 0x02, 0x03]),
-      );
+      writeFileSync(join(testDir, "bun.lockb"), Buffer.from([0x01, 0x02, 0x03]));
       const hash2 = calculateRepoHash(testDir);
 
       expect(hash1).not.toBe(hash2);
@@ -164,10 +148,7 @@ describe("integrity", () => {
       mkdirSync(join(testDir, "src", "utils"));
 
       writeFileSync(join(testDir, "src", "index.ts"), "export const main = 1;");
-      writeFileSync(
-        join(testDir, "src", "utils", "helpers.ts"),
-        "export const helper = 2;",
-      );
+      writeFileSync(join(testDir, "src", "utils", "helpers.ts"), "export const helper = 2;");
 
       const hash = calculateRepoHash(testDir);
 

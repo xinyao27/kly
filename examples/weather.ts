@@ -7,15 +7,11 @@ const currentTool = tool({
   description: "Get current weather for a city",
   inputSchema: z.object({
     city: z.string().describe("City name"),
-    unit: z
-      .enum(["celsius", "fahrenheit"])
-      .default("celsius")
-      .describe("Temperature unit"),
+    unit: z.enum(["celsius", "fahrenheit"]).default("celsius").describe("Temperature unit"),
   }),
   execute: async ({ city, unit }) => {
     const temp = Math.floor(Math.random() * 30) + 5;
-    const displayTemp =
-      unit === "fahrenheit" ? Math.floor(temp * 1.8 + 32) : temp;
+    const displayTemp = unit === "fahrenheit" ? Math.floor(temp * 1.8 + 32) : temp;
     const symbol = unit === "fahrenheit" ? "°F" : "°C";
 
     return {

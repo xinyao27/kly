@@ -19,9 +19,7 @@ export declare namespace StandardSchemaV1 {
   interface Props<Input = unknown, Output = Input> {
     readonly version: 1;
     readonly vendor: string;
-    readonly validate: (
-      value: unknown,
-    ) => Result<Output> | Promise<Result<Output>>;
+    readonly validate: (value: unknown) => Result<Output> | Promise<Result<Output>>;
     readonly types?: Types<Input, Output>;
   }
 
@@ -174,27 +172,23 @@ export interface ExecuteContext {
  * Tool definition (Vercel AI SDK style)
  * Core building block that can be used standalone or within defineApp
  */
-export interface ToolDefinition<
-  TInput extends StandardSchemaV1,
-  TResult = unknown,
-> {
+export interface ToolDefinition<TInput extends StandardSchemaV1, TResult = unknown> {
   /** Description of what the tool does (used by LLM for tool selection) */
   description?: string;
   /** Input schema (Standard Schema compliant: Zod, Valibot, ArkType, etc.) */
   inputSchema: TInput;
   /** Execute function that performs the tool's action */
-  execute: (
-    args: InferOutput<TInput>,
-    context: ExecuteContext,
-  ) => Promise<TResult>;
+  execute: (args: InferOutput<TInput>, context: ExecuteContext) => Promise<TResult>;
 }
 
 /**
  * Tool instance returned by tool()
  * Each tool has a name for CLI subcommand and MCP registration
  */
-export interface Tool<TInput extends StandardSchemaV1, TResult = unknown>
-  extends ToolDefinition<TInput, TResult> {
+export interface Tool<TInput extends StandardSchemaV1, TResult = unknown> extends ToolDefinition<
+  TInput,
+  TResult
+> {
   /** Tool name (used as subcommand in CLI, tool name in MCP) */
   name: string;
   /** Type brand for tool identification */
@@ -302,8 +296,7 @@ export interface AppPermissions {
   sandbox?: DeepPartial<SandboxRuntimeConfig>;
 }
 
-export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]>
-  extends AppMetadata {
+export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]> extends AppMetadata {
   /** Array of tools */
   tools: TTools;
   /**
@@ -344,9 +337,7 @@ export class ValidationError extends Error {
   constructor(public readonly issues: ReadonlyArray<StandardSchemaV1.Issue>) {
     const message = issues
       .map((issue) => {
-        const path = issue.path
-          ?.map((p) => (typeof p === "object" ? p.key : p))
-          .join(".");
+        const path = issue.path?.map((p) => (typeof p === "object" ? p.key : p)).join(".");
         return path ? `${path}: ${issue.message}` : issue.message;
       })
       .join("\n");

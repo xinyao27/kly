@@ -7,9 +7,7 @@ const selectTool = tool({
   description: "Select from a list of options",
   inputSchema: z.object({
     prompt: z.string().describe("The prompt message"),
-    options: z
-      .enum(["colors", "languages", "priorities"])
-      .describe("Category of options"),
+    options: z.enum(["colors", "languages", "priorities"]).describe("Category of options"),
     value: z
       .union([z.string(), z.number()])
       .optional()

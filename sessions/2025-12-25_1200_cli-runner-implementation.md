@@ -20,6 +20,7 @@ Implemented the `kly` CLI runner command, enabling users to run Kly apps via `kl
 ## Current State
 
 **Phase 1 (Protocol) - Complete:**
+
 - `defineApp()` and `tool()` APIs working
 - 13 UI components based on @clack/prompts
 - CLI argument parsing and interactive forms
@@ -27,6 +28,7 @@ Implemented the `kly` CLI runner command, enabling users to run Kly apps via `kl
 - 12 working examples
 
 **CLI Runner - Complete:**
+
 - `kly run <file>` executes local .ts/.js files
 - `kly --help` and `kly --version` work
 - Build outputs to `dist/bin/kly.mjs`

@@ -124,9 +124,7 @@ async function listAction(): Promise<void> {
   const models = listModels();
 
   if (models.length === 0) {
-    note(
-      "No models configured yet.\nRun 'kly models' and select 'Add a new model'",
-    );
+    note("No models configured yet.\nRun 'kly models' and select 'Add a new model'");
     return;
   }
 
@@ -137,18 +135,13 @@ async function listAction(): Promise<void> {
   for (const model of models) {
     const current = model.isCurrent ? colors.green("✓ ") : "  ";
     const provider = getProviderDisplayName(model.config.provider);
-    const modelName =
-      model.config.model || DEFAULT_MODELS[model.config.provider];
+    const modelName = model.config.model || DEFAULT_MODELS[model.config.provider];
 
     let line = `${current}${colors.cyan(model.name)} - ${provider} (${modelName})`;
 
     // Add pricing and capabilities if available
     if (modelsData) {
-      const modelInfo = getModelInfo(
-        modelsData,
-        model.config.provider,
-        modelName,
-      );
+      const modelInfo = getModelInfo(modelsData, model.config.provider, modelName);
 
       if (modelInfo) {
         const metadata = formatModelMetadata(modelInfo);
@@ -171,10 +164,7 @@ function formatModelMetadata(modelInfo: ModelInfo): string {
   const parts: string[] = [];
 
   // Add pricing
-  if (
-    modelInfo.cost?.input !== undefined &&
-    modelInfo.cost?.output !== undefined
-  ) {
+  if (modelInfo.cost?.input !== undefined && modelInfo.cost?.output !== undefined) {
     parts.push(
       `[$${formatPrice(modelInfo.cost.input)}/$${formatPrice(modelInfo.cost.output)} per 1M]`,
     );
@@ -266,9 +256,7 @@ async function removeAction(): Promise<void> {
     })),
   });
 
-  const confirmed = await confirm(
-    `Are you sure you want to remove '${modelName}'?`,
-  );
+  const confirmed = await confirm(`Are you sure you want to remove '${modelName}'?`);
 
   if (!confirmed) {
     throw new ExitWarning();
@@ -321,10 +309,7 @@ async function getProviderConfig(provider: LLMProvider): Promise<{
   });
 
   // Ask for optional base URL
-  const customBaseURL = await confirm(
-    "Do you want to specify a custom base URL?",
-    false,
-  );
+  const customBaseURL = await confirm("Do you want to specify a custom base URL?", false);
 
   let baseURL: string | undefined;
 
@@ -378,30 +363,26 @@ async function selectFromModelList(
   availableModels: ModelInfo[],
   defaultModel: string,
 ): Promise<string | undefined> {
-  const modelOptions: SelectOption<string>[] = availableModels
-    .slice(0, 10)
-    .map((m) => {
-      const parts: string[] = [];
+  const modelOptions: SelectOption<string>[] = availableModels.slice(0, 10).map((m) => {
+    const parts: string[] = [];
 
-      // Add pricing if available
-      if (m.cost?.input !== undefined && m.cost?.output !== undefined) {
-        parts.push(
-          `$${formatPrice(m.cost.input)}/$${formatPrice(m.cost.output)} per 1M`,
-        );
-      }
+    // Add pricing if available
+    if (m.cost?.input !== undefined && m.cost?.output !== undefined) {
+      parts.push(`$${formatPrice(m.cost.input)}/$${formatPrice(m.cost.output)} per 1M`);
+    }
 
-      // Add capabilities
-      const caps = formatCapabilities(m);
-      if (caps.length > 0) {
-        parts.push(caps.join(", "));
-      }
+    // Add capabilities
+    const caps = formatCapabilities(m);
+    if (caps.length > 0) {
+      parts.push(caps.join(", "));
+    }
 
-      return {
-        value: m.id,
-        name: m.name || m.id,
-        description: parts.length > 0 ? parts.join(" - ") : "No info available",
-      };
-    });
+    return {
+      value: m.id,
+      name: m.name || m.id,
+      description: parts.length > 0 ? parts.join(" - ") : "No info available",
+    };
+  });
 
   // Add option to use default or enter custom
   modelOptions.push({
@@ -434,13 +415,8 @@ async function selectFromModelList(
 /**
  * Simple model selection via confirm + input
  */
-async function selectModelWithInput(
-  defaultModel: string,
-): Promise<string | undefined> {
-  const useDefault = await confirm(
-    `Use default model (${defaultModel})?`,
-    true,
-  );
+async function selectModelWithInput(defaultModel: string): Promise<string | undefined> {
+  const useDefault = await confirm(`Use default model (${defaultModel})?`, true);
 
   if (useDefault) {
     return undefined;

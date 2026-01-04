@@ -56,9 +56,7 @@ function resolveFilesystemPath(path: string | undefined): string | undefined {
  * @param permissions - Declared app permissions
  * @returns Complete sandbox configuration ready for SandboxManager
  */
-export function buildSandboxConfig(
-  permissions: AppPermissions | undefined,
-): SandboxRuntimeConfig {
+export function buildSandboxConfig(permissions: AppPermissions | undefined): SandboxRuntimeConfig {
   const currentDir = process.cwd();
 
   // Start with defaults
@@ -139,9 +137,7 @@ export function buildSandboxConfig(
  * Get a human-readable summary of permissions for display
  * Only shows special/non-default permissions
  */
-export function formatPermissionsSummary(
-  permissions: AppPermissions | undefined,
-): string[] {
+export function formatPermissionsSummary(permissions: AppPermissions | undefined): string[] {
   const summary: string[] = [];
 
   // Always show API Keys if requested (special permission)
@@ -159,16 +155,14 @@ export function formatPermissionsSummary(
     summary.push("• Network: All domains (unrestricted)");
   } else if (allowedDomains.length > 0) {
     const domains = allowedDomains.slice(0, 3).join(", ");
-    const more =
-      allowedDomains.length > 3 ? ` +${allowedDomains.length - 3} more` : "";
+    const more = allowedDomains.length > 3 ? ` +${allowedDomains.length - 3} more` : "";
     summary.push(`• Network: ${domains}${more}`);
   }
 
   // Filesystem - only show if custom (not just current directory)
   const hasCustomWrite =
     config.filesystem.allowWrite.length > 1 ||
-    (config.filesystem.allowWrite.length === 1 &&
-      config.filesystem.allowWrite[0] !== currentDir);
+    (config.filesystem.allowWrite.length === 1 && config.filesystem.allowWrite[0] !== currentDir);
 
   if (hasCustomWrite) {
     // Check if home directory is allowed (via "*" marker)

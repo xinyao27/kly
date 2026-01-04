@@ -31,6 +31,7 @@ export function convertToJsonSchema(schema: StandardSchemaV1): JsonSchema {
     });
 
     // Remove $schema property if present (MCP doesn't need it)
+    // oxlint-disable-next-line no-unused-vars
     const { $schema, ...rest } = jsonSchema as Record<string, unknown>;
 
     return rest as JsonSchema;

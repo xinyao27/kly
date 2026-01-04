@@ -74,12 +74,8 @@ export async function requestUnifiedPermission(
   // Check if running in TTY mode
   if (!isTTY()) {
     const appName = getAppName(appId);
-    error(
-      `Permission required: App "${appName}" (${appId}) requests permissions.`,
-    );
-    error(
-      "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
-    );
+    error(`Permission required: App "${appName}" (${appId}) requests permissions.`);
+    error("Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.");
     return false;
   }
 
@@ -140,9 +136,7 @@ export async function requestUnifiedPermission(
  * Check if app needs permission check
  * Returns stored sandbox config if "always" was granted
  */
-export function checkStoredPermission(
-  appId: string,
-): SandboxRuntimeConfig | null {
+export function checkStoredPermission(appId: string): SandboxRuntimeConfig | null {
   if (isTrustAll()) {
     return null; // Will use default config
   }

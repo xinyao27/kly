@@ -37,9 +37,7 @@ describe("sandbox/ipc-client", () => {
 
       const { sendIPCRequest } = await import("../ipc-client");
 
-      await expect(sendIPCRequest("listModels", {})).rejects.toThrow(
-        "IPC not available",
-      );
+      await expect(sendIPCRequest("listModels", {})).rejects.toThrow("IPC not available");
     });
 
     it("generates unique request IDs", () => {
@@ -59,12 +57,8 @@ describe("sandbox/ipc-client", () => {
 
       // Create multiple requests (without awaiting - just to generate IDs)
       ipcModule.sendIPCRequest("listModels", {}).catch(() => {});
-      ipcModule
-        .sendIPCRequest("getModelConfig", { name: "test" })
-        .catch(() => {});
-      ipcModule
-        .sendIPCRequest("log", { level: "info", message: "test" })
-        .catch(() => {});
+      ipcModule.sendIPCRequest("getModelConfig", { name: "test" }).catch(() => {});
+      ipcModule.sendIPCRequest("log", { level: "info", message: "test" }).catch(() => {});
 
       // IDs are generated synchronously during the call
       // All IDs should be unique
@@ -85,9 +79,7 @@ describe("sandbox/ipc-client", () => {
 
       const { sendIPCRequest } = await import("../ipc-client");
 
-      await expect(sendIPCRequest("listModels", {})).rejects.toThrow(
-        "Failed to send IPC message",
-      );
+      await expect(sendIPCRequest("listModels", {})).rejects.toThrow("Failed to send IPC message");
     });
   });
 

@@ -122,9 +122,7 @@ async function executeUserScript(): Promise<void> {
 
     // Inject sandboxed context into global scope
     // This allows defineApp to access the sandboxed context
-    (
-      global as { __KLY_SANDBOXED_CONTEXT__?: unknown }
-    ).__KLY_SANDBOXED_CONTEXT__ = {
+    (global as { __KLY_SANDBOXED_CONTEXT__?: unknown }).__KLY_SANDBOXED_CONTEXT__ = {
       modelsContext: createSandboxedModelsContext(),
       invokeDir,
     };
@@ -146,11 +144,7 @@ async function executeUserScript(): Promise<void> {
 /**
  * Send execution complete message to host
  */
-function sendExecutionComplete(
-  success: boolean,
-  result?: unknown,
-  error?: string,
-): void {
+function sendExecutionComplete(success: boolean, result?: unknown, error?: string): void {
   if (!process.send) {
     return;
   }

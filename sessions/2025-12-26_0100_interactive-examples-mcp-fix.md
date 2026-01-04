@@ -10,6 +10,7 @@ Fixed all interactive UI component examples to work correctly in both CLI and MC
 ## Problem
 
 All example files using interactive UI components (`input`, `select`, `form`, `multiselect`, `password`, `autocomplete`) would fail in MCP mode with error:
+
 ```
 Interactive input not available in MCP mode. All parameters must be defined in the tool's inputSchema.
 ```
@@ -17,6 +18,7 @@ Interactive input not available in MCP mode. All parameters must be defined in t
 ## Root Cause
 
 The examples were designed for CLI mode only, calling interactive UI functions directly without considering MCP mode where:
+
 - Claude provides all parameters through inputSchema
 - No user interaction is possible (stdio used for JSON-RPC)
 - Parameters should be read from schema, not prompted
@@ -26,7 +28,9 @@ The examples were designed for CLI mode only, calling interactive UI functions d
 For each interactive example, implemented the dual-mode pattern:
 
 ### 1. Update inputSchema
+
 Add optional parameters for the values that would be collected interactively:
+
 ```typescript
 inputSchema: z.object({
   // ... existing params
@@ -35,6 +39,7 @@ inputSchema: z.object({
 ```
 
 ### 2. Check context.mode in execute
+
 ```typescript
 execute: async ({ value, ... }, context) => {
   if (context.mode === "mcp") {
@@ -51,6 +56,7 @@ execute: async ({ value, ... }, context) => {
 ## Files Modified
 
 ### Examples Fixed
+
 1. **`examples/input.ts`**
    - Added `value` parameter to schema
    - Check mode: use schema value in MCP, prompt in CLI
@@ -77,7 +83,9 @@ execute: async ({ value, ... }, context) => {
    - Check mode: use schema values in MCP, interactive autocomplete in CLI
 
 ### UI Components Updated (Earlier)
+
 Also updated UI component error messages to be MCP-aware:
+
 - `src/ui/components/input.ts`
 - `src/ui/components/select.ts`
 - `src/ui/components/form.ts`
@@ -87,6 +95,7 @@ Also updated UI component error messages to be MCP-aware:
 ## Key Patterns
 
 ### Simple Value Input
+
 ```typescript
 inputSchema: z.object({
   value: z.string().optional().describe("The input value"),
@@ -98,6 +107,7 @@ execute: async ({ value }, context) => {
 ```
 
 ### Selection
+
 ```typescript
 inputSchema: z.object({
   value: z.enum(["option1", "option2"]).optional(),
@@ -109,6 +119,7 @@ execute: async ({ value }, context) => {
 ```
 
 ### Multi-Selection
+
 ```typescript
 inputSchema: z.object({
   values: z.array(z.string()).optional(),
@@ -120,6 +131,7 @@ execute: async ({ values }, context) => {
 ```
 
 ### Form (Multiple Fields)
+
 ```typescript
 inputSchema: z.object({
   field1: z.string().optional(),
@@ -137,6 +149,7 @@ execute: async (args, context) => {
 ```
 
 ### Secrets (Password/API Keys)
+
 ```typescript
 inputSchema: z.object({
   useEnvVar: z.boolean().default(true),
@@ -163,6 +176,7 @@ execute: async ({ useEnvVar, envVarName }, context) => {
 ## Testing
 
 Build successful:
+
 ```bash
 bun run build
 # ✔ Build complete in 1116ms
@@ -170,6 +184,7 @@ bun run build
 ```
 
 All examples now:
+
 - Work in CLI mode (interactive prompts)
 - Work in MCP mode (Claude provides parameters)
 - Follow MCP best practices

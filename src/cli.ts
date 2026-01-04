@@ -20,9 +20,7 @@ interface PropertyInfo {
 /**
  * Extract JSON Schema from a Standard Schema if available
  */
-function extractJsonSchema(
-  schema: StandardSchemaV1,
-): Record<string, unknown> | null {
+function extractJsonSchema(schema: StandardSchemaV1): Record<string, unknown> | null {
   const standard = schema["~standard"] as unknown as Record<string, unknown>;
   if ("jsonSchema" in standard && standard.jsonSchema) {
     const jsonSchema = standard.jsonSchema as {
@@ -40,13 +38,8 @@ function extractJsonSchema(
 /**
  * Extract property info from JSON Schema
  */
-function extractProperties(
-  jsonSchema: Record<string, unknown>,
-): PropertyInfo[] {
-  const properties = (jsonSchema.properties ?? {}) as Record<
-    string,
-    Record<string, unknown>
-  >;
+function extractProperties(jsonSchema: Record<string, unknown>): PropertyInfo[] {
+  const properties = (jsonSchema.properties ?? {}) as Record<string, Record<string, unknown>>;
   const required = (jsonSchema.required ?? []) as string[];
 
   return Object.entries(properties).map(([name, prop]) => {
@@ -253,10 +246,7 @@ export function generateToolHelp(appName: string, tool: AnyTool): string {
 /**
  * Generate help text for single tool app (no subcommand needed)
  */
-export function generateSingleToolHelp(
-  config: AppDefinition,
-  tool: AnyTool,
-): string {
+export function generateSingleToolHelp(config: AppDefinition, tool: AnyTool): string {
   const lines: string[] = [];
 
   // Header

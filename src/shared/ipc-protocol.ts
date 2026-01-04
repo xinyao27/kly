@@ -170,21 +170,9 @@ export function isIPCResponse(msg: unknown): msg is IPCResponse {
 }
 
 export function isSandboxInitMessage(msg: unknown): msg is SandboxInitMessage {
-  return (
-    typeof msg === "object" &&
-    msg !== null &&
-    "type" in msg &&
-    msg.type === "init"
-  );
+  return typeof msg === "object" && msg !== null && "type" in msg && msg.type === "init";
 }
 
-export function isExecutionCompleteMessage(
-  msg: unknown,
-): msg is ExecutionCompleteMessage {
-  return (
-    typeof msg === "object" &&
-    msg !== null &&
-    "type" in msg &&
-    msg.type === "complete"
-  );
+export function isExecutionCompleteMessage(msg: unknown): msg is ExecutionCompleteMessage {
+  return typeof msg === "object" && msg !== null && "type" in msg && msg.type === "complete";
 }

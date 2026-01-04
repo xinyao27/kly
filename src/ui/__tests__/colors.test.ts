@@ -29,9 +29,7 @@ describe("formatText", () => {
   });
 
   it("applies underline formatting", () => {
-    expect(formatText("hello", { underline: true })).toBe(
-      colors.underline("hello"),
-    );
+    expect(formatText("hello", { underline: true })).toBe(colors.underline("hello"));
   });
 
   it("applies color formatting", () => {

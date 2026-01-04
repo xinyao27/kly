@@ -6,17 +6,12 @@ const formTool = tool({
   name: "multi-form",
   description: "Collect multiple form fields",
   inputSchema: z.object({
-    formType: z
-      .enum(["user-registration", "project-setup", "survey"])
-      .describe("Type of form"),
+    formType: z.enum(["user-registration", "project-setup", "survey"]).describe("Type of form"),
     // Define all possible fields that might be needed
     username: z.string().optional().describe("Username for registration"),
     email: z.string().optional().describe("Email address"),
     age: z.number().optional().describe("User age"),
-    role: z
-      .enum(["admin", "editor", "viewer"])
-      .optional()
-      .describe("User role"),
+    role: z.enum(["admin", "editor", "viewer"]).optional().describe("User role"),
     newsletter: z.boolean().optional().describe("Subscribe to newsletter"),
     projectName: z.string().optional().describe("Project name"),
     framework: z
@@ -122,12 +117,7 @@ const formTool = tool({
                 name: "satisfaction",
                 label: "How satisfied are you?",
                 type: "enum",
-                enumValues: [
-                  "Very Satisfied",
-                  "Satisfied",
-                  "Neutral",
-                  "Dissatisfied",
-                ],
+                enumValues: ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied"],
               },
               {
                 name: "rating",

@@ -6,21 +6,15 @@ const autocompleteTool = tool({
   name: "search-select",
   description: "Search and select with autocomplete",
   inputSchema: z.object({
-    category: z
-      .enum(["countries", "packages", "multi"])
-      .describe("Category to search"),
+    category: z.enum(["countries", "packages", "multi"]).describe("Category to search"),
     query: z
       .string()
       .optional()
-      .describe(
-        "Search query or selected value (Claude provides this in MCP mode)",
-      ),
+      .describe("Search query or selected value (Claude provides this in MCP mode)"),
     values: z
       .array(z.string())
       .optional()
-      .describe(
-        "Selected values for multi-select (Claude provides this in MCP mode)",
-      ),
+      .describe("Selected values for multi-select (Claude provides this in MCP mode)"),
   }),
   execute: async ({ category, query, values }, context) => {
     // In MCP mode: use the provided query/values

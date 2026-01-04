@@ -41,10 +41,9 @@ export function createSandboxedModelsContext(): ModelsContext {
      */
     async getConfigAsync(name?: string): Promise<ModelConfig | null> {
       try {
-        const response = await sendIPCRequest<ModelConfigResponse | null>(
-          "getModelConfig",
-          { name },
-        );
+        const response = await sendIPCRequest<ModelConfigResponse | null>("getModelConfig", {
+          name,
+        });
 
         if (!response) {
           return null;
@@ -58,8 +57,7 @@ export function createSandboxedModelsContext(): ModelsContext {
         };
       } catch (error) {
         // Re-throw with clear error message
-        const message =
-          error instanceof Error ? error.message : "Failed to get model config";
+        const message = error instanceof Error ? error.message : "Failed to get model config";
         throw new Error(`Permission denied: ${message}`);
       }
     },

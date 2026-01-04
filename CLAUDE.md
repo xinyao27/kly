@@ -4,43 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a TypeScript library starter template configured with modern tooling. The project uses Bun as its runtime and package manager, Biome for linting and formatting, and tsdown for building.
+This is a TypeScript library starter template configured with modern tooling. The project uses Bun as its runtime and package manager, Oxc for linting and formatting, and tsdown for building.
 
 ## Development Commands
 
 ### Building
+
 ```bash
 bun run build          # Build the library using tsdown
 ```
 
 The build outputs to `dist/` with three formats:
+
 - `dist/index.cjs` (CommonJS)
 - `dist/index.mjs` (ESM)
 - `dist/index.d.ts` (TypeScript declarations)
 
 ### Linting
+
 ```bash
-bun run lint           # Run Biome formatter + type checking on ./src
+bun run lint           # Run Oxc format + Oxc lint + type checking on ./src
 bun run typecheck      # Type check only (no emit)
 ```
 
 The `lint` script runs two tasks sequentially:
-1. Biome check with auto-fix on `./src` directory
+
+1. Oxc check with auto-fix on `./src` directory
 2. TypeScript type checking
 
-Note: Git pre-commit hooks run `biome check --write --unsafe` on all staged files via lint-staged.
-
 ### Testing
+
 ```bash
 bun test               # Run tests using Bun's built-in test runner
 ```
 
 ### Development
+
 ```bash
 bun run start          # Run src/index.ts directly
 ```
 
 ### Releasing
+
 ```bash
 bun run release        # Interactive release using release-it with conventional changelog
 ```
@@ -48,6 +53,7 @@ bun run release        # Interactive release using release-it with conventional 
 Release configuration follows Angular conventional commits. Changelog is auto-generated in CHANGELOG.md.
 
 ### Dependencies
+
 ```bash
 bun run up             # Update dependencies to latest major versions using taze
 ```
@@ -61,11 +67,13 @@ bun run up             # Update dependencies to latest major versions using taze
 **Avoid Dynamic Imports Unless Necessary**
 
 Prefer static imports over dynamic imports (`await import(...)`) unless there's a specific reason:
+
 - Module is only needed in certain runtime modes (e.g., MCP vs CLI)
 - Lazy loading is required for performance
 - Circular dependency issues need to be resolved
 
 **Bad Example:**
+
 ```typescript
 if (command === "models") {
   const { modelsCommand } = await import("../src/ai/models-command");
@@ -74,6 +82,7 @@ if (command === "models") {
 ```
 
 **Good Example:**
+
 ```typescript
 import { modelsCommand } from "../src/ai/models-command";
 
@@ -83,6 +92,7 @@ if (command === "models") {
 ```
 
 **Acceptable Use Cases:**
+
 - MCP server module in defineApp (only loaded when needed in MCP mode)
 - Large dependencies that are rarely used
 - Runtime-specific modules
@@ -119,6 +129,7 @@ help("Usage: myapp <command>");         // Help text
 ```
 
 **Bad Example:**
+
 ```typescript
 console.log("Installing dependencies...");
 console.warn("Config file not found");
@@ -126,6 +137,7 @@ console.error("Failed to load config");
 ```
 
 **Good Example:**
+
 ```typescript
 import { log, error } from "../ui";
 
@@ -135,6 +147,7 @@ error("Failed to load config");
 ```
 
 **Why Use `log` Instead of `console`:**
+
 - Consistent styling across the CLI using @clack/prompts
 - Better visual hierarchy with icons and colors
 - Centralized output management
@@ -142,6 +155,7 @@ error("Failed to load config");
 - Better user experience
 
 **Exceptions:**
+
 - Test files may use `console` for debugging
 - When explicitly testing console output behavior
 - MCP mode error handlers (stderr only, as stdout is reserved for JSON-RPC)
@@ -155,6 +169,7 @@ error("Failed to load config");
 ## Build System
 
 Uses `tsdown` (configured in `tsdown.config.ts`):
+
 - Cleans dist directory before build
 - Generates TypeScript declarations
 - Outputs dual-format bundles (CJS + ESM)
@@ -162,11 +177,6 @@ Uses `tsdown` (configured in `tsdown.config.ts`):
 ## CI/CD
 
 GitHub Actions workflows:
+
 - **Lint**: Runs on push/PR to main, executes `bun run lint`
 - **Test**: Runs on push/PR to main across Ubuntu/Windows/macOS, executes build + test
-
-## Git Workflow
-
-- Main branch: `main`
-- Pre-commit hook: Runs Biome formatting on staged files
-- Commit message format: Conventional commits (Angular preset) for release automation

@@ -68,9 +68,7 @@ export interface ModelsDevData {
 /**
  * Fetch models.dev data with caching
  */
-export async function fetchModelsDevData(
-  forceRefresh = false,
-): Promise<ModelsDevData | null> {
+export async function fetchModelsDevData(forceRefresh = false): Promise<ModelsDevData | null> {
   // Try to load from cache first
   if (!forceRefresh && existsSync(CACHE_FILE)) {
     try {
@@ -80,7 +78,7 @@ export async function fetchModelsDevData(
       if (age < CACHE_TTL) {
         return cached;
       }
-    } catch (_error) {
+    } catch {
       // Cache file corrupted, continue to fetch
     }
   }
@@ -101,12 +99,12 @@ export async function fetchModelsDevData(
     // Save to cache
     try {
       writeFileSync(CACHE_FILE, JSON.stringify(cachedData, null, 2), "utf-8");
-    } catch (_error) {
+    } catch {
       // Ignore cache write errors
     }
 
     return cachedData;
-  } catch (_error) {
+  } catch {
     // Network error, try to return stale cache
     if (existsSync(CACHE_FILE)) {
       try {
@@ -136,10 +134,7 @@ const PROVIDER_ID_MAP: Partial<Record<LLMProvider, string>> = {
 /**
  * Get provider info by our internal provider ID
  */
-export function getProviderInfo(
-  data: ModelsDevData,
-  provider: LLMProvider,
-): ProviderInfo | null {
+export function getProviderInfo(data: ModelsDevData, provider: LLMProvider): ProviderInfo | null {
   const modelsDevId = PROVIDER_ID_MAP[provider];
   if (!modelsDevId) return null;
 
@@ -149,10 +144,7 @@ export function getProviderInfo(
 /**
  * Get all models for a provider
  */
-export function getProviderModels(
-  data: ModelsDevData,
-  provider: LLMProvider,
-): ModelInfo[] {
+export function getProviderModels(data: ModelsDevData, provider: LLMProvider): ModelInfo[] {
   const providerInfo = getProviderInfo(data, provider);
   if (!providerInfo) return [];
 

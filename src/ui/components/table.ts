@@ -70,7 +70,7 @@ function alignText(text: string, width: number, align: ColumnAlign): string {
  * Strip ANSI escape codes from string for length calculation
  */
 function stripAnsi(str: string): string {
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI codes regex
+  // oxlint-disable-next-line no-control-regex
   return str.replace(/\x1b\[[0-9;]*m/g, "");
 }
 
@@ -93,9 +93,7 @@ function calculateColumnWidths<T>(
 
     for (const row of rows) {
       const value = row[col.key];
-      const formatted = col.formatter
-        ? col.formatter(value, row)
-        : String(value ?? "");
+      const formatted = col.formatter ? col.formatter(value, row) : String(value ?? "");
       const length = stripAnsi(formatted).length;
       maxWidth = Math.max(maxWidth, length);
     }
@@ -123,13 +121,7 @@ function formatCell<T>(value: unknown, row: T, column: TableColumn<T>): string {
  * Render table in TTY mode with borders and styling
  */
 function renderTTY<T>(config: TableConfig<T>): string {
-  const {
-    columns,
-    rows,
-    showHeader = true,
-    showBorders = true,
-    title,
-  } = config;
+  const { columns, rows, showHeader = true, showBorders = true, title } = config;
   const lines: string[] = [];
 
   // Calculate column widths
@@ -233,9 +225,7 @@ function renderPlain<T>(config: TableConfig<T>): string {
  * });
  * ```
  */
-export function table<T = Record<string, unknown>>(
-  config: TableConfig<T>,
-): void {
+export function table<T = Record<string, unknown>>(config: TableConfig<T>): void {
   const output = isTTY() ? renderTTY(config) : renderPlain(config);
   console.log(output);
 }

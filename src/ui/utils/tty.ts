@@ -3,7 +3,5 @@
  * Returns false in CI or non-interactive environments
  */
 export function isTTY(): boolean {
-  return Boolean(
-    process.stdout.isTTY && process.stdin.isTTY && !process.env.CI,
-  );
+  return Boolean(process.stdout.isTTY && process.stdin.isTTY && !process.env.CI);
 }

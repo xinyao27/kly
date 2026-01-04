@@ -128,15 +128,18 @@ const schema = type({ city: "string" })
 ```
 
 **CLI Mode:**
+
 - Without args: List all available tools for user selection
 - With tool name: Auto-generate TUI form from inputSchema
 - With full args: Direct execution
 
 **MCP Mode:**
+
 - Expose `tools[]` array directly as MCP Tool list
 - AI (Claude) handles parameter parsing - zero additional LLM calls
 
 **Skill Mode:**
+
 - Use `instructions` field for AI routing hints
 - Composable with other apps via `ctx.run()`
 
@@ -196,12 +199,12 @@ kly run weather.ts --city Beijing "should I bring umbrella?"
 
 ### 3.4 Inference Cost Matrix
 
-| Scenario | Source | Cost | Latency |
-|----------|--------|------|---------|
-| MCP Mode | Claude itself | Free | ~0ms |
-| CLI + Ollama | Local model | Free | ~500ms |
-| CLI + API Key | OpenAI/Anthropic/DeepSeek | User pays | ~1s |
-| CLI + Gateway | kly cloud | Limited free | ~1s |
+| Scenario      | Source                    | Cost         | Latency |
+| ------------- | ------------------------- | ------------ | ------- |
+| MCP Mode      | Claude itself             | Free         | ~0ms    |
+| CLI + Ollama  | Local model               | Free         | ~500ms  |
+| CLI + API Key | OpenAI/Anthropic/DeepSeek | User pays    | ~1s     |
+| CLI + Gateway | kly cloud                 | Limited free | ~1s     |
 
 ---
 
@@ -355,15 +358,15 @@ export default defineApp({
 
 ## 8. Technical Stack
 
-| Layer | Technology |
-|-------|------------|
-| Runtime | Bun |
-| Type Safety | TypeScript + Standard Schema (Zod/Valibot/ArkType) |
-| TUI | @clack/prompts |
-| Build | tsdown |
-| Distribution | GitHub-first + Cloudflare Workers |
-| Web IDE | WebContainer API + xterm.js |
-| AI Integration | MCP Protocol Compatible |
+| Layer          | Technology                                         |
+| -------------- | -------------------------------------------------- |
+| Runtime        | Bun                                                |
+| Type Safety    | TypeScript + Standard Schema (Zod/Valibot/ArkType) |
+| TUI            | @clack/prompts                                     |
+| Build          | tsdown                                             |
+| Distribution   | GitHub-first + Cloudflare Workers                  |
+| Web IDE        | WebContainer API + xterm.js                        |
+| AI Integration | MCP Protocol Compatible                            |
 
 ---
 
@@ -479,7 +482,7 @@ await generateText({
 
 ### 10.6 Error Handling
 
-```typescript
+````typescript
 try {
   // LLM call with spinner
   const { text } = await generateText(...)
@@ -494,7 +497,7 @@ try {
   spinner.fail("Failed to analyze request")
   throw new Error("Detailed error message...")
 }
-```
+````
 
 ---
 
@@ -511,6 +514,7 @@ try {
 **Risk**: Monkey-patching `fetch` can be bypassed via dynamic imports.
 
 **Mitigation**:
+
 - Short-term: Best-effort interception via `--preload`
 - Long-term: WASM sandbox or isolated process
 
@@ -519,6 +523,7 @@ try {
 **Risk**: Frequent natural language usage can incur API costs.
 
 **Mitigation**:
+
 - In-memory caching (100 entries) for repeated queries
 - Fast, cheap models by default (gpt-4o-mini, claude-3-5-haiku)
 - Users can override with environment variables

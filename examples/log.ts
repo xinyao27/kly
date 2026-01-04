@@ -6,10 +6,7 @@ const logTool = tool({
   name: "log-demo",
   description: "Logging and message output demonstrations",
   inputSchema: z.object({
-    demo: z
-      .enum(["all", "workflow", "errors"])
-      .default("all")
-      .describe("Type of log demo to run"),
+    demo: z.enum(["all", "workflow", "errors"]).default("all").describe("Type of log demo to run"),
   }),
   execute: async ({ demo }) => {
     switch (demo) {
@@ -41,10 +38,7 @@ const logTool = tool({
         log.step("Configuring project");
         log.warn("Using default configuration");
 
-        note(
-          "Run `npm run dev` to start\nRun `npm run build` to build",
-          "Next Steps",
-        );
+        note("Run `npm run dev` to start\nRun `npm run build` to build", "Next Steps");
 
         outro("Setup complete!");
         return { demo, steps: 3 };

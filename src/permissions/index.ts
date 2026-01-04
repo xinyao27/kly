@@ -114,18 +114,11 @@ export function savePermissions(config: PermissionsConfig): void {
 /**
  * Request permission from user with interactive prompt
  */
-async function requestPermission(
-  appId: string,
-  appName: string,
-): Promise<boolean> {
+async function requestPermission(appId: string, appName: string): Promise<boolean> {
   // Check if running in TTY mode
   if (!isTTY()) {
-    error(
-      `Permission required: App "${appName}" (${appId}) wants to access your API keys.`,
-    );
-    error(
-      "Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.",
-    );
+    error(`Permission required: App "${appName}" (${appId}) wants to access your API keys.`);
+    error("Set KLY_TRUST_ALL=true environment variable to grant access in non-interactive mode.");
     return false;
   }
 
@@ -351,11 +344,7 @@ async function requestSandboxConfig(
 
   let allowedDomains: string[] = [];
   if (networkChoice === "llm-apis") {
-    allowedDomains = [
-      "api.openai.com",
-      "*.anthropic.com",
-      "generativelanguage.googleapis.com",
-    ];
+    allowedDomains = ["api.openai.com", "*.anthropic.com", "generativelanguage.googleapis.com"];
   } else if (networkChoice === "common") {
     allowedDomains = [
       "api.openai.com",
@@ -430,9 +419,7 @@ async function requestSandboxConfig(
  * @param appId - App identifier
  * @returns SandboxRuntimeConfig or null if denied
  */
-export async function getAppSandboxConfig(
-  appId: string,
-): Promise<SandboxRuntimeConfig | null> {
+export async function getAppSandboxConfig(appId: string): Promise<SandboxRuntimeConfig | null> {
   const homeDir = homedir();
 
   // Check for trust-all bypass (for automation)

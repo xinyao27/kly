@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { getRepoCachePath } from "./parser";
 import type { CacheCheckResult, CacheMetadata, RepoRef } from "./types";
@@ -31,9 +25,7 @@ export function checkCache(ref: RepoRef): CacheCheckResult {
   }
 
   try {
-    const metadata = JSON.parse(
-      readFileSync(metaPath, "utf-8"),
-    ) as CacheMetadata;
+    const metadata = JSON.parse(readFileSync(metaPath, "utf-8")) as CacheMetadata;
 
     // Check if entry point still exists
     const entryPath = join(cachePath, metadata.entryPoint);

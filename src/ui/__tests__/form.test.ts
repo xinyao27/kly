@@ -37,9 +37,7 @@ describe("form (non-TTY mode)", () => {
   it("displays form title", async () => {
     await form({
       title: "My Form",
-      fields: [
-        { name: "field1", label: "Field 1", type: "string", defaultValue: "a" },
-      ],
+      fields: [{ name: "field1", label: "Field 1", type: "string", defaultValue: "a" }],
     });
 
     expect(logOutput.some((line) => line.includes("My Form"))).toBe(true);

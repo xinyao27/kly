@@ -26,15 +26,7 @@ export const theme = {
   disabled: "#6e7681", // Muted gray
 } as const;
 
-export type AnsiColor =
-  | "red"
-  | "green"
-  | "yellow"
-  | "blue"
-  | "magenta"
-  | "cyan"
-  | "white"
-  | "gray";
+export type AnsiColor = "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray";
 
 /**
  * Color mapping for formatText function

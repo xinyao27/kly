@@ -13,10 +13,7 @@ const passwordTool = tool({
       .boolean()
       .default(true)
       .describe("Use environment variable (recommended for MCP mode)"),
-    envVarName: z
-      .string()
-      .optional()
-      .describe("Environment variable name to read from"),
+    envVarName: z.string().optional().describe("Environment variable name to read from"),
   }),
   execute: async ({ type, useEnvVar, envVarName }, context) => {
     let secret: string;
@@ -82,8 +79,7 @@ const passwordTool = tool({
       type,
       masked,
       length: secret.length,
-      source:
-        context.mode === "mcp" || useEnvVar ? "environment" : "interactive",
+      source: context.mode === "mcp" || useEnvVar ? "environment" : "interactive",
     };
   },
 });

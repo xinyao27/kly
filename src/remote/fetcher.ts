@@ -40,12 +40,9 @@ export async function cloneRepo(ref: RepoRef): Promise<void> {
 
   // Shallow clone specific ref
   try {
-    await execAsync(
-      `git clone --depth 1 --branch ${ref.ref} ${repoUrl} "${targetPath}"`,
-      {
-        timeout: 60000, // 60s timeout
-      },
-    );
+    await execAsync(`git clone --depth 1 --branch ${ref.ref} ${repoUrl} "${targetPath}"`, {
+      timeout: 60000, // 60s timeout
+    });
   } catch (error) {
     // If branch clone fails, try without --branch (for default branch)
     if (ref.ref === "main") {

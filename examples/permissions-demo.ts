@@ -42,10 +42,7 @@ const demoTool = tool({
   name: "demo",
   description: "Demo the permissions system by accessing model config",
   inputSchema: z.object({
-    modelName: z
-      .string()
-      .optional()
-      .describe("Model name (uses current if not specified)"),
+    modelName: z.string().optional().describe("Model name (uses current if not specified)"),
   }),
   execute: async ({ modelName }, context) => {
     output("🔐 Permission Demo");

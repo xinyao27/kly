@@ -33,9 +33,7 @@ function _getCacheKey(
 function extractJsonSchema(schema: StandardSchemaV1): unknown {
   const standard = schema["~standard"];
   if (!standard || !("jsonSchema" in standard)) {
-    throw new Error(
-      "Schema must support JSON Schema (missing ~standard.jsonSchema)",
-    );
+    throw new Error("Schema must support JSON Schema (missing ~standard.jsonSchema)");
   }
   return standard.jsonSchema;
 }
@@ -43,10 +41,7 @@ function extractJsonSchema(schema: StandardSchemaV1): unknown {
 /**
  * Build system prompt with schema information
  */
-function buildSystemPrompt(
-  jsonSchema: any,
-  providedArgs: Record<string, unknown>,
-): string {
+function buildSystemPrompt(jsonSchema: any, providedArgs: Record<string, unknown>): string {
   const providedInfo =
     Object.keys(providedArgs).length > 0
       ? `\n\nThe following parameters are already provided:\n${JSON.stringify(providedArgs, null, 2)}\nDo NOT extract these again.`
@@ -55,9 +50,7 @@ function buildSystemPrompt(
   // Extract required fields from schema
   const required = jsonSchema.required || [];
   const requiredInfo =
-    required.length > 0
-      ? `\n\nREQUIRED fields (must be present): ${required.join(", ")}`
-      : "";
+    required.length > 0 ? `\n\nREQUIRED fields (must be present): ${required.join(", ")}` : "";
 
   return `You are a parameter extraction assistant. Extract structured parameters from natural language input.
 
@@ -111,9 +104,7 @@ export async function parseNaturalLanguage(
     // Note: Reasoning models (like o1, o3) don't support temperature parameter
     // For those models, omit temperature to avoid warnings
     const isReasoningModel =
-      modelName.includes("o1") ||
-      modelName.includes("o3") ||
-      modelName.includes("gpt-5");
+      modelName.includes("o1") || modelName.includes("o3") || modelName.includes("gpt-5");
 
     const { text } = await generateText({
       model,
@@ -130,11 +121,9 @@ export async function parseNaturalLanguage(
       // Remove markdown code blocks if present
       const cleaned = text.replace(/```json\s*|\s*```/g, "").trim();
       parsed = JSON.parse(cleaned);
-    } catch (_parseError) {
+    } catch {
       s?.fail("Failed to parse LLM response");
-      throw new Error(
-        `Failed to parse LLM response as JSON. Response was:\n${text}`,
-      );
+      throw new Error(`Failed to parse LLM response as JSON. Response was:\n${text}`);
     }
 
     const result = { ...parsed, ...providedArgs };
@@ -180,9 +169,7 @@ export async function selectTool(
   const modelName = config.model || "";
 
   // Build system prompt for tool selection
-  const toolsDescription = tools
-    .map((t) => `- ${t.name}: ${t.description}`)
-    .join("\n");
+  const toolsDescription = tools.map((t) => `- ${t.name}: ${t.description}`).join("\n");
 
   const systemPrompt = `You are a tool selection assistant. Given user input and available tools, select the most appropriate tool.
 
@@ -199,9 +186,7 @@ Instructions:
   try {
     // Note: Reasoning models (like o1, o3) don't support temperature parameter
     const isReasoningModel =
-      modelName.includes("o1") ||
-      modelName.includes("o3") ||
-      modelName.includes("gpt-5");
+      modelName.includes("o1") || modelName.includes("o3") || modelName.includes("gpt-5");
 
     const { text } = await generateText({
       model,

@@ -6,10 +6,7 @@ import type { IPCRequest, IPCResponse } from "../shared/ipc-protocol";
  * Send an IPC request to the host and wait for response
  * Used by UI components and other sandbox code to communicate with the host process
  */
-export async function sendIPCRequest<T>(
-  type: IPCRequest["type"],
-  payload: unknown,
-): Promise<T> {
+export async function sendIPCRequest<T>(type: IPCRequest["type"], payload: unknown): Promise<T> {
   if (!process.send) {
     throw new Error("IPC not available - not running in sandbox mode");
   }

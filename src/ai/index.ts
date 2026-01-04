@@ -1,9 +1,5 @@
 export { getNoLLMConfiguredMessage } from "./config";
-export {
-  isNaturalLanguage,
-  parseNaturalLanguage,
-  selectTool,
-} from "./inference";
+export { isNaturalLanguage, parseNaturalLanguage, selectTool } from "./inference";
 export type { ModelInfo, ModelsDevData, ProviderInfo } from "./models-dev";
 export {
   fetchModelsDevData,
@@ -15,11 +11,7 @@ export {
   getProviderModels,
 } from "./models-dev";
 export { createModel, supportsTemperature } from "./provider";
-export {
-  getDefaultBaseURL,
-  getProviderDescription,
-  getProviderDocURL,
-} from "./provider-config";
+export { getDefaultBaseURL, getProviderDescription, getProviderDocURL } from "./provider-config";
 export {
   getCurrentModelConfig,
   getProviderDisplayName,

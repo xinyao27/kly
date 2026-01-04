@@ -80,12 +80,7 @@ export function parseRemoteRef(input: string): RepoRef | null {
   const [owner, repo, ...subpathParts] = parts;
 
   // Validate owner and repo names
-  if (
-    !owner ||
-    !repo ||
-    !isValidGitHubName(owner) ||
-    !isValidGitHubName(repo)
-  ) {
+  if (!owner || !repo || !isValidGitHubName(owner) || !isValidGitHubName(repo)) {
     return null;
   }
 
@@ -102,10 +97,7 @@ export function parseRemoteRef(input: string): RepoRef | null {
  */
 function isValidGitHubName(name: string): boolean {
   // GitHub names: alphanumeric, hyphens, no consecutive hyphens, no start/end with hyphen
-  return (
-    /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(name) ||
-    /^[a-zA-Z0-9]$/.test(name)
-  );
+  return /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(name) || /^[a-zA-Z0-9]$/.test(name);
 }
 
 /**

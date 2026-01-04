@@ -52,9 +52,7 @@ export interface FormConfig {
  * // values: { name: string, age: number, role: string, subscribe: boolean }
  * ```
  */
-export async function form(
-  config: FormConfig,
-): Promise<Record<string, unknown>> {
+export async function form(config: FormConfig): Promise<Record<string, unknown>> {
   // Sandbox mode: use IPC to request form from host
   if (isSandbox()) {
     return sendIPCRequest<Record<string, unknown>>("prompt:form", config);
@@ -92,9 +90,7 @@ export async function form(
   }
 
   for (const field of config.fields) {
-    const label = field.description
-      ? `${field.label} (${field.description})`
-      : field.label;
+    const label = field.description ? `${field.label} (${field.description})` : field.label;
 
     if (field.type === "boolean") {
       const value = handleCancel(

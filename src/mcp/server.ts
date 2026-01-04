@@ -1,9 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { KlyApp } from "../types";
 import { error } from "../ui";
 import { convertToJsonSchema } from "./schema-converter";
@@ -77,8 +74,7 @@ export async function startMcpServer(app: KlyApp): Promise<void> {
       };
     } catch (error) {
       // Return error in MCP format
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       return {
         content: [
@@ -113,9 +109,7 @@ export async function startMcpServer(app: KlyApp): Promise<void> {
 /**
  * Format tool result for MCP response
  */
-function formatToolResult(
-  result: unknown,
-): Array<{ type: string; text: string }> {
+function formatToolResult(result: unknown): Array<{ type: string; text: string }> {
   if (result === undefined || result === null) {
     return [
       {

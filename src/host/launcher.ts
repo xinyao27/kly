@@ -2,14 +2,8 @@ import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { SandboxManager } from "@anthropic-ai/sandbox-runtime";
-import type {
-  ExecutionCompleteMessage,
-  SandboxInitMessage,
-} from "../shared/ipc-protocol";
-import {
-  isExecutionCompleteMessage,
-  isIPCRequest,
-} from "../shared/ipc-protocol";
+import type { ExecutionCompleteMessage, SandboxInitMessage } from "../shared/ipc-protocol";
+import { isExecutionCompleteMessage, isIPCRequest } from "../shared/ipc-protocol";
 import { log } from "../ui";
 import { createResourceProvider } from "./resource-provider";
 
@@ -37,21 +31,15 @@ export interface LaunchResult {
  * 3. Handles IPC communication for resource access
  * 4. Returns execution result
  */
-export async function launchSandbox(
-  options: LaunchOptions,
-): Promise<LaunchResult> {
-  const { scriptPath, args, appId, invokeDir, sandboxConfig, allowApiKey } =
-    options;
+export async function launchSandbox(options: LaunchOptions): Promise<LaunchResult> {
+  const { scriptPath, args, appId, invokeDir, sandboxConfig, allowApiKey } = options;
 
   // Initialize sandbox manager
   await SandboxManager.initialize(sandboxConfig);
 
   // Resolve paths
   const absoluteScriptPath = resolve(process.cwd(), scriptPath);
-  const _scriptDir = absoluteScriptPath.substring(
-    0,
-    absoluteScriptPath.lastIndexOf("/"),
-  );
+  const _scriptDir = absoluteScriptPath.substring(0, absoluteScriptPath.lastIndexOf("/"));
 
   // Find executor path based on current location
   // Development: src/host/launcher.ts -> src/sandbox/executor.ts
@@ -62,9 +50,7 @@ export async function launchSandbox(
 
   // Show sandbox info
   if (!SandboxManager.isSandboxingEnabled()) {
-    log.warn(
-      "Sandboxing is not supported on this platform. Running without OS-level isolation.",
-    );
+    log.warn("Sandboxing is not supported on this platform. Running without OS-level isolation.");
   }
 
   // Create the command to run in sandbox

@@ -91,24 +91,17 @@ export function defineApp<TTools extends AnyTool[]>(
     definition: fullDefinition,
     tools: toolsMap,
 
-    async execute(
-      toolName: string,
-      providedArgs?: Record<string, unknown>,
-    ): Promise<unknown> {
+    async execute(toolName: string, providedArgs?: Record<string, unknown>): Promise<unknown> {
       const mode = detectMode();
       const tool = toolsMap.get(toolName);
 
       if (!tool) {
         const available = Array.from(toolsMap.keys()).join(", ");
-        throw new Error(
-          `Unknown tool: ${toolName}. Available tools: ${available}`,
-        );
+        throw new Error(`Unknown tool: ${toolName}. Available tools: ${available}`);
       }
 
       // Validate with schema
-      const result = await tool.inputSchema["~standard"].validate(
-        providedArgs ?? {},
-      );
+      const result = await tool.inputSchema["~standard"].validate(providedArgs ?? {});
 
       if (result.issues) {
         throw new ValidationError(result.issues);
@@ -129,8 +122,7 @@ export function defineApp<TTools extends AnyTool[]>(
   if (mode === "cli") {
     runCli(app, fullDefinition).catch((err) => {
       // Check for ExitWarning (user cancellation - graceful exit)
-      const isExitWarning =
-        err instanceof ExitWarning || err?.name === "ExitWarning";
+      const isExitWarning = err instanceof ExitWarning || err?.name === "ExitWarning";
       if (isExitWarning) {
         if (err.message) {
           cancel(err.message);
@@ -141,8 +133,7 @@ export function defineApp<TTools extends AnyTool[]>(
       // Check for ExitError
       const isExitError = err instanceof ExitError || err?.name === "ExitError";
       const exitCode = isExitError ? (err.exitCode ?? 1) : 1;
-      const message =
-        typeof err === "string" ? err : err?.message || String(err);
+      const message = typeof err === "string" ? err : err?.message || String(err);
 
       if (isExitError) {
         if (message) {
@@ -158,8 +149,7 @@ export function defineApp<TTools extends AnyTool[]>(
     // Dynamically import MCP server to avoid bundling it in CLI mode
     import("./mcp").then(({ startMcpServer }) => {
       startMcpServer(app).catch((err) => {
-        const message =
-          typeof err === "string" ? err : err?.message || String(err);
+        const message = typeof err === "string" ? err : err?.message || String(err);
         error("MCP server error:", [message]);
         process.exit(1);
       });
@@ -231,10 +221,7 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
   // Check for missing required fields and prompt if in TTY mode
   // In sandbox mode, form() will use IPC to prompt in the host process
   if (interactive) {
-    const missingFields = getMissingRequiredFields(
-      tool.inputSchema,
-      parsedArgs,
-    );
+    const missingFields = getMissingRequiredFields(tool.inputSchema, parsedArgs);
 
     if (missingFields.length > 0) {
       const additionalArgs = await form({ fields: missingFields });
@@ -249,9 +236,7 @@ async function runSingleToolCli<TTools extends AnyTool[]>(
     }
   } catch (err) {
     if (err instanceof ValidationError) {
-      throw new ExitError(
-        `${err.message}\nRun with --help for usage information.`,
-      );
+      throw new ExitError(`${err.message}\nRun with --help for usage information.`);
     }
     throw err;
   }
@@ -308,10 +293,7 @@ async function runMultiToolsCli<TTools extends AnyTool[]>(
   // Check for missing required fields and prompt if in TTY mode
   // In sandbox mode, form() will use IPC to prompt in the host process
   if (interactive) {
-    const missingFields = getMissingRequiredFields(
-      tool.inputSchema,
-      parsedArgs,
-    );
+    const missingFields = getMissingRequiredFields(tool.inputSchema, parsedArgs);
 
     if (missingFields.length > 0) {
       const additionalArgs = await form({ fields: missingFields });

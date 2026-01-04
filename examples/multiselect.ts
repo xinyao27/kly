@@ -7,9 +7,7 @@ const multiselectTool = tool({
   description: "Select multiple items from a list",
   inputSchema: z.object({
     prompt: z.string().describe("The prompt message"),
-    category: z
-      .enum(["features", "skills", "toppings"])
-      .describe("Category of options"),
+    category: z.enum(["features", "skills", "toppings"]).describe("Category of options"),
     values: z
       .array(z.string())
       .optional()

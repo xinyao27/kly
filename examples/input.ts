@@ -25,10 +25,7 @@ const interactiveWorkflowTool = tool({
 
     // In CLI mode: Ask if user wants to provide more info
     if (context.mode === "cli") {
-      const wantsMore = await confirm(
-        "Would you like to add more profile information?",
-        true,
-      );
+      const wantsMore = await confirm("Would you like to add more profile information?", true);
 
       if (wantsMore) {
         // Conditionally collect additional data based on user's choice
@@ -61,8 +58,7 @@ const interactiveWorkflowTool = tool({
 defineApp({
   name: "input-example",
   version: "0.1.0",
-  description:
-    "Interactive input component examples - shows conditional data collection",
+  description: "Interactive input component examples - shows conditional data collection",
   permissions: {
     // Simple UI demo, no special permissions needed
   },

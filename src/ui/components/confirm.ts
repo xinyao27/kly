@@ -12,10 +12,7 @@ import { isTTY } from "../utils/tty";
  * const proceed = await confirm("Continue?", true);
  * ```
  */
-export async function confirm(
-  message: string,
-  defaultValue = false,
-): Promise<boolean> {
+export async function confirm(message: string, defaultValue = false): Promise<boolean> {
   // Sandbox mode: use IPC to request confirm from host
   if (isSandbox()) {
     return sendIPCRequest<boolean>("prompt:confirm", { message, defaultValue });

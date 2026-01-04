@@ -39,9 +39,7 @@ function findPackageJson(startDir: string): string | null {
  * @param searchDir - Directory to start searching from (defaults to process.cwd())
  * @returns Partial metadata from package.json, or empty object if not found
  */
-export function readPackageMetadata(
-  searchDir: string = process.cwd(),
-): Partial<AppMetadata> {
+export function readPackageMetadata(searchDir: string = process.cwd()): Partial<AppMetadata> {
   try {
     const pkgPath = findPackageJson(searchDir);
 

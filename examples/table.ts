@@ -5,10 +5,7 @@ const showUsersTool = tool({
   name: "users",
   description: "Display a table of users",
   inputSchema: z.object({
-    format: z
-      .enum(["basic", "detailed", "minimal"])
-      .default("basic")
-      .describe("Display format"),
+    format: z.enum(["basic", "detailed", "minimal"]).default("basic").describe("Display format"),
   }),
   execute: async ({ format }) => {
     const users = [
@@ -39,9 +36,7 @@ const showUsersTool = tool({
             key: "status",
             header: "Status",
             formatter: (val: unknown) =>
-              val === "active"
-                ? colors.green("● Active")
-                : colors.red("○ Inactive"),
+              val === "active" ? colors.green("● Active") : colors.red("○ Inactive"),
           },
         ],
         rows: users,

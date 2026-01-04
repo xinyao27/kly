@@ -17,9 +17,7 @@ export function createModelsContext(): ModelsContext {
   async function ensurePermission(): Promise<void> {
     if (permissionChecked) {
       if (!permissionGranted) {
-        throw new Error(
-          "Permission denied: This app does not have permission to access API keys.",
-        );
+        throw new Error("Permission denied: This app does not have permission to access API keys.");
       }
       return;
     }
@@ -29,9 +27,7 @@ export function createModelsContext(): ModelsContext {
     permissionChecked = true;
 
     if (!permissionGranted) {
-      throw new Error(
-        "Permission denied: This app does not have permission to access API keys.",
-      );
+      throw new Error("Permission denied: This app does not have permission to access API keys.");
     }
   }
 

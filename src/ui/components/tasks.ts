@@ -50,9 +50,7 @@ export interface TaskResult<T = unknown> {
  * ]);
  * ```
  */
-export async function tasks<T extends readonly Task[]>(
-  taskList: T,
-): Promise<TaskResult[]> {
+export async function tasks<T extends readonly Task[]>(taskList: T): Promise<TaskResult[]> {
   const results: TaskResult[] = [];
 
   for (const task of taskList) {

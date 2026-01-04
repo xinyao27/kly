@@ -5,13 +5,7 @@ import type { KlyConfig } from "./types";
 /**
  * Entry point candidates to search for (in order)
  */
-const ENTRY_CANDIDATES = [
-  "index.ts",
-  "main.ts",
-  "src/index.ts",
-  "src/main.ts",
-  "app.ts",
-];
+const ENTRY_CANDIDATES = ["index.ts", "main.ts", "src/index.ts", "src/main.ts", "app.ts"];
 
 /**
  * Resolve entry point for a kly app
@@ -23,10 +17,7 @@ const ENTRY_CANDIDATES = [
  * @param repoPath - The root path of the cloned repository
  * @param subpath - Optional subpath within the repository to search for entry point
  */
-export function resolveEntryPoint(
-  repoPath: string,
-  subpath?: string,
-): string | null {
+export function resolveEntryPoint(repoPath: string, subpath?: string): string | null {
   // If subpath is specified, search within that subpath
   const searchPath = subpath ? join(repoPath, subpath) : repoPath;
 

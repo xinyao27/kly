@@ -19,10 +19,7 @@ import { getAppIdentifier } from "../src/permissions";
 import { permissionsCommand } from "../src/permissions/cli";
 import { buildSandboxConfig } from "../src/permissions/config-builder";
 import { extractAppPermissions } from "../src/permissions/extract";
-import {
-  checkStoredPermission,
-  requestUnifiedPermission,
-} from "../src/permissions/unified-prompt";
+import { checkStoredPermission, requestUnifiedPermission } from "../src/permissions/unified-prompt";
 import { isRemoteRef, runRemote } from "../src/remote";
 import { EXIT_CODES } from "../src/shared/constants";
 import { ExitError, ExitWarning } from "../src/shared/errors";
@@ -32,9 +29,7 @@ const args = process.argv.slice(2);
 const command = args[0];
 
 async function main() {
-  intro(
-    `${colors.bgHex("#dc7702")(colors.black(` Kly ${colors.italic(__VERSION__)} `))}`,
-  );
+  intro(`${colors.bgHex("#dc7702")(colors.black(` Kly ${colors.italic(__VERSION__)} `))}`);
 
   if (!command || command === "--help" || command === "-h") {
     showHelp();
@@ -95,9 +90,7 @@ async function main() {
     const appArgs =
       dashDashIndex !== -1
         ? args.slice(dashDashIndex + 1)
-        : args
-            .slice(2)
-            .filter((arg) => arg !== "--force" && arg !== "--no-update-check");
+        : args.slice(2).filter((arg) => arg !== "--force" && arg !== "--no-update-check");
 
     if (isRemoteRef(target)) {
       await runRemote(target, { args: appArgs, force, skipUpdateCheck });
@@ -129,9 +122,7 @@ async function main() {
     return;
   }
 
-  throw new ExitError(
-    `Unknown command: ${command}\nRun "kly --help" for usage`,
-  );
+  throw new ExitError(`Unknown command: ${command}\nRun "kly --help" for usage`);
 }
 
 async function runFile(filePath: string, appArgs: string[]) {
@@ -160,11 +151,7 @@ async function runFile(filePath: string, appArgs: string[]) {
       sandboxConfig = buildSandboxConfig(appPermissions);
 
       // Show unified permission prompt
-      const allowed = await requestUnifiedPermission(
-        appId,
-        appPermissions,
-        sandboxConfig,
-      );
+      const allowed = await requestUnifiedPermission(appId, appPermissions, sandboxConfig);
 
       if (!allowed) {
         throw new ExitError("Permission denied");
@@ -318,8 +305,7 @@ main()
   })
   .catch((err) => {
     // Check for ExitWarning (user cancellation - graceful exit)
-    const isExitWarning =
-      err instanceof ExitWarning || err?.name === "ExitWarning";
+    const isExitWarning = err instanceof ExitWarning || err?.name === "ExitWarning";
     if (isExitWarning) {
       if (err.message) {
         cancel(err.message);
