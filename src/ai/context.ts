@@ -1,36 +1,11 @@
-import { checkApiKeyPermission, getAppIdentifier } from "../permissions";
 import type { ModelConfig, ModelInfo, ModelsContext } from "../types";
 import { getCurrentModelConfig, listModels } from "./storage";
 
 /**
  * Create models context for ExecuteContext
- * Provides access to configured LLM models and their credentials (with permission checks)
+ * Provides access to configured LLM models and their credentials
  */
 export function createModelsContext(): ModelsContext {
-  // Track if permission has been checked in this process
-  let permissionChecked = false;
-  let permissionGranted = false;
-
-  /**
-   * Check permission before allowing access to API keys
-   */
-  async function ensurePermission(): Promise<void> {
-    if (permissionChecked) {
-      if (!permissionGranted) {
-        throw new Error("Permission denied: This app does not have permission to access API keys.");
-      }
-      return;
-    }
-
-    const appId = getAppIdentifier();
-    permissionGranted = await checkApiKeyPermission(appId);
-    permissionChecked = true;
-
-    if (!permissionGranted) {
-      throw new Error("Permission denied: This app does not have permission to access API keys.");
-    }
-  }
-
   return {
     list(): ModelInfo[] {
       return listModels().map((m) => ({
@@ -68,9 +43,6 @@ export function createModelsContext(): ModelsContext {
     },
 
     async getConfigAsync(name?: string): Promise<ModelConfig | null> {
-      // Check permission first
-      await ensurePermission();
-
       if (name) {
         const models = listModels();
         const found = models.find((m) => m.name === name);

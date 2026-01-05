@@ -128,9 +128,5 @@ export default defineApp({
   name: "use-model-config",
   version: "0.1.0",
   description: "Example showing how to use context.models to access API keys",
-  permissions: {
-    // Needs API keys to call LLM APIs
-    apiKeys: true,
-  },
   tools: [askAiTool],
 });

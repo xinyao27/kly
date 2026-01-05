@@ -22,12 +22,4 @@ export default defineConfig([
     outDir: "dist/bin",
     format: "esm",
   },
-  {
-    // Bundle sandbox executor to avoid circular dependency issues
-    ...common,
-    entry: { "bundled-executor": "src/sandbox/executor.ts" },
-    outDir: "dist/sandbox",
-    format: "esm",
-    clean: false, // Don't clean dist directory
-  },
 ]);

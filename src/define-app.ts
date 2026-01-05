@@ -11,36 +11,43 @@ import {
 } from "./cli";
 import { EXIT_CODES } from "./shared/constants";
 import { ExitError, ExitWarning } from "./shared/errors";
-import { detectMode, isSandbox } from "./shared/runtime-mode";
+import { detectMode } from "./shared/runtime-mode";
 import type { AnyTool, AppDefinition, KlyApp } from "./types";
 import { ValidationError } from "./types";
 import { cancel, error, form, isTTY, output, select } from "./ui";
 
 /**
- * Get the appropriate models context based on runtime environment
+ * Global key for app execution promise
+ * Using globalThis to ensure the same variable is accessed across module instances
+ */
+const KLY_APP_PROMISE_KEY = "__kly_app_promise__" as const;
+
+/**
+ * Type for the global app promise storage
+ */
+interface KlyGlobal {
+  [KLY_APP_PROMISE_KEY]?: Promise<{ exitCode: number }>;
+}
+
+/**
+ * Get the global storage
+ */
+function getGlobal(): KlyGlobal {
+  return globalThis as unknown as KlyGlobal;
+}
+
+/**
+ * Get the models context
  */
 async function _getModelsContext() {
-  if (isSandbox()) {
-    // In sandbox: use IPC-based context
-    // Dynamic import for runtime-specific module loading
-    const m = await import("./sandbox/sandboxed-context");
-    return m.getSandboxedContext().modelsContext;
-  }
-  // Outside sandbox: use direct file access
   return createModelsContext();
 }
 
 /**
- * Get the invoke directory based on runtime environment
+ * Get the invoke directory
  */
 async function _getInvokeDir(): Promise<string | undefined> {
-  if (isSandbox()) {
-    // In sandbox: get from sandboxed context
-    const m = await import("./sandbox/sandboxed-context");
-    return m.getSandboxedContext().invokeDir;
-  }
-  // Outside sandbox: not available (programmatic mode)
-  return undefined;
+  return process.cwd();
 }
 
 /**
@@ -78,7 +85,6 @@ export function defineApp<TTools extends AnyTool[]>(
     description: definition.description ?? "",
     tools: definition.tools,
     instructions: definition.instructions,
-    permissions: definition.permissions,
   };
 
   // Build tools map
@@ -120,33 +126,37 @@ export function defineApp<TTools extends AnyTool[]>(
   // Auto-run based on mode
   const mode = detectMode();
   if (mode === "cli") {
-    runCli(app, fullDefinition).catch((err) => {
-      // Check for ExitWarning (user cancellation - graceful exit)
-      const isExitWarning = err instanceof ExitWarning || err?.name === "ExitWarning";
-      if (isExitWarning) {
-        if (err.message) {
-          cancel(err.message);
+    // Create and store the app execution promise globally
+    getGlobal()[KLY_APP_PROMISE_KEY] = runCli(app, fullDefinition)
+      .then(() => ({ exitCode: 0 }))
+      .catch((err) => {
+        // Check for ExitWarning (user cancellation - graceful exit)
+        const isExitWarning = err instanceof ExitWarning || err?.name === "ExitWarning";
+        if (isExitWarning) {
+          if (err.message) {
+            cancel(err.message);
+          }
+          return { exitCode: EXIT_CODES.CANCELLED };
         }
-        process.exit(EXIT_CODES.CANCELLED);
-      }
 
-      // Check for ExitError
-      const isExitError = err instanceof ExitError || err?.name === "ExitError";
-      const exitCode = isExitError ? (err.exitCode ?? 1) : 1;
-      const message = typeof err === "string" ? err : err?.message || String(err);
+        // Check for ExitError
+        const isExitError = err instanceof ExitError || err?.name === "ExitError";
+        const exitCode = isExitError ? (err.exitCode ?? 1) : 1;
+        const message = typeof err === "string" ? err : err?.message || String(err);
 
-      if (isExitError) {
-        if (message) {
-          error(message);
+        if (isExitError) {
+          if (message) {
+            error(message);
+          }
+        } else {
+          error("Fatal error:", [message]);
         }
-      } else {
-        error("Fatal error:", [message]);
-      }
 
-      process.exit(exitCode);
-    });
+        return { exitCode };
+      });
   } else if (mode === "mcp") {
     // Dynamically import MCP server to avoid bundling it in CLI mode
+    // MCP mode runs indefinitely, so we don't set a completion promise
     import("./mcp").then(({ startMcpServer }) => {
       startMcpServer(app).catch((err) => {
         const message = typeof err === "string" ? err : err?.message || String(err);
@@ -200,8 +210,20 @@ async function runCli<TTools extends AnyTool[]>(
   } else {
     await runMultiToolsCli(app, definition);
   }
-  // Clean exit
-  process.exit(0);
+  // Exit is handled by the caller (bin/kly.ts) via the global promise
+}
+
+/**
+ * Wait for the app to complete execution
+ * Returns the exit code from the app, or undefined if no app was running
+ */
+export async function waitForAppCompletion(): Promise<number | undefined> {
+  const promise = getGlobal()[KLY_APP_PROMISE_KEY];
+  if (!promise) {
+    return undefined;
+  }
+  const result = await promise;
+  return result.exitCode;
 }
 
 /**

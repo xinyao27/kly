@@ -1,6 +1,5 @@
 import * as p from "@clack/prompts";
-import { sendIPCRequest } from "../../sandbox/ipc-client";
-import { isMCP, isSandbox } from "../../shared/runtime-mode";
+import { isMCP } from "../../shared/runtime-mode";
 import { handleCancel } from "../utils/cancel";
 import { colors } from "../utils/colors";
 import { isTTY } from "../utils/tty";
@@ -53,11 +52,6 @@ export interface FormConfig {
  * ```
  */
 export async function form(config: FormConfig): Promise<Record<string, unknown>> {
-  // Sandbox mode: use IPC to request form from host
-  if (isSandbox()) {
-    return sendIPCRequest<Record<string, unknown>>("prompt:form", config);
-  }
-
   const result: Record<string, unknown> = {};
 
   // Non-TTY fallback: return defaults or throw in MCP mode

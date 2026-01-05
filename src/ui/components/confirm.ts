@@ -1,6 +1,5 @@
 import * as p from "@clack/prompts";
-import { sendIPCRequest } from "../../sandbox/ipc-client";
-import { isMCP, isSandbox } from "../../shared/runtime-mode";
+import { isMCP } from "../../shared/runtime-mode";
 import { handleCancel } from "../utils/cancel";
 import { isTTY } from "../utils/tty";
 
@@ -13,11 +12,6 @@ import { isTTY } from "../utils/tty";
  * ```
  */
 export async function confirm(message: string, defaultValue = false): Promise<boolean> {
-  // Sandbox mode: use IPC to request confirm from host
-  if (isSandbox()) {
-    return sendIPCRequest<boolean>("prompt:confirm", { message, defaultValue });
-  }
-
   if (!isTTY()) {
     // In MCP mode, warn about using default value for confirmation
     if (isMCP()) {

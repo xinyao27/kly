@@ -6,7 +6,6 @@ export { tool } from "./tool";
 export type {
   AnyTool,
   AppDefinition,
-  AppPermissions,
   ExecuteContext,
   InferOutput,
   KlyApp,

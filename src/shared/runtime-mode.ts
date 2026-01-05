@@ -7,14 +7,6 @@ import type { RuntimeMode } from "../types";
 import { ENV_VARS } from "./constants";
 
 /**
- * Check if running in sandbox mode
- * Sandbox mode: Isolated child process with restricted permissions
- */
-export function isSandbox(): boolean {
-  return process.env[ENV_VARS.SANDBOX_MODE] === "true";
-}
-
-/**
  * Check if running in MCP (Model Context Protocol) mode
  * MCP mode: Running as an MCP server for Claude Desktop integration
  */
@@ -28,14 +20,6 @@ export function isMCP(): boolean {
  */
 export function isProgrammatic(): boolean {
   return process.env[ENV_VARS.PROGRAMMATIC] === "true";
-}
-
-/**
- * Check if running with trust all flag
- * Trust all: Skip permission prompts (for testing/automation)
- */
-export function isTrustAll(): boolean {
-  return process.env[ENV_VARS.TRUST_ALL] === "true";
 }
 
 /**
@@ -57,11 +41,6 @@ export function getRemoteRef(): string | undefined {
  * This is the canonical implementation that should be used throughout the app
  */
 export function detectMode(): RuntimeMode {
-  // Sandbox mode: Running inside sandboxed child process
-  if (isSandbox()) {
-    return "cli"; // Sandbox always runs in CLI mode
-  }
-
   // MCP mode: Check for MCP environment variable
   if (isMCP()) {
     return "mcp";

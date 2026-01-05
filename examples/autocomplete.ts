@@ -132,8 +132,5 @@ defineApp({
   name: "autocomplete-example",
   version: "0.1.0",
   description: "Autocomplete search examples",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [autocompleteTool],
 });

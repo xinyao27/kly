@@ -59,8 +59,5 @@ defineApp({
   name: "input-example",
   version: "0.1.0",
   description: "Interactive input component examples - shows conditional data collection",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [interactiveWorkflowTool],
 });

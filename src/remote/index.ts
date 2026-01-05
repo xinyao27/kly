@@ -296,90 +296,16 @@ async function executeApp(
   process.env[ENV_VARS.REMOTE_REF] = remoteRef;
 
   try {
-    // Dynamic imports to avoid circular dependencies
-    const { getAppIdentifier, checkApiKeyPermission, getAppSandboxConfig } =
-      await import("../permissions");
-    const { launchSandbox } = await import("../host/launcher");
-    const { buildSandboxConfig, formatPermissionsSummary } =
-      await import("../permissions/config-builder");
-    const { extractAppPermissions } = await import("./permissions-extractor");
-
-    const appId = getAppIdentifier();
-
-    // Extract declared permissions from the app
-    const declaredPermissions = await extractAppPermissions(absoluteEntryPath);
-
-    // Show permission summary if declared
-    if (declaredPermissions) {
-      const summary = formatPermissionsSummary(declaredPermissions);
-      if (summary.length > 0) {
-        output("This app requests the following permissions:");
-        for (const item of summary) {
-          output(item);
-        }
-      }
-    }
-
-    // Check permissions based on what's declared
-    let allowApiKey = false;
-    let sandboxConfig: import("@anthropic-ai/sandbox-runtime").SandboxRuntimeConfig | null = null;
-
-    // Only ask for API key permission if the app declares it needs it
-    if (declaredPermissions?.apiKeys) {
-      allowApiKey = await checkApiKeyPermission(appId);
-
-      if (!allowApiKey) {
-        throw new ExitError("Permission denied: API key access rejected");
-      }
-    }
-
-    // Build sandbox config from declared permissions, or ask interactively
-    if (declaredPermissions) {
-      // Use declared permissions to build sandbox config
-      sandboxConfig = buildSandboxConfig(declaredPermissions);
-    } else {
-      // Fall back to interactive prompt if no permissions declared
-      sandboxConfig = await getAppSandboxConfig(appId);
-
-      if (!sandboxConfig) {
-        throw new ExitError("Permission denied: Sandbox configuration rejected");
-      }
-    }
-
-    // Ensure remote app directory is accessible in sandbox
-    // This is needed for module resolution and file access
-    if (!sandboxConfig.filesystem.allowWrite.includes(repoPath)) {
-      sandboxConfig.filesystem.allowWrite.push(repoPath);
-    }
+    // Set process.argv for the app
+    process.argv = ["bun", absoluteEntryPath, ...args];
 
     // Handle MCP mode
     if (mcp) {
-      // For MCP mode, we still need special handling
-      // For now, just run directly without sandbox
-      log.warn("⚠️  MCP mode with remote repos not yet fully supported in new architecture");
       process.env[ENV_VARS.MCP_MODE] = "true";
-      process.argv = ["bun", absoluteEntryPath];
-      await import(absoluteEntryPath);
-      return;
     }
 
-    // Launch in sandbox
-    const result = await launchSandbox({
-      scriptPath: absoluteEntryPath,
-      args,
-      appId,
-      invokeDir: process.cwd(), // Capture where kly run was invoked
-      sandboxConfig,
-      allowApiKey,
-    });
-
-    if (result.error) {
-      error(result.error);
-    }
-
-    if (result.exitCode !== 0) {
-      throw new ExitError("", result.exitCode);
-    }
+    // Import and execute the app
+    await import(absoluteEntryPath);
   } finally {
     // Restore environment
     if (prevRemoteRef === undefined) {

@@ -1,12 +1,3 @@
-import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
-
-/**
- * Deep partial type - makes all properties optional recursively
- */
-type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
-
 /**
  * Standard Schema V1 interface (inlined to avoid external dependency)
  * @see https://github.com/standard-schema/standard-schema
@@ -227,75 +218,6 @@ export interface AppMetadata {
  * })
  * ```
  */
-/**
- * App permissions declaration
- * Simplified user-friendly interface for declaring app permissions
- */
-export interface AppPermissions {
-  /**
-   * API Keys access - needed to call LLM APIs
-   *
-   * When enabled:
-   * - Grants access to models.getConfigAsync() to retrieve API keys
-   * - Automatically allows network access to common LLM API domains:
-   *   • api.openai.com
-   *   • *.anthropic.com
-   *   • generativelanguage.googleapis.com
-   *   • api.deepseek.com
-   *
-   * @default false
-   */
-  apiKeys?: boolean;
-
-  /**
-   * Sandbox configuration
-   * Uses @anthropic-ai/sandbox-runtime configuration directly
-   *
-   * Defaults when not specified:
-   * - Network: No access (apiKeys=true adds LLM APIs automatically)
-   * - Filesystem: Current directory read/write only
-   * - Protected: ~/.kly, ~/.ssh, ~/.aws, ~/.gnupg always denied
-   *
-   * Special markers for filesystem paths:
-   * - "*": User's home directory (allows access to all non-sensitive files)
-   *        Use this for apps that need broad filesystem access (like project generators)
-   *
-   * @example
-   * ```typescript
-   * // Minimal: just need GitHub API access
-   * permissions: {
-   *   sandbox: {
-   *     network: { allowedDomains: ["api.github.com"] }
-   *   }
-   * }
-   *
-   * // Allow access to all non-sensitive directories
-   * permissions: {
-   *   sandbox: {
-   *     filesystem: {
-   *       allowWrite: ["*"] // Expands to user's home directory at runtime
-   *     }
-   *   }
-   * }
-   *
-   * // Full control
-   * permissions: {
-   *   apiKeys: true, // LLM domains added automatically
-   *   sandbox: {
-   *     network: {
-   *       allowedDomains: ["api.github.com"] // Add more domains
-   *     },
-   *     filesystem: {
-   *       allowWrite: ["./output", "/tmp"],
-   *       denyRead: ["/etc"]
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  sandbox?: DeepPartial<SandboxRuntimeConfig>;
-}
-
 export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]> extends AppMetadata {
   /** Array of tools */
   tools: TTools;
@@ -304,18 +226,6 @@ export interface AppDefinition<TTools extends AnyTool[] = AnyTool[]> extends App
    * Hints for AI routing when this app is composed with others
    */
   instructions?: string;
-  /**
-   * Permissions required by this app
-   * Declare upfront what your app needs to access
-   * @example
-   * ```typescript
-   * permissions: {
-   *   apiKeys: true,
-   *   network: { allow: "llm-apis" }
-   * }
-   * ```
-   */
-  permissions?: AppPermissions;
 }
 
 /**

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import { dirname, resolve } from "node:path";
-import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
 import { modelsCommand } from "../src/ai/models-command";
 import {
   autoRegisterBins,
@@ -14,21 +13,15 @@ import {
   listCommand,
   uninstallCommand,
 } from "../src/bin-registry/commands";
-import { launchSandbox } from "../src/host/launcher";
-import { getAppIdentifier } from "../src/permissions";
-import { permissionsCommand } from "../src/permissions/cli";
-import { buildSandboxConfig } from "../src/permissions/config-builder";
-import { extractAppPermissions } from "../src/permissions/extract";
-import { checkStoredPermission, requestUnifiedPermission } from "../src/permissions/unified-prompt";
+import { waitForAppCompletion } from "../src/define-app";
 import { isRemoteRef, runRemote } from "../src/remote";
-import { EXIT_CODES } from "../src/shared/constants";
 import { ExitError, ExitWarning } from "../src/shared/errors";
 import { cancel, colors, error, intro, log, outro } from "../src/ui";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-async function main() {
+async function main(): Promise<number | undefined> {
   intro(`${colors.bgHex("#dc7702")(colors.black(` Kly ${colors.italic(__VERSION__)} `))}`);
 
   if (!command || command === "--help" || command === "-h") {
@@ -43,11 +36,6 @@ async function main() {
 
   if (command === "models") {
     await modelsCommand();
-    return;
-  }
-
-  if (command === "permissions") {
-    await permissionsCommand();
     return;
   }
 
@@ -97,7 +85,8 @@ async function main() {
     } else {
       await runFile(target, appArgs);
     }
-    return;
+    // Wait for app to complete and return its exit code
+    return await waitForAppCompletion();
   }
 
   if (command === "mcp") {
@@ -119,7 +108,8 @@ async function main() {
     } else {
       await runFileAsMcp(target);
     }
-    return;
+    // MCP mode runs indefinitely - wait forever (process will be killed externally)
+    await new Promise(() => {});
   }
 
   throw new ExitError(`Unknown command: ${command}\nRun "kly --help" for usage`);
@@ -127,114 +117,48 @@ async function main() {
 
 async function runFile(filePath: string, appArgs: string[]) {
   const absolutePath = resolve(process.cwd(), filePath);
-  // Capture the working directory where kly run was invoked
-  const invokeDir = process.cwd();
 
-  // Set local file identifier for permission tracking
-  const prevLocalRef = process.env.KLY_LOCAL_REF;
-  process.env.KLY_LOCAL_REF = `local:${absolutePath}`;
+  // Set process.argv for the app
+  process.argv = ["bun", absolutePath, ...appArgs];
 
-  try {
-    // Get app identifier
-    const appId = getAppIdentifier();
+  // Import and execute the app
+  await import(absolutePath);
 
-    // Check if permission already granted
-    const storedConfig = checkStoredPermission(appId);
-    let sandboxConfig: SandboxRuntimeConfig;
-    let allowApiKey = false;
+  // Auto-register bin commands for local projects
+  const projectPath = dirname(absolutePath);
+  const detection = detectBins(projectPath);
 
-    if (!storedConfig) {
-      // Extract declared permissions from app
-      const appPermissions = await extractAppPermissions(absolutePath);
-
-      // Build complete sandbox config (with auto-LLM domains if apiKeys: true)
-      sandboxConfig = buildSandboxConfig(appPermissions);
-
-      // Show unified permission prompt
-      const allowed = await requestUnifiedPermission(appId, appPermissions, sandboxConfig);
-
-      if (!allowed) {
-        throw new ExitError("Permission denied");
+  if (detection.hasBin) {
+    // Check if any commands need re-registration (local project code changed)
+    let needsUpdate = false;
+    for (const [cmdName] of Object.entries(detection.bins)) {
+      if (shouldReregisterLocal(cmdName, projectPath)) {
+        needsUpdate = true;
+        break;
       }
+    }
 
-      // Set API key access based on declared permissions
-      allowApiKey = appPermissions?.apiKeys ?? false;
+    if (needsUpdate) {
+      // Auto-update without asking
+      await autoRegisterBins(projectPath, {
+        type: "local",
+        force: true,
+        skipConfirm: true,
+      });
     } else {
-      // Permission already granted, use stored config
-      sandboxConfig = storedConfig;
-      // We need to re-extract to determine if apiKeys was requested
-      const appPermissions = await extractAppPermissions(absolutePath);
-      allowApiKey = appPermissions?.apiKeys ?? false;
-    }
+      // Check if this is the first time (not registered yet)
+      const firstBinCmd = Object.keys(detection.bins)[0];
+      if (firstBinCmd) {
+        const existing = getCommand(firstBinCmd);
 
-    // Launch in sandbox
-    const result = await launchSandbox({
-      scriptPath: absolutePath,
-      args: appArgs,
-      appId,
-      invokeDir,
-      sandboxConfig,
-      allowApiKey,
-    });
-
-    if (result.error) {
-      error(result.error);
-    }
-
-    if (result.exitCode === 0) {
-      // Auto-register bin commands for local projects
-      const projectPath = dirname(absolutePath);
-      const detection = detectBins(projectPath);
-
-      if (detection.hasBin) {
-        // Check if any commands need re-registration (local project code changed)
-        let needsUpdate = false;
-        for (const [cmdName] of Object.entries(detection.bins)) {
-          if (shouldReregisterLocal(cmdName, projectPath)) {
-            needsUpdate = true;
-            break;
-          }
-        }
-
-        if (needsUpdate) {
-          // Auto-update without asking
+        if (!existing) {
+          // First time - ask user
           await autoRegisterBins(projectPath, {
             type: "local",
-            force: true,
-            skipConfirm: true,
+            skipConfirm: false,
           });
-        } else {
-          // Check if this is the first time (not registered yet)
-          const firstBinCmd = Object.keys(detection.bins)[0];
-          if (firstBinCmd) {
-            const existing = getCommand(firstBinCmd);
-
-            if (!existing) {
-              // First time - ask user
-              await autoRegisterBins(projectPath, {
-                type: "local",
-                skipConfirm: false,
-              });
-            }
-          }
         }
       }
-    }
-
-    if (result.exitCode === EXIT_CODES.CANCELLED) {
-      // User cancelled in sandbox - propagate as ExitWarning (no message since sandbox already showed it)
-      throw new ExitWarning("");
-    }
-
-    if (result.exitCode !== 0) {
-      throw new ExitError("", result.exitCode);
-    }
-  } finally {
-    // Restore environment
-    if (prevLocalRef === undefined) {
-      delete process.env.KLY_LOCAL_REF;
-    } else {
-      process.env.KLY_LOCAL_REF = prevLocalRef;
     }
   }
 }
@@ -258,7 +182,6 @@ function showHelp() {
 
 Commands:
   models           Manage LLM model configurations
-  permissions      Manage app permissions
   run <target>     Run a Kly app
   mcp <target>     Start an MCP server for a Kly app
   install <target> Install a Kly app as global command
@@ -280,7 +203,6 @@ Options:
 
 Examples:
   kly models
-  kly permissions
   kly run ./my-tool.ts
   kly run ./my-tool.ts --name=World
   kly run user/weather-app
@@ -299,9 +221,9 @@ function showVersion() {
 }
 
 main()
-  .then(() => {
+  .then((exitCode) => {
     outro(`ヾ(￣▽￣)Bye~`);
-    process.exit(0);
+    process.exit(exitCode ?? 0);
   })
   .catch((err) => {
     // Check for ExitWarning (user cancellation - graceful exit)

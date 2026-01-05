@@ -92,8 +92,5 @@ defineApp({
   name: "select-example",
   version: "0.1.0",
   description: "Interactive select menu examples",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [selectTool],
 });

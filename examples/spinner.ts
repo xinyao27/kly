@@ -70,8 +70,5 @@ defineApp({
   name: "spinner-example",
   version: "0.1.0",
   description: "Loading spinner and progress examples",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [spinnerTool],
 });

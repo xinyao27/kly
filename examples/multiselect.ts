@@ -85,8 +85,5 @@ defineApp({
   name: "multiselect-example",
   version: "0.1.0",
   description: "Interactive multi-select examples",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [multiselectTool],
 });

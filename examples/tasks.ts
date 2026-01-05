@@ -125,8 +125,5 @@ defineApp({
   name: "tasks-example",
   version: "0.1.0",
   description: "Sequential task runner examples",
-  permissions: {
-    // Simple UI demo, no special permissions needed
-  },
   tools: [tasksTool],
 });
