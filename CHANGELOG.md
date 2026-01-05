@@ -2,10 +2,9 @@
 
 # [0.4.0](https://github.com/xinyao27/kly/compare/0.3.1...0.4.0) (2026-01-05)
 
-
 ### Features
 
-* remove permissions ([5872cbf](https://github.com/xinyao27/kly/commit/5872cbf46c38386984d751cc1cbfc0d725309893))
+- remove permissions ([5872cbf](https://github.com/xinyao27/kly/commit/5872cbf46c38386984d751cc1cbfc0d725309893))
 
 ## [0.3.1](https://github.com/xinyao27/kly/compare/0.3.0...0.3.1) (2026-01-04)
 

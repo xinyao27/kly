@@ -4,8 +4,8 @@
  * Example: Using context.models to access configured LLM API keys
  *
  * This example demonstrates how to:
- * 1. Access configured model information (no permission needed)
- * 2. Get full model config including API keys (requires user permission)
+ * 1. Access configured model information
+ * 2. Get full model config including API keys
  * 3. Use the config to call LLM APIs
  *
  * Prerequisites:
@@ -16,7 +16,7 @@
  * # Run the tool
  * bun run examples/use-model-config.ts
  *
- * # Skip permission prompt (for automation)
+ * # Trust all apps (for automation)
  * KLY_TRUST_ALL=true bun run examples/use-model-config.ts
  * ```
  */
@@ -41,7 +41,7 @@ const askAiTool = tool({
       .describe("Model configuration name (uses current if not specified)"),
   }),
   execute: async ({ question, modelName }, context) => {
-    // 1. List all configured models (no permission needed)
+    // 1. List all configured models
     output("📋 Configured models:");
     const models = context.models.list();
     for (const model of models) {
@@ -51,13 +51,13 @@ const askAiTool = tool({
       );
     }
 
-    // 2. Get current model info (no permission needed)
+    // 2. Get current model info
     const current = context.models.getCurrent();
     if (current) {
       output(`Current model: ${current.name} (${current.provider})`);
     }
 
-    // 3. Get full config including API key (requires permission)
+    // 3. Get full config including API key
     log.step("Requesting access to API keys...");
     const config = await context.models.getConfigAsync(modelName);
 
@@ -70,7 +70,7 @@ const askAiTool = tool({
       throw new Error("No LLM model configured. Run 'bun run bin/kly.ts models' to set up.");
     }
 
-    log.success(`Permission granted! Using ${config.provider}`);
+    log.success(`Using ${config.provider}`);
 
     // 4. Create provider based on config
     const provider = createProviderFromConfig(config);

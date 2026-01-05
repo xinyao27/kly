@@ -98,7 +98,7 @@ function collectSourceFiles(dir: string, results: string[] = []): string[] {
       try {
         stat = statSync(fullPath);
       } catch {
-        // Skip files we can't stat (permission issues, symlinks, etc.)
+        // Skip files we can't stat (symlinks, etc.)
         continue;
       }
 

@@ -102,16 +102,8 @@ export interface ModelsContext {
   /**
    * Get full configuration for a model (including API key)
    *
-   * ⚠️  SECURITY: This method requires user permission
-   * The first time this is called, the user will be prompted to grant permission.
-   * Permission can be granted for:
-   * - One time only
-   * - Always for this app
-   * - Denied
-   *
    * @param name - Model name (if not specified, returns current model)
    * @returns Full config or null if not found/configured
-   * @throws Error if permission is denied
    *
    * @example
    * ```typescript

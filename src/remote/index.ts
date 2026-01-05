@@ -290,7 +290,7 @@ async function executeApp(
 
   const absoluteEntryPath = join(repoPath, entryPoint);
 
-  // Set remote ref environment variable for permission tracking
+  // Set remote ref environment variable for tracking
   const remoteRef = formatRepoUrl(ref);
   const prevRemoteRef = process.env[ENV_VARS.REMOTE_REF];
   process.env[ENV_VARS.REMOTE_REF] = remoteRef;
