@@ -12,6 +12,7 @@ import {
   linkCommand,
   listCommand,
   uninstallCommand,
+  unlinkCommand,
 } from "../src/bin-registry/commands";
 import { waitForAppCompletion } from "../src/define-app";
 import { isRemoteRef, runRemote } from "../src/remote";
@@ -51,6 +52,11 @@ async function main(): Promise<number | undefined> {
 
   if (command === "link") {
     await linkCommand(args.slice(1));
+    return;
+  }
+
+  if (command === "unlink") {
+    await unlinkCommand(args.slice(1));
     return;
   }
 
@@ -187,6 +193,7 @@ Commands:
   install <target> Install a Kly app as global command
   uninstall <cmd>  Uninstall a registered global command
   link [path]      Link a local project as global command
+  unlink <cmd>     Unlink a registered global command
   list             List all registered global commands
 
 Target can be:
@@ -212,6 +219,7 @@ Examples:
   kly mcp user/weather-app
   kly install user/awesome-cli
   kly link ./my-tool
+  kly unlink user/awesome-cli
   kly list
   kly install --setup-path`);
 }

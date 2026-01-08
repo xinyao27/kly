@@ -8,6 +8,7 @@ import {
   autoRegisterBins,
   checkPathSetup,
   detectBins,
+  getCommand,
   listCommands,
   setupPath,
   unregisterCommand,
@@ -57,13 +58,76 @@ export async function installCommand(args: string[]): Promise<void> {
 }
 
 export async function uninstallCommand(args: string[]): Promise<void> {
-  const commandName = args[0];
+  const target = args[0];
 
-  if (!commandName) {
-    throw new ExitError("Missing command name\nUsage: kly uninstall <command-name>");
+  if (!target) {
+    throw new ExitError(
+      "Missing target\nUsage: kly uninstall <command-name|remote-ref|path>",
+    );
   }
 
-  await unregisterCommand(commandName, { skipConfirm: false });
+  await unlinkCommand(args);
+}
+
+export async function unlinkCommand(args: string[]): Promise<void> {
+  const target = args[0];
+
+  if (!target) {
+    throw new ExitError("Missing target\nUsage: kly unlink <command-name|remote-ref|path>");
+  }
+
+  const existing = getCommand(target);
+  if (existing) {
+    await unregisterCommand(target, { skipConfirm: false });
+    return;
+  }
+
+  const commands = listCommands();
+
+  if (isRemoteRef(target)) {
+    const targetKey = getRemoteKey(target);
+    if (!targetKey) {
+      throw new ExitError(`Invalid remote reference: ${target}`);
+    }
+
+    const remoteMatches = commands
+      .filter((cmd) => cmd.type === "remote" && getRemoteKey(cmd.remoteRef ?? "") === targetKey)
+      .map((cmd) => cmd.commandName);
+
+    if (remoteMatches.length === 0) {
+      log.warn(`No commands registered for remote '${target}'`);
+      return;
+    }
+
+    for (const commandName of remoteMatches) {
+      await unregisterCommand(commandName, { skipConfirm: false });
+    }
+    return;
+  }
+
+  const absolutePath = resolve(process.cwd(), target);
+  const localMatches = commands
+    .filter((cmd) => cmd.type === "local" && cmd.localPath === absolutePath)
+    .map((cmd) => cmd.commandName);
+
+  if (localMatches.length === 0) {
+    log.warn(`Command '${target}' is not registered`);
+    return;
+  }
+
+  for (const commandName of localMatches) {
+    await unregisterCommand(commandName, { skipConfirm: false });
+  }
+}
+
+function getRemoteKey(input: string): string | null {
+  const ref = parseRemoteRef(input);
+  if (!ref) {
+    return null;
+  }
+
+  const subpath = ref.subpath ? `/${ref.subpath}` : "";
+  return `${ref.provider}:${ref.owner}/${ref.repo}@${ref.ref}${subpath}`;
 }
 
 export async function linkCommand(args: string[]): Promise<void> {
