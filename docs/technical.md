@@ -111,19 +111,19 @@ CREATE TABLE metadata (
 
 **Why SQLite over YAML:**
 
-| Dimension | YAML (old) | SQLite (current) |
-|-----------|-----------|------------------|
-| Read 1 file's index | Parse entire file O(n) | Primary key query O(1) |
-| Search | Full scan + JS scoring | FTS5 full-text search |
-| Write single entry | Rewrite entire file | UPDATE single row |
-| 10k file repo | ~5-10MB YAML, slow parse | ~2-3MB SQLite, ms queries |
-| Concurrency | None | WAL mode, multi-read |
+| Dimension           | YAML (old)               | SQLite (current)          |
+| ------------------- | ------------------------ | ------------------------- |
+| Read 1 file's index | Parse entire file O(n)   | Primary key query O(1)    |
+| Search              | Full scan + JS scoring   | FTS5 full-text search     |
+| Write single entry  | Rewrite entire file      | UPDATE single row         |
+| 10k file repo       | ~5-10MB YAML, slow parse | ~2-3MB SQLite, ms queries |
+| Concurrency         | None                     | WAL mode, multi-read      |
 
 ### State File (`state.yaml`)
 
 ```yaml
 version: 2
-configHash: "sha256..."       # Hash of include/exclude config
+configHash: "sha256..." # Hash of include/exclude config
 branches:
   main:
     lastCommit: "a1b2c3d4..."
@@ -140,16 +140,16 @@ branches:
 type Language = "typescript" | "javascript" | "swift";
 
 interface FileIndex {
-  path: string;         // relative to repo root
-  name: string;         // LLM-generated human-readable name
-  description: string;  // one-line description
+  path: string; // relative to repo root
+  name: string; // LLM-generated human-readable name
+  description: string; // one-line description
   language: Language;
-  imports: string[];    // extracted by tree-sitter
-  exports: string[];    // extracted by tree-sitter
+  imports: string[]; // extracted by tree-sitter
+  exports: string[]; // extracted by tree-sitter
   symbols: SymbolInfo[];
-  summary: string;      // 2-3 sentence summary
-  hash: string;         // SHA-256 for incremental builds
-  indexedAt: number;    // timestamp
+  summary: string; // 2-3 sentence summary
+  hash: string; // SHA-256 for incremental builds
+  indexedAt: number; // timestamp
 }
 
 interface GitDiff {
@@ -275,15 +275,15 @@ Delegates to FTS5 full-text search in SQLite. Also provides utility filters: `fi
 
 ## CLI Commands
 
-| Command            | Description                                              | Key Options                                |
-| ------------------ | -------------------------------------------------------- | ------------------------------------------ |
-| `kly init`         | Interactive setup + optional post-commit hook install     | —                                          |
-| `kly build`        | Build index (git-incremental by default)                  | `--full` force rebuild, `--quiet` for hooks |
-| `kly query <text>` | Search files by natural language description (FTS5)       | —                                          |
-| `kly show <path>`  | Display detailed index for a specific file                | —                                          |
-| `kly serve`        | Start MCP stdio server                                    | —                                          |
-| `kly hook <action>`| Install/uninstall post-commit hook                        | `install` or `uninstall`                   |
-| `kly gc`           | Clean up databases for deleted branches                   | —                                          |
+| Command             | Description                                           | Key Options                                 |
+| ------------------- | ----------------------------------------------------- | ------------------------------------------- |
+| `kly init`          | Interactive setup + optional post-commit hook install | —                                           |
+| `kly build`         | Build index (git-incremental by default)              | `--full` force rebuild, `--quiet` for hooks |
+| `kly query <text>`  | Search files by natural language description (FTS5)   | —                                           |
+| `kly show <path>`   | Display detailed index for a specific file            | —                                           |
+| `kly serve`         | Start MCP stdio server                                | —                                           |
+| `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
+| `kly gc`            | Clean up databases for deleted branches               | —                                           |
 
 ## MCP Server
 
@@ -371,30 +371,30 @@ kly/
 
 ## Tech Stack
 
-| Component       | Technology                     | Purpose                                                                      |
-| --------------- | ------------------------------ | ---------------------------------------------------------------------------- |
-| Build           | VP (vite-plus) / tsdown        | Bundle 3 entry points to ESM                                                 |
-| LLM             | `@mariozechner/pi-ai`          | Unified multi-provider LLM API                                               |
-| Static Analysis | `tree-sitter`                  | AST parsing (TS/JS/Swift)                                                    |
-| Storage         | `better-sqlite3`               | Per-branch SQLite with FTS5 full-text search                                 |
-| MCP             | `@modelcontextprotocol/sdk`    | Agent-facing tool protocol                                                   |
-| File Discovery  | `globby`                       | Glob patterns with gitignore                                                 |
-| CLI             | `commander` + `@clack/prompts` | Command-line interface with interactive prompts                              |
-| Concurrency     | `p-limit`                      | Rate limit LLM calls                                                         |
-| Serialization   | `yaml`                         | YAML config and state                                                        |
-| Validation      | `zod`                          | Schema validation                                                            |
+| Component       | Technology                     | Purpose                                         |
+| --------------- | ------------------------------ | ----------------------------------------------- |
+| Build           | VP (vite-plus) / tsdown        | Bundle 3 entry points to ESM                    |
+| LLM             | `@mariozechner/pi-ai`          | Unified multi-provider LLM API                  |
+| Static Analysis | `tree-sitter`                  | AST parsing (TS/JS/Swift)                       |
+| Storage         | `better-sqlite3`               | Per-branch SQLite with FTS5 full-text search    |
+| MCP             | `@modelcontextprotocol/sdk`    | Agent-facing tool protocol                      |
+| File Discovery  | `globby`                       | Glob patterns with gitignore                    |
+| CLI             | `commander` + `@clack/prompts` | Command-line interface with interactive prompts |
+| Concurrency     | `p-limit`                      | Rate limit LLM calls                            |
+| Serialization   | `yaml`                         | YAML config and state                           |
+| Validation      | `zod`                          | Schema validation                               |
 
 ## Edge Cases
 
-| Scenario | Handling |
-|----------|----------|
-| Detached HEAD | Uses `_detached--<commit8>` as db filename |
+| Scenario          | Handling                                                        |
+| ----------------- | --------------------------------------------------------------- |
+| Detached HEAD     | Uses `_detached--<commit8>` as db filename                      |
 | Rebase/Force push | `isAncestor` check fails → falls back to hash-based incremental |
-| Branch deletion | `kly gc` cleans up corresponding .db file |
-| Merge commit | `git diff` correctly covers all changes from merge |
-| Non-git repo | Uses `default.db` with hash-based incremental |
-| Renamed files | Copies existing index, re-indexes if content changed |
-| Config change | Detects `configHash` change → forces full rebuild |
+| Branch deletion   | `kly gc` cleans up corresponding .db file                       |
+| Merge commit      | `git diff` correctly covers all changes from merge              |
+| Non-git repo      | Uses `default.db` with hash-based incremental                   |
+| Renamed files     | Copies existing index, re-indexes if content changed            |
+| Config change     | Detects `configHash` change → forces full rebuild               |
 
 ## Roadmap
 

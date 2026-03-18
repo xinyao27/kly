@@ -11,7 +11,7 @@ ${HOOK_END}`;
 
 export function runHook(root: string, action: string): void {
   if (action !== "install" && action !== "uninstall") {
-    p.log.error('Usage: kly hook <install|uninstall>');
+    p.log.error("Usage: kly hook <install|uninstall>");
     process.exit(1);
   }
 

@@ -15,9 +15,7 @@ const users: User[] = [
   },
 ];
 
-export async function findUserByEmail(
-  email: Email
-): Promise<User | undefined> {
+export async function findUserByEmail(email: Email): Promise<User | undefined> {
   return users.find((u) => u.email === email);
 }
 
@@ -25,18 +23,12 @@ export async function findUserById(id: UserId): Promise<User | undefined> {
   return users.find((u) => u.id === id);
 }
 
-export async function listUsers(
-  limit: number = 10
-): Promise<QueryResult<User[]>> {
+export async function listUsers(limit: number = 10): Promise<QueryResult<User[]>> {
   const result = users.slice(0, limit);
   return { data: result, count: result.length };
 }
 
-export async function createUser(
-  email: Email,
-  name: string,
-  role: UserRole
-): Promise<User> {
+export async function createUser(email: Email, name: string, role: UserRole): Promise<User> {
   const user: User = {
     id: String(users.length + 1),
     email,

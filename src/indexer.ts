@@ -209,7 +209,9 @@ async function buildClassic(
   options: IndexOptions,
   dbName?: string,
 ): Promise<void> {
-  const name = dbName || (isGitRepo(root) ? branchToDbName(getCurrentBranch(root), getCurrentCommit(root)) : "default");
+  const name =
+    dbName ||
+    (isGitRepo(root) ? branchToDbName(getCurrentBranch(root), getCurrentCommit(root)) : "default");
   const db = openDatabase(root, name);
 
   try {

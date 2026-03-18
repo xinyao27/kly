@@ -47,8 +47,11 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
+    ignorePatterns: ["playground/**"],
   },
   fmt: {
     sortImports: {},
+    sortPackageJson: true,
+    sortTailwindcss: {},
   },
 });

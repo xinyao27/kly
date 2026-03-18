@@ -21,7 +21,7 @@ function resolveModel(provider: Provider, modelId: string): Model<Api> {
   const model = (getModel as (p: Provider, m: string) => Model<Api> | undefined)(provider, modelId);
   if (!model) {
     throw new Error(
-      `Unknown model "${modelId}" for provider "${provider}". Check your .kly/config.yaml.`
+      `Unknown model "${modelId}" for provider "${provider}". Check your .kly/config.yaml.`,
     );
   }
   return model;

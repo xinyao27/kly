@@ -51,10 +51,7 @@ describe("IndexDatabase", () => {
     });
 
     it("should remove files", () => {
-      db.upsertFiles([
-        createFileIndex({ path: "a.ts" }),
-        createFileIndex({ path: "b.ts" }),
-      ]);
+      db.upsertFiles([createFileIndex({ path: "a.ts" }), createFileIndex({ path: "b.ts" })]);
       db.removeFile("a.ts");
       expect(db.getFileCount()).toBe(1);
       expect(db.getFile("a.ts")).toBeUndefined();
@@ -135,10 +132,7 @@ describe("IndexDatabase", () => {
 
   describe("stats", () => {
     it("should count files", () => {
-      db.upsertFiles([
-        createFileIndex({ path: "a.ts" }),
-        createFileIndex({ path: "b.ts" }),
-      ]);
+      db.upsertFiles([createFileIndex({ path: "a.ts" }), createFileIndex({ path: "b.ts" })]);
       expect(db.getFileCount()).toBe(2);
     });
 

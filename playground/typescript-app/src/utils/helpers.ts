@@ -25,10 +25,7 @@ export function chunk<T>(array: T[], size: number): T[][] {
 export const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-export function retry<T>(
-  fn: () => Promise<T>,
-  retries: number = MAX_RETRIES
-): Promise<T> {
+export function retry<T>(fn: () => Promise<T>, retries: number = MAX_RETRIES): Promise<T> {
   return fn().catch((err) => {
     if (retries <= 0) throw err;
     return sleep(100).then(() => retry(fn, retries - 1));

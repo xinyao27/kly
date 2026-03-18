@@ -1,7 +1,7 @@
 // Authentication service with JWT token management
 
-import type { User, AuthToken, AuthErrorCode } from "./types";
 import { findUserByEmail, findUserById } from "./db";
+import type { User, AuthToken, AuthErrorCode } from "./types";
 
 export class AuthService {
   private secret: string;

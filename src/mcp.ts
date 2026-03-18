@@ -2,8 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { openDatabase } from "./store.js";
 import { searchFiles } from "./query.js";
+import { openDatabase } from "./store.js";
 
 export async function startMcpServer(root: string): Promise<void> {
   const server = new McpServer({

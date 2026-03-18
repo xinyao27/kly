@@ -268,9 +268,7 @@ function rowToFileIndex(row: RawFileRow): FileIndex {
   };
 }
 
-function fileIndexToRow(
-  fileIndex: FileIndex,
-): Record<string, string | number> {
+function fileIndexToRow(fileIndex: FileIndex): Record<string, string | number> {
   return {
     path: fileIndex.path,
     name: fileIndex.name,

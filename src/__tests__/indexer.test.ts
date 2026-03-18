@@ -175,7 +175,9 @@ describe("indexer", () => {
     const db = openDatabase(tmpDir, "default");
     try {
       const file = db.getFile("src/svc.ts")!;
-      const userServiceSymbol = file.symbols.find((s: { name: string }) => s.name === "UserService");
+      const userServiceSymbol = file.symbols.find(
+        (s: { name: string }) => s.name === "UserService",
+      );
       expect(userServiceSymbol?.description).toBe("The main service class");
       const helperSymbol = file.symbols.find((s: { name: string }) => s.name === "helper");
       expect(helperSymbol?.description).toBe("");

@@ -12,13 +12,7 @@ import { complete } from "@mariozechner/pi-ai";
 
 import { initKlyDir } from "../config.js";
 import { buildIndex } from "../indexer.js";
-import {
-  copyDatabase,
-  loadState,
-  openDatabase,
-  resolveDbName,
-  saveState,
-} from "../store.js";
+import { copyDatabase, loadState, openDatabase, resolveDbName, saveState } from "../store.js";
 import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
 
 function git(dir: string, cmd: string): string {

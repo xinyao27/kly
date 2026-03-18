@@ -111,19 +111,19 @@ CREATE TABLE metadata (
 
 **为什么选 SQLite 而非 YAML：**
 
-| 维度 | YAML (旧) | SQLite (当前) |
-|------|----------|--------------|
-| 读取 1 个文件的索引 | 解析整个文件 O(n) | 主键查询 O(1) |
-| 搜索 | 全量扫描 + JS 打分 | FTS5 全文搜索 |
-| 写入单个条目 | 重写整个文件 | UPDATE 单行 |
-| 10k 文件仓库 | ~5-10MB YAML，解析慢 | ~2-3MB SQLite，毫秒级查询 |
-| 并发安全 | 无 | WAL 模式，多读单写 |
+| 维度                | YAML (旧)            | SQLite (当前)             |
+| ------------------- | -------------------- | ------------------------- |
+| 读取 1 个文件的索引 | 解析整个文件 O(n)    | 主键查询 O(1)             |
+| 搜索                | 全量扫描 + JS 打分   | FTS5 全文搜索             |
+| 写入单个条目        | 重写整个文件         | UPDATE 单行               |
+| 10k 文件仓库        | ~5-10MB YAML，解析慢 | ~2-3MB SQLite，毫秒级查询 |
+| 并发安全            | 无                   | WAL 模式，多读单写        |
 
 ### 状态文件（`state.yaml`）
 
 ```yaml
 version: 2
-configHash: "sha256..."       # include/exclude 配置的哈希
+configHash: "sha256..." # include/exclude 配置的哈希
 branches:
   main:
     lastCommit: "a1b2c3d4..."
@@ -140,16 +140,16 @@ branches:
 type Language = "typescript" | "javascript" | "swift";
 
 interface FileIndex {
-  path: string;         // 相对于仓库根目录
-  name: string;         // LLM 生成的可读名称
-  description: string;  // 一句话描述
+  path: string; // 相对于仓库根目录
+  name: string; // LLM 生成的可读名称
+  description: string; // 一句话描述
   language: Language;
-  imports: string[];    // tree-sitter 提取
-  exports: string[];    // tree-sitter 提取
+  imports: string[]; // tree-sitter 提取
+  exports: string[]; // tree-sitter 提取
   symbols: SymbolInfo[];
-  summary: string;      // 2-3 句摘要
-  hash: string;         // SHA-256，用于增量构建
-  indexedAt: number;    // 时间戳
+  summary: string; // 2-3 句摘要
+  hash: string; // SHA-256，用于增量构建
+  indexedAt: number; // 时间戳
 }
 
 interface GitDiff {
@@ -275,15 +275,15 @@ interface BranchState {
 
 ## CLI 命令
 
-| 命令                | 描述                                    | 关键选项                                |
-| ------------------- | --------------------------------------- | --------------------------------------- |
-| `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                       |
+| 命令                | 描述                                    | 关键选项                                     |
+| ------------------- | --------------------------------------- | -------------------------------------------- |
+| `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                            |
 | `kly build`         | 构建索引（git 仓库中默认增量）          | `--full` 强制全量，`--quiet` 静默（hook 用） |
-| `kly query <text>`  | 按自然语言描述搜索文件（FTS5）          | —                                       |
-| `kly show <path>`   | 显示指定文件的详细索引                  | —                                       |
-| `kly serve`         | 启动 MCP stdio Server                   | —                                       |
-| `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`               |
-| `kly gc`            | 清理已删除分支的数据库                  | —                                       |
+| `kly query <text>`  | 按自然语言描述搜索文件（FTS5）          | —                                            |
+| `kly show <path>`   | 显示指定文件的详细索引                  | —                                            |
+| `kly serve`         | 启动 MCP stdio Server                   | —                                            |
+| `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                     |
+| `kly gc`            | 清理已删除分支的数据库                  | —                                            |
 
 ## MCP Server
 
@@ -371,30 +371,30 @@ kly/
 
 ## 技术栈
 
-| 组件     | 技术                           | 用途                                         |
-| -------- | ------------------------------ | -------------------------------------------- |
-| 构建     | VP (vite-plus) / tsdown        | 打包 3 个入口为 ESM                          |
-| LLM      | `@mariozechner/pi-ai`          | 统一多 provider LLM API                      |
-| 静态分析 | `tree-sitter`                  | AST 解析 (TS/JS/Swift)                       |
-| 存储     | `better-sqlite3`               | 每分支 SQLite + FTS5 全文搜索                |
-| MCP      | `@modelcontextprotocol/sdk`    | Agent 侧工具协议                              |
-| 文件发现 | `globby`                       | Glob 模式 + gitignore                        |
-| CLI      | `commander` + `@clack/prompts` | 命令行框架 + 交互式提示                      |
-| 并发控制 | `p-limit`                      | 限制 LLM 调用速率                            |
-| 序列化   | `yaml`                         | YAML 配置和状态                               |
-| 校验     | `zod`                          | Schema 验证                                   |
+| 组件     | 技术                           | 用途                          |
+| -------- | ------------------------------ | ----------------------------- |
+| 构建     | VP (vite-plus) / tsdown        | 打包 3 个入口为 ESM           |
+| LLM      | `@mariozechner/pi-ai`          | 统一多 provider LLM API       |
+| 静态分析 | `tree-sitter`                  | AST 解析 (TS/JS/Swift)        |
+| 存储     | `better-sqlite3`               | 每分支 SQLite + FTS5 全文搜索 |
+| MCP      | `@modelcontextprotocol/sdk`    | Agent 侧工具协议              |
+| 文件发现 | `globby`                       | Glob 模式 + gitignore         |
+| CLI      | `commander` + `@clack/prompts` | 命令行框架 + 交互式提示       |
+| 并发控制 | `p-limit`                      | 限制 LLM 调用速率             |
+| 序列化   | `yaml`                         | YAML 配置和状态               |
+| 校验     | `zod`                          | Schema 验证                   |
 
 ## 边界情况
 
-| 场景 | 处理方式 |
-|------|---------|
-| Detached HEAD | 使用 `_detached--<commit8>` 作为 db 文件名 |
+| 场景              | 处理方式                                      |
+| ----------------- | --------------------------------------------- |
+| Detached HEAD     | 使用 `_detached--<commit8>` 作为 db 文件名    |
 | Rebase/Force push | `isAncestor` 检测失败，回退到 hash-based 增量 |
-| 分支删除 | `kly gc` 清理对应 .db 文件 |
-| Merge commit | `git diff` 正确覆盖合并带来的所有变更 |
-| 非 git 仓库 | 使用 `default.db`，hash-based 增量 |
-| Renamed files | 复制已有索引，内容变更时重新 LLM 索引 |
-| Config 变更 | 检测 configHash 变化，强制全量重建 |
+| 分支删除          | `kly gc` 清理对应 .db 文件                    |
+| Merge commit      | `git diff` 正确覆盖合并带来的所有变更         |
+| 非 git 仓库       | 使用 `default.db`，hash-based 增量            |
+| Renamed files     | 复制已有索引，内容变更时重新 LLM 索引         |
+| Config 变更       | 检测 configHash 变化，强制全量重建            |
 
 ## 路线图
 
