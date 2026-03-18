@@ -44,26 +44,27 @@
 
 ## Review
 
-- Recommended next phase: P2.1 npm publish hardening
-- Reason 1: README already advertises `npm install -g kly`, so publishing is the shortest path to making the current feature set actually consumable
-- Reason 2: Core indexing, query, graph, overview, rerank, and MCP features are already implemented and covered in tests; the main gap is shipping confidence, not feature breadth
-- Reason 3: Architecture visualization is valuable, but its user value is lower than making the existing CLI installable and releasable
+- Corrected priority after user feedback: do not optimize for publish yet
+- Recommended next phase: detail polish and quality closure
+- Reason 1: the current product surface exists, but the user considers the details not ready enough for shipping
+- Reason 2: publishing now would lock in UX, command semantics, output format, and behavior before they are fully refined
+- Reason 3: the highest-value work is to improve trust in the current feature set, then decide whether to ship or expand
 
 Proposed execution order:
 
-1. Add release-readiness work for npm publish
-2. Add smoke coverage for CLI and MCP entrypoints
-3. Add architecture visualization after release flow is stable
+1. Tighten current CLI and output details
+2. Add verification around real user flows for existing commands
+3. Define the next feature phase only after the current surface feels finished
 
-Suggested scope for P2.1:
+Suggested scope for the polish phase:
 
-1. Complete package metadata (`repository`, `homepage`, `bugs`, `keywords`, engine expectations)
-2. Add a documented release checklist and versioning flow
-3. Add automated smoke tests for `kly --help`, `kly mcp`, and one end-to-end happy path
-4. Validate install/build behavior from a packed tarball before first publish
+1. Review command help text, error copy, and success messages for consistency across `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, and `gc`
+2. Audit output shape and readability for `query`, `show`, `overview`, and `graph`
+3. Add smoke tests or snapshot-style verification for user-facing CLI behavior
+4. Close documentation mismatches such as the coverage wording difference between `docs/technical*.md` and `docs/testing*.md`
+5. Identify rough edges in config flow, incremental build UX, and MCP startup behavior before considering publish
 
-Suggested scope for P2.2:
+Candidate phase after polish:
 
-1. Define what “architecture visualization” means beyond the current file import graph
-2. Prefer module/package-level dependency views instead of another file-level graph
-3. Reuse the existing Mermaid rendering pipeline where possible
+1. Architecture visualization, if the product still needs a clearer repository-level view
+2. npm publish, once the command surface and UX details are stable
