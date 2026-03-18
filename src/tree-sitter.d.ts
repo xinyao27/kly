@@ -5,13 +5,6 @@ declare module "tree-sitter-typescript" {
   export default mod;
 }
 
-declare module "tree-sitter-javascript" {
-  import type Parser from "tree-sitter";
-
-  const lang: Parser.Language;
-  export default lang;
-}
-
 declare module "tree-sitter-swift" {
   import type Parser from "tree-sitter";
 

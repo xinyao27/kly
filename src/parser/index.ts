@@ -1,6 +1,5 @@
 import type { Language, ParseResult } from "../types.js";
 import { BaseParser } from "./base.js";
-import { JavaScriptParser } from "./javascript.js";
 import { SwiftParser } from "./swift.js";
 import { TypeScriptParser } from "./typescript.js";
 
@@ -16,7 +15,7 @@ export class ParserManager {
   private parsers: BaseParser[];
 
   constructor() {
-    this.parsers = [new TypeScriptParser(), new JavaScriptParser(), new SwiftParser()];
+    this.parsers = [new TypeScriptParser(), new SwiftParser()];
   }
 
   getParser(filePath: string): BaseParser | undefined {
@@ -36,6 +35,5 @@ export class ParserManager {
 }
 
 export { BaseParser } from "./base.js";
-export { JavaScriptParser } from "./javascript.js";
 export { SwiftParser } from "./swift.js";
 export { TypeScriptParser } from "./typescript.js";

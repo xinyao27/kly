@@ -57,6 +57,7 @@ kly serve
 ```
 
 可用工具：
+
 - `search_files` — 自然语言文件搜索
 - `get_file_index` — 获取指定文件的详细元数据
 - `get_overview` — 仓库概览（含语言分布）
@@ -83,7 +84,8 @@ exclude:
 
 ## 文档
 
-详见 [技术文档](docs/technical.zh-CN.md)，包含架构设计、数据流、核心类型和模块详解。
+- [技术文档](docs/technical.zh-CN.md) — 架构设计、数据流、核心类型和模块详解
+- [测试文档](docs/testing.zh-CN.md) — 测试策略、覆盖率、手动测试清单
 
 ## License
 

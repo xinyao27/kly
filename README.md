@@ -57,6 +57,7 @@ Add to your MCP client config:
 ```
 
 Available tools:
+
 - `search_files` — Natural language file search
 - `get_file_index` — Get detailed metadata for a specific file
 - `get_overview` — Repository summary with language breakdown
@@ -83,7 +84,8 @@ exclude:
 
 ## Documentation
 
-See [Technical Documentation](docs/technical.md) ([中文](docs/technical.zh-CN.md)) for architecture details, data flow, core types, and module breakdown.
+- [Technical Documentation](docs/technical.md) ([中文](docs/technical.zh-CN.md)) — Architecture, data flow, core types, module breakdown
+- [Testing Documentation](docs/testing.md) ([中文](docs/testing.zh-CN.md)) — Test strategy, coverage, manual test checklist
 
 ## License
 

@@ -22,14 +22,18 @@ export function runQuery(root: string, description: string): void {
 
   for (const result of results.slice(0, 20)) {
     const { file, score } = result;
-    const symbols = file.symbols.length > 0
-      ? file.symbols.slice(0, 5).map((s) => s.name).join(", ")
-      : "";
+    const symbols =
+      file.symbols.length > 0
+        ? file.symbols
+            .slice(0, 5)
+            .map((s) => s.name)
+            .join(", ")
+        : "";
 
     p.log.message(
-      `${file.path} (score: ${score})\n`
-      + `  ${file.name}: ${file.description}\n`
-      + (symbols ? `  symbols: ${symbols}` : ""),
+      `${file.path} (score: ${score})\n` +
+        `  ${file.name}: ${file.description}\n` +
+        (symbols ? `  symbols: ${symbols}` : ""),
     );
   }
 }
