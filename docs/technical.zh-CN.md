@@ -271,7 +271,15 @@ interface BranchState {
 
 ### Query (`src/query.ts`)
 
-委托 SQLite 中的 FTS5 全文搜索。另提供工具函数：`filterByLanguage()`、`filterByPath()`。
+委托 SQLite 中的 FTS5 全文搜索。另提供工具函数：`filterByLanguage()`、`filterByPath()`。可选通过 `searchFilesWithRerank()` 支持 LLM 语义重排序。
+
+### Graph (`src/graph.ts`)
+
+从已索引文件的 imports 构建依赖图。解析相对导入到已索引文件（支持扩展名补全和 index.ts 补全）。支持聚焦子图和可配置深度。生成 Mermaid `graph LR` 语法用于可视化。
+
+### Reranker (`src/llm/reranker.ts`)
+
+接收 FTS5 搜索候选结果，通过 LLM 语义理解重新排序。将文件元数据（path、name、description、summary）发送给 LLM，解析重排后的路径列表。
 
 ## CLI 命令
 
@@ -279,8 +287,10 @@ interface BranchState {
 | ------------------- | --------------------------------------- | -------------------------------------------- |
 | `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                            |
 | `kly build`         | 构建索引（git 仓库中默认增量）          | `--full` 强制全量，`--quiet` 静默（hook 用） |
-| `kly query <text>`  | 按自然语言描述搜索文件（FTS5）          | —                                            |
+| `kly query <text>`  | 按自然语言描述搜索文件（FTS5）          | `--rerank` LLM 重排序                        |
 | `kly show <path>`   | 显示指定文件的详细索引                  | —                                            |
+| `kly overview`      | 仓库概览（语言分布）                    | —                                            |
+| `kly graph`         | 可视化文件依赖图（Mermaid）             | `--focus <path>`、`--depth <n>`、`--format`  |
 | `kly serve`         | 启动 MCP stdio Server                   | —                                            |
 | `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                     |
 | `kly gc`            | 清理已删除分支的数据库                  | —                                            |
@@ -293,7 +303,7 @@ interface BranchState {
 
 基于 FTS5 的自然语言文件搜索。
 
-- **输入：** `{ query: string, limit?: number }`
+- **输入：** `{ query: string, limit?: number, rerank?: boolean }`
 - **输出：** JSON 数组 `{ path, name, description, score }`
 
 ### `get_file_index`
@@ -327,18 +337,22 @@ kly/
 │   ├── hasher.ts             # SHA-256 哈希
 │   ├── store.ts              # 分支感知 db 管理
 │   ├── indexer.ts            # 流水线编排
-│   ├── query.ts              # FTS5 搜索与过滤
+│   ├── query.ts              # FTS5 搜索与过滤 + rerank
+│   ├── graph.ts              # 依赖图构建 + Mermaid 生成
 │   ├── commands/
 │   │   ├── init.ts
 │   │   ├── build.ts
 │   │   ├── query.ts
 │   │   ├── show.ts
+│   │   ├── overview.ts       # 仓库概览
+│   │   ├── graph.ts          # 依赖图 CLI
 │   │   ├── serve.ts
 │   │   ├── hook.ts           # Git hook 安装/卸载
 │   │   └── gc.ts             # 分支 db 清理
 │   ├── llm/
 │   │   ├── index.ts          # LLMService
 │   │   ├── prompts.ts        # 提示词模板
+│   │   ├── reranker.ts       # LLM 搜索结果重排序
 │   │   └── batcher.ts        # 并发控制
 │   ├── parser/
 │   │   ├── base.ts           # 抽象基类 BaseParser
@@ -354,6 +368,7 @@ kly/
 │       ├── integration.test.ts
 │       ├── store.test.ts
 │       ├── query.test.ts
+│       ├── graph.test.ts
 │       ├── indexer.test.ts
 │       ├── scanner.test.ts
 │       ├── hasher.test.ts
@@ -383,6 +398,7 @@ kly/
 | 并发控制 | `p-limit`                      | 限制 LLM 调用速率             |
 | 序列化   | `yaml`                         | YAML 配置和状态               |
 | 校验     | `zod`                          | Schema 验证                   |
+| 图渲染   | `beautiful-mermaid`            | Mermaid 图渲染（ASCII + SVG） |
 
 ## 边界情况
 
@@ -410,16 +426,15 @@ kly/
 - FTS5 全文搜索
 - Post-commit hook 系统
 
-### P1
+### P1（已完成）
 
 - `kly overview` — 仓库级摘要命令
-- `kly graph` — 依赖图可视化（Mermaid）
-- LLM rerank 查询结果
-- npm publish
-- MCP SSE 传输
+- `kly graph` — 依赖图可视化（Mermaid，基于 beautiful-mermaid）
+- LLM rerank 查询结果（`--rerank` 选项 + MCP `rerank` 参数）
 
 ### P2
 
+- npm publish
 - 架构可视化（模块依赖图）
 
 ### P3

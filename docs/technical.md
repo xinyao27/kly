@@ -271,7 +271,15 @@ Handles edge cases: rebase/force-push (falls back to hash-based), config changes
 
 ### Query (`src/query.ts`)
 
-Delegates to FTS5 full-text search in SQLite. Also provides utility filters: `filterByLanguage()`, `filterByPath()`.
+Delegates to FTS5 full-text search in SQLite. Also provides utility filters: `filterByLanguage()`, `filterByPath()`. Optionally supports LLM-based reranking via `searchFilesWithRerank()`.
+
+### Graph (`src/graph.ts`)
+
+Builds dependency graphs from indexed file imports. Resolves relative imports to indexed files (with extension and index.ts completion). Supports focused subgraphs with configurable depth. Generates Mermaid `graph LR` syntax for visualization.
+
+### Reranker (`src/llm/reranker.ts`)
+
+Takes FTS5 search candidates and reorders them using LLM semantic understanding. Sends file metadata (path, name, description, summary) to LLM and parses the reordered path list.
 
 ## CLI Commands
 
@@ -279,8 +287,10 @@ Delegates to FTS5 full-text search in SQLite. Also provides utility filters: `fi
 | ------------------- | ----------------------------------------------------- | ------------------------------------------- |
 | `kly init`          | Interactive setup + optional post-commit hook install | —                                           |
 | `kly build`         | Build index (git-incremental by default)              | `--full` force rebuild, `--quiet` for hooks |
-| `kly query <text>`  | Search files by natural language description (FTS5)   | —                                           |
+| `kly query <text>`  | Search files by natural language description (FTS5)   | `--rerank` LLM rerank                       |
 | `kly show <path>`   | Display detailed index for a specific file            | —                                           |
+| `kly overview`      | Repository overview with language breakdown           | —                                           |
+| `kly graph`         | Visualize file dependency graph (Mermaid)             | `--focus <path>`, `--depth <n>`, `--format` |
 | `kly serve`         | Start MCP stdio server                                | —                                           |
 | `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
 | `kly gc`            | Clean up databases for deleted branches               | —                                           |
@@ -293,7 +303,7 @@ Exposes 3 tools via stdio transport for agent consumption:
 
 Natural language file search powered by FTS5.
 
-- **Input:** `{ query: string, limit?: number }`
+- **Input:** `{ query: string, limit?: number, rerank?: boolean }`
 - **Output:** JSON array of `{ path, name, description, score }`
 
 ### `get_file_index`
@@ -327,18 +337,22 @@ kly/
 │   ├── hasher.ts             # SHA-256 hashing
 │   ├── store.ts              # Branch-aware db management
 │   ├── indexer.ts            # Pipeline orchestration
-│   ├── query.ts              # FTS5 search & filtering
+│   ├── query.ts              # FTS5 search & filtering + rerank
+│   ├── graph.ts              # Dependency graph builder + Mermaid
 │   ├── commands/
 │   │   ├── init.ts
 │   │   ├── build.ts
 │   │   ├── query.ts
 │   │   ├── show.ts
+│   │   ├── overview.ts       # Repository overview
+│   │   ├── graph.ts          # Dependency graph CLI
 │   │   ├── serve.ts
 │   │   ├── hook.ts           # Git hook install/uninstall
 │   │   └── gc.ts             # Branch db cleanup
 │   ├── llm/
 │   │   ├── index.ts          # LLMService
 │   │   ├── prompts.ts        # Prompt templates
+│   │   ├── reranker.ts       # LLM search result reranking
 │   │   └── batcher.ts        # Concurrency control
 │   ├── parser/
 │   │   ├── base.ts           # Abstract BaseParser
@@ -354,6 +368,7 @@ kly/
 │       ├── integration.test.ts
 │       ├── store.test.ts
 │       ├── query.test.ts
+│       ├── graph.test.ts
 │       ├── indexer.test.ts
 │       ├── scanner.test.ts
 │       ├── hasher.test.ts
@@ -383,6 +398,7 @@ kly/
 | Concurrency     | `p-limit`                      | Rate limit LLM calls                            |
 | Serialization   | `yaml`                         | YAML config and state                           |
 | Validation      | `zod`                          | Schema validation                               |
+| Graph Render    | `beautiful-mermaid`            | Mermaid diagram rendering (ASCII + SVG)         |
 
 ## Edge Cases
 
@@ -410,16 +426,15 @@ kly/
 - FTS5 full-text search
 - Post-commit hook system
 
-### P1
+### P1 (Done)
 
 - `kly overview` — repository-level summary command
-- `kly graph` — dependency graph visualization (Mermaid)
-- LLM rerank for query results
-- npm publish
-- SSE transport for MCP
+- `kly graph` — dependency graph visualization (Mermaid via beautiful-mermaid)
+- LLM rerank for query results (`--rerank` flag + MCP `rerank` param)
 
 ### P2
 
+- npm publish
 - Architecture visualization (module dependency diagrams)
 
 ### P3

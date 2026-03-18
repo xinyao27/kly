@@ -15,6 +15,8 @@ export default defineConfig({
         "src/hasher.ts",
         "src/store.ts",
         "src/query.ts",
+        "src/graph.ts",
+        "src/llm/reranker.ts",
         "src/indexer.ts",
         "src/parser/**/*.ts",
         "src/llm/**/*.ts",

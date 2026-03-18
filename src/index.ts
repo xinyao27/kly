@@ -75,4 +75,11 @@ export { buildIndex } from "./indexer";
 export type { IndexOptions, IndexProgress, ProgressCallback } from "./indexer";
 
 // Query
-export { filterByLanguage, filterByPath, searchFiles } from "./query";
+export { filterByLanguage, filterByPath, searchFiles, searchFilesWithRerank } from "./query";
+
+// Reranker
+export { rerankResults } from "./llm/reranker";
+
+// Graph
+export { buildDependencyGraph, generateMermaid } from "./graph";
+export type { DependencyGraph, GraphEdge, GraphNode } from "./graph";

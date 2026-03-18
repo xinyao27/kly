@@ -12,6 +12,30 @@ Rules:
 - Symbol descriptions should explain the purpose, not restate the signature
 - Return ONLY valid JSON, no markdown or explanation`;
 
+export const RERANK_SYSTEM_PROMPT = `You are a search result reranking assistant. Given a user query and a list of candidate files, reorder them by relevance.
+
+Return ONLY a JSON array of file paths, ordered from most relevant to least relevant.
+Do not include any explanation, markdown, or extra text — just the JSON array.`;
+
+export function buildRerankPrompt(
+  query: string,
+  candidates: Array<{ path: string; name: string; description: string; summary: string }>,
+): string {
+  const fileList = candidates
+    .map(
+      (c, i) =>
+        `${i + 1}. ${c.path}\n   Name: ${c.name}\n   Description: ${c.description}\n   Summary: ${c.summary}`,
+    )
+    .join("\n\n");
+
+  return `User query: "${query}"
+
+Candidate files:
+${fileList}
+
+Reorder these files by relevance to the query. Return a JSON array of file paths, most relevant first.`;
+}
+
 export function buildIndexingPrompt(
   filePath: string,
   content: string,

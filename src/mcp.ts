@@ -1,16 +1,14 @@
+import { getModel } from "@mariozechner/pi-ai";
+import type { Api, Model, Provider } from "@mariozechner/pi-ai";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { searchFiles } from "./query";
+import { loadConfig } from "./config";
+import { searchFiles, searchFilesWithRerank } from "./query";
 import { openDatabase } from "./store";
 
-export async function startMcpServer(root: string): Promise<void> {
-  const server = new McpServer({
-    name: "kly",
-    version: "0.1.0",
-  });
-
+function registerTools(server: McpServer, root: string): void {
   server.registerTool(
     "search_files",
     {
@@ -18,12 +16,41 @@ export async function startMcpServer(root: string): Promise<void> {
       inputSchema: {
         query: z.string().describe("Natural language search query"),
         limit: z.number().optional().default(10).describe("Maximum number of results"),
+        rerank: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Use LLM to rerank results for better relevance"),
       },
     },
-    async ({ query, limit }) => {
+    async ({ query, limit, rerank }) => {
       const db = openDatabase(root);
       try {
-        const results = searchFiles(db, query, limit);
+        let results;
+        if (rerank) {
+          const config = loadConfig(root);
+          const model = (getModel as (p: Provider, m: string) => Model<Api>)(
+            config.llm.provider,
+            config.llm.model,
+          );
+          const envKeyMap: Record<string, string> = {
+            openrouter: "OPENROUTER_API_KEY",
+            anthropic: "ANTHROPIC_API_KEY",
+            openai: "OPENAI_API_KEY",
+            google: "GOOGLE_API_KEY",
+            mistral: "MISTRAL_API_KEY",
+            groq: "GROQ_API_KEY",
+            xai: "XAI_API_KEY",
+          };
+          const envKey =
+            envKeyMap[config.llm.provider] || `${config.llm.provider.toUpperCase()}_API_KEY`;
+          if (config.llm.apiKey && !process.env[envKey]) {
+            process.env[envKey] = config.llm.apiKey;
+          }
+          results = await searchFilesWithRerank(db, model, query, limit);
+        } else {
+          results = searchFiles(db, query, limit);
+        }
 
         const items = results.map((r) => ({
           path: r.file.path,
@@ -124,6 +151,15 @@ export async function startMcpServer(root: string): Promise<void> {
       }
     },
   );
+}
+
+export async function startMcpServer(root: string): Promise<void> {
+  const server = new McpServer({
+    name: "kly",
+    version: "0.1.0",
+  });
+
+  registerTools(server, root);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

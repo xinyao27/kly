@@ -14,7 +14,9 @@ kly scans your codebase, extracts structural information via tree-sitter AST, an
 - **SQLite storage** — Per-branch SQLite databases with FTS5 full-text search, replacing single YAML file
 - **MCP Server** — Expose index as tools for agent consumption (stdio transport)
 - **Post-commit hook** — Automatic indexing after every commit
-- **Simple CLI** — `init`, `build`, `query`, `show`, `serve`, `hook`, `gc`
+- **Dependency graph** — Visualize file dependencies as Mermaid diagrams (ASCII, SVG, or raw syntax)
+- **LLM rerank** — Optionally rerank search results using LLM for better semantic relevance
+- **Simple CLI** — `init`, `build`, `query`, `show`, `overview`, `graph`, `serve`, `hook`, `gc`
 
 ## Install
 
@@ -34,8 +36,19 @@ kly build
 # Search files by description (powered by FTS5)
 kly query "authentication middleware"
 
+# Search with LLM reranking for better relevance
+kly query "authentication middleware" --rerank
+
 # Show detailed index for a file
 kly show src/auth.ts
+
+# Repository overview with language breakdown
+kly overview
+
+# Visualize file dependency graph
+kly graph
+kly graph --focus src/auth.ts --depth 3
+kly graph --format mermaid > deps.mmd
 
 # Start MCP server for agent integration
 kly serve
@@ -80,7 +93,7 @@ Add to your MCP client config:
 
 Available tools:
 
-- `search_files` — Natural language file search (FTS5 full-text search)
+- `search_files` — Natural language file search (FTS5 full-text search, optional LLM rerank)
 - `get_file_index` — Get detailed metadata for a specific file
 - `get_overview` — Repository summary with language breakdown
 

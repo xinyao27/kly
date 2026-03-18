@@ -3,8 +3,10 @@ import { Command } from "commander";
 
 import { runBuild } from "./commands/build";
 import { runGc } from "./commands/gc";
+import { runGraph } from "./commands/graph";
 import { runHook } from "./commands/hook";
 import { runInit } from "./commands/init";
+import { runOverview } from "./commands/overview";
 import { runQuery } from "./commands/query";
 import { runServe } from "./commands/serve";
 import { runShow } from "./commands/show";
@@ -32,8 +34,9 @@ program
 program
   .command("query <description>")
   .description("Search files by description")
-  .action((description: string) => {
-    runQuery(process.cwd(), description);
+  .option("--rerank", "Use LLM to rerank results for better relevance")
+  .action(async (description: string, options: { rerank?: boolean }) => {
+    await runQuery(process.cwd(), description, options);
   });
 
 program
@@ -41,6 +44,27 @@ program
   .description("Show file index details")
   .action((filePath: string) => {
     runShow(process.cwd(), filePath);
+  });
+
+program
+  .command("graph")
+  .description("Visualize file dependency graph")
+  .option("--focus <path>", "Show dependencies for a specific file")
+  .option("--depth <n>", "Maximum dependency depth", "2")
+  .option("--format <format>", "Output format: ascii, svg, mermaid", "ascii")
+  .action(async (options: { focus?: string; depth: string; format: string }) => {
+    await runGraph(process.cwd(), {
+      focus: options.focus,
+      depth: parseInt(options.depth, 10),
+      format: options.format as "ascii" | "svg" | "mermaid",
+    });
+  });
+
+program
+  .command("overview")
+  .description("Show repository overview with language breakdown")
+  .action(() => {
+    runOverview(process.cwd());
   });
 
 program

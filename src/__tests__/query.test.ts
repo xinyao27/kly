@@ -1,10 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { Api, Model } from "@mariozechner/pi-ai";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { initKlyDir } from "../config";
 import { IndexDatabase } from "../database";
-import { filterByLanguage, filterByPath, searchFiles } from "../query";
+import { filterByLanguage, filterByPath, searchFiles, searchFilesWithRerank } from "../query";
 import { openDatabase } from "../store";
 import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
+
+vi.mock("@mariozechner/pi-ai", () => ({
+  complete: vi.fn(),
+}));
 
 describe("query", () => {
   let tmpDir: string;
@@ -127,6 +132,32 @@ describe("query", () => {
       const result = filterByPath(db, "utils");
       expect(result).toHaveLength(2);
       expect(result.every((f) => f.path.includes("utils"))).toBe(true);
+    });
+  });
+
+  describe("searchFilesWithRerank", () => {
+    const mockModel = {} as Model<Api>;
+
+    it("should return empty array for no FTS matches", async () => {
+      const results = await searchFilesWithRerank(db, mockModel, "nonexistent");
+      expect(results).toEqual([]);
+    });
+
+    it("should rerank FTS results via LLM", async () => {
+      const { complete } = await import("@mariozechner/pi-ai");
+      db.upsertFiles([
+        createFileIndex({ path: "src/a.ts", name: "A", description: "shared utility" }),
+        createFileIndex({ path: "src/b.ts", name: "B", description: "shared utility" }),
+      ]);
+
+      (complete as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        content: [{ type: "text", text: '["src/b.ts", "src/a.ts"]' }],
+      });
+
+      const results = await searchFilesWithRerank(db, mockModel, "utility", 10);
+      expect(results).toHaveLength(2);
+      expect(results[0].file.path).toBe("src/b.ts");
+      expect(results[1].file.path).toBe("src/a.ts");
     });
   });
 });
