@@ -68,7 +68,7 @@ program
   });
 
 program
-  .command("serve")
+  .command("mcp")
   .description("Start MCP server (stdio)")
   .action(async () => {
     await runServe(process.cwd());

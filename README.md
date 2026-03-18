@@ -16,7 +16,7 @@ kly scans your codebase, extracts structural information via tree-sitter AST, an
 - **Post-commit hook** — Automatic indexing after every commit
 - **Dependency graph** — Visualize file dependencies as Mermaid diagrams (ASCII, SVG, or raw syntax)
 - **LLM rerank** — Optionally rerank search results using LLM for better semantic relevance
-- **Simple CLI** — `init`, `build`, `query`, `show`, `overview`, `graph`, `serve`, `hook`, `gc`
+- **Simple CLI** — `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, `gc`
 
 ## Install
 
@@ -51,7 +51,7 @@ kly graph --focus src/auth.ts --depth 3
 kly graph --format mermaid > deps.mmd
 
 # Start MCP server for agent integration
-kly serve
+kly mcp
 
 # Install post-commit hook for automatic indexing
 kly hook install
@@ -84,7 +84,7 @@ Add to your MCP client config:
   "mcpServers": {
     "kly": {
       "command": "kly",
-      "args": ["serve"],
+      "args": ["mcp"],
       "cwd": "/path/to/your/repo"
     }
   }

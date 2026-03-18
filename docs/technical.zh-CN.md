@@ -291,7 +291,7 @@ interface BranchState {
 | `kly show <path>`   | 显示指定文件的详细索引                  | —                                            |
 | `kly overview`      | 仓库概览（语言分布）                    | —                                            |
 | `kly graph`         | 可视化文件依赖图（Mermaid）             | `--focus <path>`、`--depth <n>`、`--format`  |
-| `kly serve`         | 启动 MCP stdio Server                   | —                                            |
+| `kly mcp`           | 启动 MCP stdio Server                   | —                                            |
 | `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                     |
 | `kly gc`            | 清理已删除分支的数据库                  | —                                            |
 
@@ -420,7 +420,7 @@ kly/
 - 核心模块：scanner、hasher、store、config
 - Tree-sitter 解析器：TypeScript、JavaScript、Swift
 - LLM 集成多 provider 支持
-- CLI：init、build、query、show、serve、hook、gc
+- CLI：init、build、query、show、mcp、hook、gc
 - MCP Server（stdio 传输）
 - Git 感知增量索引 + 每分支 SQLite 存储
 - FTS5 全文搜索

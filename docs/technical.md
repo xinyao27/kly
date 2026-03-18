@@ -291,7 +291,7 @@ Takes FTS5 search candidates and reorders them using LLM semantic understanding.
 | `kly show <path>`   | Display detailed index for a specific file            | —                                           |
 | `kly overview`      | Repository overview with language breakdown           | —                                           |
 | `kly graph`         | Visualize file dependency graph (Mermaid)             | `--focus <path>`, `--depth <n>`, `--format` |
-| `kly serve`         | Start MCP stdio server                                | —                                           |
+| `kly mcp`           | Start MCP stdio server                                | —                                           |
 | `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
 | `kly gc`            | Clean up databases for deleted branches               | —                                           |
 
@@ -420,7 +420,7 @@ kly/
 - Core modules: scanner, hasher, store, config
 - Tree-sitter parsers: TypeScript, JavaScript, Swift
 - LLM integration with multi-provider support
-- CLI: init, build, query, show, serve, hook, gc
+- CLI: init, build, query, show, mcp, hook, gc
 - MCP Server with stdio transport
 - Git-aware incremental indexing with per-branch SQLite storage
 - FTS5 full-text search

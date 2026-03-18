@@ -97,11 +97,11 @@ test: {
 - [ ] `kly build -i`：增量模式跳过未更改文件
 - [ ] `kly query "search term"`：输出格式正确；无结果时警告
 - [ ] `kly show src/file.ts`：完整信息展示；不存在的文件报错
-- [ ] `kly serve`：不报错启动；未初始化时报错
+- [ ] `kly mcp`：不报错启动；未初始化时报错
 
 ### MCP Server
 
-- [ ] 配置 MCP client 连接 `kly serve`
+- [ ] 配置 MCP client 连接 `kly mcp`
 - [ ] `search_files` 返回结果
 - [ ] `get_file_index` 正常/不存在路径
 - [ ] `get_overview` 返回 language breakdown

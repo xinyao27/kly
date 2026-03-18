@@ -97,11 +97,11 @@ The following tests require manual verification:
 - [ ] `kly build -i`: Incremental mode skips unchanged files
 - [ ] `kly query "search term"`: Output format correct; warns when no results
 - [ ] `kly show src/file.ts`: Shows full info; errors for non-existent files
-- [ ] `kly serve`: Starts without errors; errors when not initialized
+- [ ] `kly mcp`: Starts without errors; errors when not initialized
 
 ### MCP Server
 
-- [ ] Configure MCP client to connect to `kly serve`
+- [ ] Configure MCP client to connect to `kly mcp`
 - [ ] `search_files` returns results
 - [ ] `get_file_index` works for existing/non-existing paths
 - [ ] `get_overview` returns language breakdown
