@@ -1,16 +1,13 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config";
 import { buildIndex } from "../indexer";
+import { ensureInitialized } from "./shared";
 
 export async function runBuild(
   root: string,
   options: { full?: boolean; quiet?: boolean },
 ): Promise<void> {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   const s = options.quiet ? null : p.spinner();
   s?.start("Building index...");

@@ -94,7 +94,8 @@ The following tests require manual verification:
 - [ ] `kly init`: Interactive select provider → enter API key → enter model → verify `.kly/config.yaml`
 - [ ] `kly init` cancel (Ctrl+C) exits cleanly
 - [ ] `kly build`: Spinner shows progress; errors when not initialized
-- [ ] `kly build -i`: Incremental mode skips unchanged files
+- [ ] `kly build`: Incremental mode skips unchanged files (default in git repos)
+- [ ] `kly build --full`: Full rebuild re-indexes all files
 - [ ] `kly query "search term"`: Output format correct; warns when no results
 - [ ] `kly show src/file.ts`: Shows full info; errors for non-existent files
 - [ ] `kly mcp`: Starts without errors; errors when not initialized
@@ -108,6 +109,6 @@ The following tests require manual verification:
 
 ### LLM Integration (requires real API key)
 
-- [ ] Run `kly build` with a real API key on a small project, verify index.yaml content is meaningful
+- [ ] Run `kly build` with a real API key on a small project, verify index content is meaningful
 - [ ] Switch providers (openrouter/anthropic etc.) all work
 - [ ] Network error behavior is acceptable

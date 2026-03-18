@@ -1,20 +1,17 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config";
 import { openDatabase } from "../store";
+import { ensureInitialized } from "./shared";
 
 export function runShow(root: string, filePath: string): void {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   const db = openDatabase(root);
   try {
     const fileIndex = db.getFile(filePath);
 
     if (!fileIndex) {
-      p.log.error(`File not found in index: ${filePath}`);
+      p.log.warn(`File not found in index: ${filePath}`);
       return;
     }
 

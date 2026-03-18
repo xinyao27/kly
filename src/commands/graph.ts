@@ -1,9 +1,9 @@
 import * as p from "@clack/prompts";
 import { renderMermaidASCII } from "beautiful-mermaid";
 
-import { isInitialized } from "../config";
 import { buildDependencyGraph, generateMermaid } from "../graph";
 import { openDatabase } from "../store";
+import { ensureInitialized } from "./shared";
 
 export interface GraphOptions {
   focus?: string;
@@ -12,10 +12,7 @@ export interface GraphOptions {
 }
 
 export async function runGraph(root: string, options: GraphOptions): Promise<void> {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   const format = options.format || "ascii";
   const depth = options.depth ?? 2;

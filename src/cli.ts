@@ -17,14 +17,14 @@ program.name("kly").description("Code repository file-level indexing tool").vers
 
 program
   .command("init")
-  .description("Initialize .kly/ directory")
+  .description("Initialize kly in the current repository")
   .action(async () => {
     await runInit(process.cwd());
   });
 
 program
   .command("build")
-  .description("Build file index (git-incremental by default in git repos)")
+  .description("Build or update the file index")
   .option("--full", "Force full rebuild")
   .option("--quiet", "Suppress output (for git hooks)")
   .action(async (options: { full?: boolean; quiet?: boolean }) => {
@@ -33,7 +33,7 @@ program
 
 program
   .command("query <description>")
-  .description("Search files by description")
+  .description("Search indexed files by description")
   .option("--rerank", "Use LLM to rerank results for better relevance")
   .action(async (description: string, options: { rerank?: boolean }) => {
     await runQuery(process.cwd(), description, options);
@@ -41,7 +41,7 @@ program
 
 program
   .command("show <path>")
-  .description("Show file index details")
+  .description("Show detailed index for a file")
   .action((filePath: string) => {
     runShow(process.cwd(), filePath);
   });
@@ -62,21 +62,21 @@ program
 
 program
   .command("overview")
-  .description("Show repository overview with language breakdown")
+  .description("Show repository overview")
   .action(() => {
     runOverview(process.cwd());
   });
 
 program
   .command("mcp")
-  .description("Start MCP server (stdio)")
+  .description("Start MCP server for agent integration")
   .action(async () => {
     await runServe(process.cwd());
   });
 
 program
   .command("hook")
-  .description("Manage git hooks")
+  .description("Manage post-commit hook")
   .argument("<action>", "install or uninstall")
   .action((action: string) => {
     runHook(process.cwd(), action);
@@ -84,7 +84,7 @@ program
 
 program
   .command("gc")
-  .description("Clean up databases for deleted branches")
+  .description("Remove databases for deleted branches")
   .action(() => {
     runGc(process.cwd());
   });

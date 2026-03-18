@@ -2,10 +2,11 @@ import * as p from "@clack/prompts";
 import { getModel } from "@mariozechner/pi-ai";
 import type { Api, Model, Provider } from "@mariozechner/pi-ai";
 
-import { isInitialized, loadConfig } from "../config";
+import { loadConfig } from "../config";
 import type { SearchResult } from "../database";
 import { searchFiles, searchFilesWithRerank } from "../query";
 import { openDatabase } from "../store";
+import { ensureInitialized } from "./shared";
 
 export interface QueryOptions {
   rerank?: boolean;
@@ -42,10 +43,7 @@ export async function runQuery(
   description: string,
   options: QueryOptions = {},
 ): Promise<void> {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   const db = openDatabase(root);
   try {

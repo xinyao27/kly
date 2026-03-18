@@ -2,15 +2,12 @@ import { execSync } from "node:child_process";
 
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config";
 import { isGitRepo } from "../git";
 import { listBranchDbs, loadState, removeBranchDb, saveState } from "../store";
+import { ensureInitialized } from "./shared";
 
 export function runGc(root: string): void {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   if (!isGitRepo(root)) {
     p.log.warn("Not a git repository. Nothing to clean.");

@@ -1,13 +1,10 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config";
 import { openDatabase } from "../store";
+import { ensureInitialized } from "./shared";
 
 export function runOverview(root: string): void {
-  if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
-  }
+  ensureInitialized(root);
 
   const db = openDatabase(root);
   try {

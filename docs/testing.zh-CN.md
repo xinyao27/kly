@@ -94,7 +94,8 @@ test: {
 - [ ] `kly init`：交互式选择 provider → 输入 API key → 输入 model → 验证 `.kly/config.yaml`
 - [ ] `kly init` 取消操作（Ctrl+C）正确退出
 - [ ] `kly build`：spinner 显示进度；未初始化时报错
-- [ ] `kly build -i`：增量模式跳过未更改文件
+- [ ] `kly build`：增量模式跳过未更改文件（git 仓库中默认）
+- [ ] `kly build --full`：全量重建重新索引所有文件
 - [ ] `kly query "search term"`：输出格式正确；无结果时警告
 - [ ] `kly show src/file.ts`：完整信息展示；不存在的文件报错
 - [ ] `kly mcp`：不报错启动；未初始化时报错
@@ -108,6 +109,6 @@ test: {
 
 ### LLM 集成（需要真实 API key）
 
-- [ ] 用真实 API key 对小项目 `kly build`，验证 index.yaml 内容有意义
+- [ ] 用真实 API key 对小项目 `kly build`，验证索引内容有意义
 - [ ] 切换 provider（openrouter/anthropic 等）都能工作
 - [ ] 网络错误时的行为
