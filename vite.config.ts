@@ -8,6 +8,9 @@ export default defineConfig({
       provider: "v8",
       include: [
         "src/config.ts",
+        "src/database.ts",
+        "src/diff-filter.ts",
+        "src/git.ts",
         "src/scanner.ts",
         "src/hasher.ts",
         "src/store.ts",
@@ -45,5 +48,7 @@ export default defineConfig({
       typeCheck: true,
     },
   },
-  fmt: {},
+  fmt: {
+    sortImports: {},
+  },
 });

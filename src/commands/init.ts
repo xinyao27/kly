@@ -1,6 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import * as p from "@clack/prompts";
 
 import { initKlyDir, isInitialized } from "../config.js";
+import { runHook } from "./hook.js";
 import type { KlyConfig } from "../types.js";
 
 export async function runInit(root: string): Promise<void> {
@@ -90,5 +94,19 @@ export async function runInit(root: string): Promise<void> {
 
   p.log.success("Initialized .kly/ directory");
   p.log.info("Edit .kly/config.yaml to customize settings");
+
+  // Offer to install git hook if in a git repo
+  const isGit = fs.existsSync(path.join(root, ".git"));
+  if (isGit) {
+    const installHook = await p.confirm({
+      message: "Install post-commit hook for automatic indexing?",
+      initialValue: true,
+    });
+
+    if (!p.isCancel(installHook) && installHook) {
+      runHook(root, "install");
+    }
+  }
+
   p.outro("Done!");
 }

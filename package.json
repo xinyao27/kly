@@ -32,6 +32,7 @@
     "@clack/prompts": "^1.1.0",
     "@mariozechner/pi-ai": "^0.60.0",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "better-sqlite3": "^12.8.0",
     "commander": "^14.0.3",
     "globby": "^16.1.1",
     "p-limit": "^7.3.0",
@@ -42,7 +43,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.0",
+    "@types/picomatch": "^4.0.2",
     "@typescript/native-preview": "7.0.0-dev.20260317.1",
     "@vitest/coverage-v8": "^4.1.0",
     "bumpp": "^11.0.1",

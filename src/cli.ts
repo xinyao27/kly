@@ -2,6 +2,8 @@
 import { Command } from "commander";
 
 import { runBuild } from "./commands/build.js";
+import { runGc } from "./commands/gc.js";
+import { runHook } from "./commands/hook.js";
 import { runInit } from "./commands/init.js";
 import { runQuery } from "./commands/query.js";
 import { runServe } from "./commands/serve.js";
@@ -20,9 +22,10 @@ program
 
 program
   .command("build")
-  .description("Build file index")
-  .option("-i, --incremental", "Only index changed files")
-  .action(async (options: { incremental?: boolean }) => {
+  .description("Build file index (git-incremental by default in git repos)")
+  .option("--full", "Force full rebuild")
+  .option("--quiet", "Suppress output (for git hooks)")
+  .action(async (options: { full?: boolean; quiet?: boolean }) => {
     await runBuild(process.cwd(), options);
   });
 
@@ -45,6 +48,21 @@ program
   .description("Start MCP server (stdio)")
   .action(async () => {
     await runServe(process.cwd());
+  });
+
+program
+  .command("hook")
+  .description("Manage git hooks")
+  .argument("<action>", "install or uninstall")
+  .action((action: string) => {
+    runHook(process.cwd(), action);
+  });
+
+program
+  .command("gc")
+  .description("Clean up databases for deleted branches")
+  .action(() => {
+    runGc(process.cwd());
   });
 
 program.parse();

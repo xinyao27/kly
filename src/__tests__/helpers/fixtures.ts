@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type { FileIndex, IndexStore, KlyConfig } from "../../types.js";
+import type { FileIndex, KlyConfig } from "../../types.js";
 
 export function createTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "kly-test-"));
@@ -31,14 +31,6 @@ export function createFileIndex(overrides: Partial<FileIndex> = {}): FileIndex {
     hash: "abc123",
     indexedAt: Date.now(),
     ...overrides,
-  };
-}
-
-export function createStore(files: FileIndex[] = []): IndexStore {
-  return {
-    version: 1,
-    generatedAt: Date.now(),
-    files,
   };
 }
 

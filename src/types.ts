@@ -51,3 +51,22 @@ export interface ParseResult {
   exports: string[];
   symbols: SymbolInfo[];
 }
+
+export interface BranchState {
+  lastCommit: string;
+  lastBuilt: number;
+  forkedFrom?: string;
+}
+
+export interface GitState {
+  version: number;
+  configHash: string;
+  branches: Record<string, BranchState>;
+}
+
+export interface GitDiff {
+  added: string[];
+  modified: string[];
+  deleted: string[];
+  renamed: Array<{ from: string; to: string }>;
+}

@@ -5,8 +5,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   getConfigPath,
-  getIndexPath,
+  getDbDir,
+  getDbPath,
   getKlyDir,
+  getStatePath,
+  hashConfig,
   initKlyDir,
   isInitialized,
   loadConfig,
@@ -36,9 +39,21 @@ describe("config", () => {
     });
   });
 
-  describe("getIndexPath", () => {
-    it("should return root/.kly/index.yaml", () => {
-      expect(getIndexPath(tmpDir)).toBe(path.join(tmpDir, ".kly", "index.yaml"));
+  describe("getDbDir", () => {
+    it("should return root/.kly/db", () => {
+      expect(getDbDir(tmpDir)).toBe(path.join(tmpDir, ".kly", "db"));
+    });
+  });
+
+  describe("getDbPath", () => {
+    it("should return root/.kly/db/<name>.db", () => {
+      expect(getDbPath(tmpDir, "main")).toBe(path.join(tmpDir, ".kly", "db", "main.db"));
+    });
+  });
+
+  describe("getStatePath", () => {
+    it("should return root/.kly/state.yaml", () => {
+      expect(getStatePath(tmpDir)).toBe(path.join(tmpDir, ".kly", "state.yaml"));
     });
   });
 
@@ -54,10 +69,11 @@ describe("config", () => {
   });
 
   describe("initKlyDir", () => {
-    it("should create .kly directory and config.yaml", () => {
+    it("should create .kly directory, config.yaml, and db directory", () => {
       initKlyDir(tmpDir);
       expect(fs.existsSync(getKlyDir(tmpDir))).toBe(true);
       expect(fs.existsSync(getConfigPath(tmpDir))).toBe(true);
+      expect(fs.existsSync(getDbDir(tmpDir))).toBe(true);
     });
 
     it("should write default config as YAML", () => {
@@ -106,14 +122,34 @@ describe("config", () => {
     });
 
     it("should deep merge llm section with defaults", () => {
-      // Write a config with only provider set
       const klyDir = getKlyDir(tmpDir);
       fs.mkdirSync(klyDir, { recursive: true });
       fs.writeFileSync(getConfigPath(tmpDir), "llm:\n  provider: google\n", "utf-8");
       const config = loadConfig(tmpDir);
       expect(config.llm.provider).toBe("google");
-      // model should come from default
       expect(config.llm.model).toBe("anthropic/claude-haiku-4.5");
+    });
+  });
+
+  describe("hashConfig", () => {
+    it("should return consistent hash for same config", () => {
+      const config = loadConfig(tmpDir);
+      expect(hashConfig(config)).toBe(hashConfig(config));
+    });
+
+    it("should change when include/exclude changes", () => {
+      const config1 = { ...loadConfig(tmpDir) };
+      const config2 = { ...config1, include: ["**/*.py"] };
+      expect(hashConfig(config1)).not.toBe(hashConfig(config2));
+    });
+
+    it("should not change when only llm config changes", () => {
+      const config1 = loadConfig(tmpDir);
+      const config2 = {
+        ...config1,
+        llm: { ...config1.llm, apiKey: "different" },
+      };
+      expect(hashConfig(config1)).toBe(hashConfig(config2));
     });
   });
 });

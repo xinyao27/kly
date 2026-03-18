@@ -1,5 +1,3 @@
-import fs from "node:fs";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock pi-ai before importing indexer
@@ -10,9 +8,9 @@ vi.mock("@mariozechner/pi-ai", () => ({
 
 import { complete } from "@mariozechner/pi-ai";
 
-import { getIndexPath, initKlyDir } from "../config.js";
+import { initKlyDir } from "../config.js";
 import { buildIndex } from "../indexer.js";
-import { loadStore } from "../store.js";
+import { openDatabase } from "../store.js";
 import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
 
 function mockLLMResponse(name: string, description: string) {
@@ -44,7 +42,6 @@ describe("indexer", () => {
   });
 
   it("should build index for a project", async () => {
-    // Setup project
     initKlyDir(tmpDir);
     writeFile(tmpDir, "src/hello.ts", 'export function hello() { return "world"; }');
 
@@ -56,20 +53,23 @@ describe("indexer", () => {
 
     await buildIndex(tmpDir);
 
-    // Verify index was created
-    expect(fs.existsSync(getIndexPath(tmpDir))).toBe(true);
-
-    const store = loadStore(tmpDir);
-    expect(store.files).toHaveLength(1);
-    expect(store.files[0].path).toBe("src/hello.ts");
-    expect(store.files[0].name).toBe("Hello Module");
-    expect(store.files[0].language).toBe("typescript");
-    expect(store.files[0].imports).toEqual([]);
-    expect(store.files[0].exports).toContain("hello");
-    expect(callCount).toBe(1);
+    // Verify index was created in SQLite
+    const db = openDatabase(tmpDir, "default");
+    try {
+      const files = db.getAllFiles();
+      expect(files).toHaveLength(1);
+      expect(files[0].path).toBe("src/hello.ts");
+      expect(files[0].name).toBe("Hello Module");
+      expect(files[0].language).toBe("typescript");
+      expect(files[0].imports).toEqual([]);
+      expect(files[0].exports).toContain("hello");
+      expect(callCount).toBe(1);
+    } finally {
+      db.close();
+    }
   });
 
-  it("should skip unchanged files in incremental mode", async () => {
+  it("should skip unchanged files (hash-based incremental)", async () => {
     initKlyDir(tmpDir);
     writeFile(tmpDir, "src/a.ts", "export const a = 1;");
 
@@ -83,12 +83,12 @@ describe("indexer", () => {
     await buildIndex(tmpDir);
     expect(callCount).toBe(1);
 
-    // Second build (incremental) - no changes
-    await buildIndex(tmpDir, { incremental: true });
+    // Second build - no changes, hash-based skip
+    await buildIndex(tmpDir);
     expect(callCount).toBe(1); // No additional LLM calls
   });
 
-  it("should re-index modified files in incremental mode", async () => {
+  it("should re-index modified files", async () => {
     initKlyDir(tmpDir);
     writeFile(tmpDir, "src/a.ts", "export const a = 1;");
 
@@ -105,12 +105,16 @@ describe("indexer", () => {
     // Modify file
     writeFile(tmpDir, "src/a.ts", "export const a = 2; export const b = 3;");
 
-    // Second build (incremental) - file changed
-    await buildIndex(tmpDir, { incremental: true });
+    // Second build - file changed
+    await buildIndex(tmpDir);
     expect(callCount).toBe(2);
 
-    const store = loadStore(tmpDir);
-    expect(store.files[0].name).toBe("Module v2");
+    const db = openDatabase(tmpDir, "default");
+    try {
+      expect(db.getFile("src/a.ts")!.name).toBe("Module v2");
+    } finally {
+      db.close();
+    }
   });
 
   it("should remove deleted files from store", async () => {
@@ -123,16 +127,23 @@ describe("indexer", () => {
     );
 
     await buildIndex(tmpDir);
-    let store = loadStore(tmpDir);
-    expect(store.files).toHaveLength(2);
+    const db1 = openDatabase(tmpDir, "default");
+    expect(db1.getFileCount()).toBe(2);
+    db1.close();
 
     // Delete one file
+    const fs = await import("node:fs");
     fs.unlinkSync(`${tmpDir}/src/b.ts`);
 
     await buildIndex(tmpDir);
-    store = loadStore(tmpDir);
-    expect(store.files).toHaveLength(1);
-    expect(store.files[0].path).toBe("src/a.ts");
+    const db2 = openDatabase(tmpDir, "default");
+    try {
+      expect(db2.getFileCount()).toBe(1);
+      expect(db2.getFile("src/a.ts")).toBeDefined();
+      expect(db2.getFile("src/b.ts")).toBeUndefined();
+    } finally {
+      db2.close();
+    }
   });
 
   it("should merge LLM symbol descriptions with parsed symbols", async () => {
@@ -154,7 +165,6 @@ describe("indexer", () => {
             symbols: [
               { name: "UserService", description: "The main service class" },
               { name: "getUser", description: "Fetches a user" },
-              // helper intentionally missing - should keep empty description
             ],
           }),
         },
@@ -162,14 +172,16 @@ describe("indexer", () => {
     }));
 
     await buildIndex(tmpDir);
-    const store = loadStore(tmpDir);
-    const file = store.files[0];
-
-    const userServiceSymbol = file.symbols.find((s) => s.name === "UserService");
-    expect(userServiceSymbol?.description).toBe("The main service class");
-
-    const helperSymbol = file.symbols.find((s) => s.name === "helper");
-    expect(helperSymbol?.description).toBe("");
+    const db = openDatabase(tmpDir, "default");
+    try {
+      const file = db.getFile("src/svc.ts")!;
+      const userServiceSymbol = file.symbols.find((s: { name: string }) => s.name === "UserService");
+      expect(userServiceSymbol?.description).toBe("The main service class");
+      const helperSymbol = file.symbols.find((s: { name: string }) => s.name === "helper");
+      expect(helperSymbol?.description).toBe("");
+    } finally {
+      db.close();
+    }
   });
 
   it("should use file basename when LLM returns empty name", async () => {
@@ -191,8 +203,12 @@ describe("indexer", () => {
     }));
 
     await buildIndex(tmpDir);
-    const store = loadStore(tmpDir);
-    expect(store.files[0].name).toBe("util.ts");
+    const db = openDatabase(tmpDir, "default");
+    try {
+      expect(db.getFile("src/util.ts")!.name).toBe("util.ts");
+    } finally {
+      db.close();
+    }
   });
 
   it("should handle files with unknown language (fallback to typescript)", async () => {
@@ -208,15 +224,17 @@ describe("indexer", () => {
     );
 
     await buildIndex(tmpDir);
-    const store = loadStore(tmpDir);
-    const file = store.files.find((f) => f.path === "src/data.xyz");
-    expect(file).toBeDefined();
-    // Falls back to typescript when language is undefined
-    expect(file!.language).toBe("typescript");
-    // Parser returns null, so imports/exports/symbols are empty
-    expect(file!.imports).toEqual([]);
-    expect(file!.exports).toEqual([]);
-    expect(file!.symbols).toEqual([]);
+    const db = openDatabase(tmpDir, "default");
+    try {
+      const file = db.getFile("src/data.xyz");
+      expect(file).toBeDefined();
+      expect(file!.language).toBe("typescript");
+      expect(file!.imports).toEqual([]);
+      expect(file!.exports).toEqual([]);
+      expect(file!.symbols).toEqual([]);
+    } finally {
+      db.close();
+    }
   });
 
   it("should trigger onProgress callback", async () => {
@@ -236,5 +254,23 @@ describe("indexer", () => {
     expect(progressCalls.length).toBeGreaterThan(0);
     const last = progressCalls[progressCalls.length - 1];
     expect(last.completed).toBe(last.total);
+  });
+
+  it("should force full rebuild with full option", async () => {
+    initKlyDir(tmpDir);
+    writeFile(tmpDir, "src/a.ts", "export const a = 1;");
+
+    let callCount = 0;
+    (complete as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      callCount++;
+      return mockLLMResponse(`Module v${callCount}`, "desc");
+    });
+
+    await buildIndex(tmpDir);
+    expect(callCount).toBe(1);
+
+    // Force full rebuild even though nothing changed
+    await buildIndex(tmpDir, { full: true });
+    expect(callCount).toBe(2);
   });
 });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -7,7 +8,8 @@ import type { KlyConfig } from "./types.js";
 
 const KLY_DIR = ".kly";
 const CONFIG_FILE = "config.yaml";
-const INDEX_FILE = "index.yaml";
+const DB_DIR = "db";
+const STATE_FILE = "state.yaml";
 
 const DEFAULT_CONFIG: KlyConfig = {
   llm: {
@@ -38,8 +40,16 @@ export function getConfigPath(root: string): string {
   return path.join(getKlyDir(root), CONFIG_FILE);
 }
 
-export function getIndexPath(root: string): string {
-  return path.join(getKlyDir(root), INDEX_FILE);
+export function getDbDir(root: string): string {
+  return path.join(getKlyDir(root), DB_DIR);
+}
+
+export function getDbPath(root: string, dbName: string): string {
+  return path.join(getDbDir(root), `${dbName}.db`);
+}
+
+export function getStatePath(root: string): string {
+  return path.join(getKlyDir(root), STATE_FILE);
 }
 
 export function isInitialized(root: string): boolean {
@@ -50,6 +60,11 @@ export function initKlyDir(root: string, config?: KlyConfig): void {
   const klyDir = getKlyDir(root);
   if (!fs.existsSync(klyDir)) {
     fs.mkdirSync(klyDir, { recursive: true });
+  }
+
+  const dbDir = getDbDir(root);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
   }
 
   const configToWrite = config || DEFAULT_CONFIG;
@@ -70,4 +85,12 @@ export function loadConfig(root: string): KlyConfig {
     ...parsed,
     llm: { ...DEFAULT_CONFIG.llm, ...parsed.llm },
   };
+}
+
+export function hashConfig(config: KlyConfig): string {
+  const significant = JSON.stringify({
+    include: config.include,
+    exclude: config.exclude,
+  });
+  return createHash("sha256").update(significant).digest("hex");
 }

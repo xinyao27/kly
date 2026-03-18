@@ -2,48 +2,106 @@ import fs from "node:fs";
 
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
-import { getIndexPath } from "./config.js";
-import type { FileIndex, IndexStore } from "./types.js";
+import { getDbDir, getDbPath, getStatePath } from "./config.js";
+import { IndexDatabase } from "./database.js";
+import { branchToDbName, getCurrentBranch, getCurrentCommit, isGitRepo } from "./git.js";
+import type { BranchState, FileIndex, GitState } from "./types.js";
 
-const CURRENT_VERSION = 1;
+const STATE_VERSION = 2;
 
-export function createEmptyStore(): IndexStore {
-  return {
-    version: CURRENT_VERSION,
-    generatedAt: Date.now(),
-    files: [],
-  };
-}
+// --- Database management ---
 
-export function loadStore(root: string): IndexStore {
-  const indexPath = getIndexPath(root);
-  if (!fs.existsSync(indexPath)) {
-    return createEmptyStore();
+export function openDatabase(root: string, dbName?: string): IndexDatabase {
+  const name = dbName || resolveDbName(root);
+  const dbDir = getDbDir(root);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
   }
-
-  const raw = fs.readFileSync(indexPath, "utf-8");
-  return parseYaml(raw) as IndexStore;
+  return new IndexDatabase(getDbPath(root, name));
 }
 
-export function saveStore(root: string, store: IndexStore): void {
-  const indexPath = getIndexPath(root);
-  store.generatedAt = Date.now();
-  fs.writeFileSync(indexPath, stringifyYaml(store), "utf-8");
+export function resolveDbName(root: string): string {
+  if (!isGitRepo(root)) {
+    return "default";
+  }
+  const branch = getCurrentBranch(root);
+  const commit = branch === null ? getCurrentCommit(root) : undefined;
+  return branchToDbName(branch, commit);
 }
 
-export function upsertFileIndex(store: IndexStore, fileIndex: FileIndex): void {
-  const idx = store.files.findIndex((f) => f.path === fileIndex.path);
-  if (idx >= 0) {
-    store.files[idx] = fileIndex;
-  } else {
-    store.files.push(fileIndex);
+export function copyDatabase(root: string, fromName: string, toName: string): void {
+  const fromPath = getDbPath(root, fromName);
+  const toPath = getDbPath(root, toName);
+  if (fs.existsSync(fromPath)) {
+    fs.copyFileSync(fromPath, toPath);
   }
 }
 
-export function removeFileIndex(store: IndexStore, filePath: string): void {
-  store.files = store.files.filter((f) => f.path !== filePath);
+// --- State management ---
+
+export function loadState(root: string): GitState {
+  const statePath = getStatePath(root);
+  if (!fs.existsSync(statePath)) {
+    return { version: STATE_VERSION, configHash: "", branches: {} };
+  }
+  const raw = fs.readFileSync(statePath, "utf-8");
+  return parseYaml(raw) as GitState;
 }
 
-export function getFileIndex(store: IndexStore, filePath: string): FileIndex | undefined {
-  return store.files.find((f) => f.path === filePath);
+export function saveState(root: string, state: GitState): void {
+  const statePath = getStatePath(root);
+  fs.writeFileSync(statePath, stringifyYaml(state), "utf-8");
+}
+
+export function getBranchState(state: GitState, dbName: string): BranchState | undefined {
+  return state.branches[dbName];
+}
+
+export function setBranchState(state: GitState, dbName: string, branchState: BranchState): void {
+  state.branches[dbName] = branchState;
+}
+
+// --- Convenience wrappers (for commands that just need quick access) ---
+
+export function getFileFromDb(root: string, filePath: string): FileIndex | undefined {
+  const db = openDatabase(root);
+  try {
+    return db.getFile(filePath);
+  } finally {
+    db.close();
+  }
+}
+
+export function getAllFilesFromDb(root: string): FileIndex[] {
+  const db = openDatabase(root);
+  try {
+    return db.getAllFiles();
+  } finally {
+    db.close();
+  }
+}
+
+// --- Branch db cleanup ---
+
+export function listBranchDbs(root: string): string[] {
+  const dbDir = getDbDir(root);
+  if (!fs.existsSync(dbDir)) return [];
+  return fs
+    .readdirSync(dbDir)
+    .filter((f) => f.endsWith(".db"))
+    .map((f) => f.replace(/\.db$/, ""));
+}
+
+export function removeBranchDb(root: string, dbName: string): void {
+  const dbPath = getDbPath(root, dbName);
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+  }
+  // Also remove WAL and SHM files
+  for (const ext of ["-wal", "-shm"]) {
+    const auxPath = dbPath + ext;
+    if (fs.existsSync(auxPath)) {
+      fs.unlinkSync(auxPath);
+    }
+  }
 }
