@@ -124,6 +124,20 @@ describe("LLMService", () => {
       });
       expect(svc).toBeDefined();
     });
+
+    it("should throw clear error for unresolved model", async () => {
+      const { getModel } = await import("@mariozechner/pi-ai");
+      (getModel as ReturnType<typeof vi.fn>).mockReturnValueOnce(undefined);
+
+      expect(
+        () =>
+          new LLMService({
+            llm: { provider: "openrouter", model: "nonexistent/model", apiKey: "k" },
+            include: [],
+            exclude: [],
+          }),
+      ).toThrow(/Unknown model/);
+    });
   });
 
   describe("indexFiles", () => {

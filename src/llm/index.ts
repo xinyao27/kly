@@ -18,7 +18,13 @@ interface LLMIndexResult {
  * but user config is dynamic. This wrapper bridges the gap.
  */
 function resolveModel(provider: Provider, modelId: string): Model<Api> {
-  return (getModel as (p: Provider, m: string) => Model<Api>)(provider, modelId);
+  const model = (getModel as (p: Provider, m: string) => Model<Api> | undefined)(provider, modelId);
+  if (!model) {
+    throw new Error(
+      `Unknown model "${modelId}" for provider "${provider}". Check your .kly/config.yaml.`
+    );
+  }
+  return model;
 }
 
 export class LLMService {

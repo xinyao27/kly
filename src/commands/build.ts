@@ -12,17 +12,22 @@ export async function runBuild(root: string, options: { incremental?: boolean })
   const s = p.spinner();
   s.start("Building index...");
 
-  await buildIndex(root, {
-    incremental: options.incremental,
-    onProgress: (progress) => {
-      const pct = Math.round((progress.completed / progress.total) * 100);
-      let msg = `Indexing [${pct}%] ${progress.current || "..."}`;
-      if (progress.skipped > 0) {
-        msg += ` (${progress.skipped} unchanged)`;
-      }
-      s.message(msg);
-    },
-  });
-
-  s.stop("Index built successfully");
+  try {
+    await buildIndex(root, {
+      incremental: options.incremental,
+      onProgress: (progress) => {
+        const pct = Math.round((progress.completed / progress.total) * 100);
+        let msg = `Indexing [${pct}%] ${progress.current || "..."}`;
+        if (progress.skipped > 0) {
+          msg += ` (${progress.skipped} unchanged)`;
+        }
+        s.message(msg);
+      },
+    });
+    s.stop("Index built successfully");
+  } catch (error) {
+    s.stop("Build failed");
+    p.log.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
 }

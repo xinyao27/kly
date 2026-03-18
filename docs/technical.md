@@ -90,7 +90,7 @@ interface IndexStore {
 interface KlyConfig {
   llm: {
     provider: string; // "openrouter", "anthropic", "openai", etc.
-    model: string; // "anthropic/claude-haiku-4-5-20251001"
+    model: string; // "anthropic/claude-haiku-4.5"
     apiKey: string; // stored in config, set during `kly init`
   };
   include: string[]; // glob patterns
@@ -189,7 +189,7 @@ Calls LLM via [pi-ai](https://github.com/badlogic/pi-mono) unified API to genera
 **Configuration:**
 
 - Default provider: `openrouter`
-- Default model: `anthropic/claude-haiku-4-5-20251001`
+- Default model: `anthropic/claude-haiku-4.5`
 - API key: stored in `.kly/config.yaml` (set during `kly init`)
 
 ### Indexer (`src/indexer.ts`)
@@ -262,7 +262,7 @@ Default `.kly/config.yaml`:
 ```yaml
 llm:
   provider: openrouter
-  model: anthropic/claude-haiku-4-5-20251001
+  model: anthropic/claude-haiku-4.5
   apiKey: sk-or-...
 include:
   - "**/*.ts"

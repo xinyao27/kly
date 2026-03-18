@@ -42,8 +42,8 @@ export async function runInit(root: string): Promise<void> {
   }
 
   const defaultModels: Record<string, string> = {
-    openrouter: "anthropic/claude-haiku-4-5-20251001",
-    anthropic: "claude-haiku-4-5-20251001",
+    openrouter: "anthropic/claude-haiku-4.5",
+    anthropic: "claude-haiku-4.5",
     openai: "gpt-4o-mini",
     google: "gemini-2.0-flash",
     mistral: "mistral-small-latest",

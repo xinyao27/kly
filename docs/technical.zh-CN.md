@@ -90,7 +90,7 @@ interface IndexStore {
 interface KlyConfig {
   llm: {
     provider: string; // "openrouter", "anthropic", "openai" 等
-    model: string; // "anthropic/claude-haiku-4-5-20251001"
+    model: string; // "anthropic/claude-haiku-4.5"
     apiKey: string; // 存储在配置中，通过 `kly init` 设置
   };
   include: string[]; // glob 模式
@@ -189,7 +189,7 @@ Swift:
 **配置：**
 
 - 默认 provider：`openrouter`
-- 默认模型：`anthropic/claude-haiku-4-5-20251001`
+- 默认模型：`anthropic/claude-haiku-4.5`
 - API Key：存储在 `.kly/config.yaml` 中（通过 `kly init` 设置）
 
 ### Indexer (`src/indexer.ts`)
@@ -262,7 +262,7 @@ Swift:
 ```yaml
 llm:
   provider: openrouter
-  model: anthropic/claude-haiku-4-5-20251001
+  model: anthropic/claude-haiku-4.5
   apiKey: sk-or-...
 include:
   - "**/*.ts"

@@ -12,7 +12,7 @@ const INDEX_FILE = "index.yaml";
 const DEFAULT_CONFIG: KlyConfig = {
   llm: {
     provider: "openrouter",
-    model: "anthropic/claude-haiku-4-5-20251001",
+    model: "anthropic/claude-haiku-4.5",
     apiKey: "",
   },
   include: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.swift"],

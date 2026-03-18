@@ -113,7 +113,7 @@ describe("config", () => {
       const config = loadConfig(tmpDir);
       expect(config.llm.provider).toBe("google");
       // model should come from default
-      expect(config.llm.model).toBe("anthropic/claude-haiku-4-5-20251001");
+      expect(config.llm.model).toBe("anthropic/claude-haiku-4.5");
     });
   });
 });
