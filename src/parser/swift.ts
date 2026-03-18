@@ -1,8 +1,8 @@
 import Parser from "tree-sitter";
 import Swift from "tree-sitter-swift";
 
-import type { ParseResult, SymbolInfo, SymbolKind } from "../types.js";
-import { BaseParser } from "./base.js";
+import type { ParseResult, SymbolInfo, SymbolKind } from "../types";
+import { BaseParser } from "./base";
 
 const swiftParser = new Parser();
 swiftParser.setLanguage(Swift);

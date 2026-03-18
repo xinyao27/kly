@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 
-import type { FileIndex, SymbolInfo } from "./types.js";
+import type { FileIndex, SymbolInfo } from "./types";
 
 export interface SearchResult {
   file: FileIndex;

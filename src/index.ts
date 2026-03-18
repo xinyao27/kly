@@ -9,7 +9,7 @@ export type {
   ParseResult,
   SymbolInfo,
   SymbolKind,
-} from "./types.js";
+} from "./types";
 
 // Config
 export {
@@ -22,17 +22,17 @@ export {
   initKlyDir,
   isInitialized,
   loadConfig,
-} from "./config.js";
+} from "./config";
 
 // Database
-export { IndexDatabase } from "./database.js";
-export type { SearchResult } from "./database.js";
+export { IndexDatabase } from "./database";
+export type { SearchResult } from "./database";
 
 // Scanner
-export { scanFiles } from "./scanner.js";
+export { scanFiles } from "./scanner";
 
 // Hasher
-export { hashFile, hasChanged } from "./hasher.js";
+export { hashFile, hasChanged } from "./hasher";
 
 // Git
 export {
@@ -43,7 +43,7 @@ export {
   getMergeBase,
   isAncestor,
   isGitRepo,
-} from "./git.js";
+} from "./git";
 
 // Store
 export {
@@ -58,21 +58,21 @@ export {
   resolveDbName,
   saveState,
   setBranchState,
-} from "./store.js";
+} from "./store";
 
 // Diff Filter
-export { filterGitDiff } from "./diff-filter.js";
-export type { FilteredDiff } from "./diff-filter.js";
+export { filterGitDiff } from "./diff-filter";
+export type { FilteredDiff } from "./diff-filter";
 
 // Parser
-export { ParserManager } from "./parser/index.js";
+export { ParserManager } from "./parser/index";
 
 // LLM
-export { LLMService } from "./llm/index.js";
+export { LLMService } from "./llm/index";
 
 // Indexer
-export { buildIndex } from "./indexer.js";
-export type { IndexOptions, IndexProgress, ProgressCallback } from "./indexer.js";
+export { buildIndex } from "./indexer";
+export type { IndexOptions, IndexProgress, ProgressCallback } from "./indexer";
 
 // Query
-export { filterByLanguage, filterByPath, searchFiles } from "./query.js";
+export { filterByLanguage, filterByPath, searchFiles } from "./query";

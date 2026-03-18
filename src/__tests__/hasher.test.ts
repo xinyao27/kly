@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { hashFile, hasChanged } from "../hasher.js";
-import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
+import { hashFile, hasChanged } from "../hasher";
+import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures";
 
 describe("hasher", () => {
   let tmpDir: string;

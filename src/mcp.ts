@@ -2,8 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { searchFiles } from "./query.js";
-import { openDatabase } from "./store.js";
+import { searchFiles } from "./query";
+import { openDatabase } from "./store";
 
 export async function startMcpServer(root: string): Promise<void> {
   const server = new McpServer({
@@ -11,12 +11,14 @@ export async function startMcpServer(root: string): Promise<void> {
     version: "0.1.0",
   });
 
-  server.tool(
+  server.registerTool(
     "search_files",
-    "Search indexed files by natural language description",
     {
-      query: z.string().describe("Natural language search query"),
-      limit: z.number().optional().default(10).describe("Maximum number of results"),
+      description: "Search indexed files by natural language description",
+      inputSchema: {
+        query: z.string().describe("Natural language search query"),
+        limit: z.number().optional().default(10).describe("Maximum number of results"),
+      },
     },
     async ({ query, limit }) => {
       const db = openDatabase(root);
@@ -46,11 +48,13 @@ export async function startMcpServer(root: string): Promise<void> {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "get_file_index",
-    "Get detailed index information for a specific file",
     {
-      path: z.string().describe("File path relative to repository root"),
+      description: "Get detailed index information for a specific file",
+      inputSchema: {
+        path: z.string().describe("File path relative to repository root"),
+      },
     },
     async ({ path: filePath }) => {
       const db = openDatabase(root);
@@ -83,10 +87,11 @@ export async function startMcpServer(root: string): Promise<void> {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "get_overview",
-    "Get repository overview with file count and language breakdown",
-    {},
+    {
+      description: "Get repository overview with file count and language breakdown",
+    },
     async () => {
       const db = openDatabase(root);
       try {

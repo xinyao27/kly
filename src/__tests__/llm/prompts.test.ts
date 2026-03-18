@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildIndexingPrompt, INDEXING_SYSTEM_PROMPT } from "../../llm/prompts.js";
+import { buildIndexingPrompt, INDEXING_SYSTEM_PROMPT } from "../../llm/prompts";
 
 describe("llm/prompts", () => {
   describe("INDEXING_SYSTEM_PROMPT", () => {

@@ -2,9 +2,9 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { initKlyDir, getDbDir } from "../config.js";
-import { IndexDatabase } from "../database.js";
-import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures.js";
+import { initKlyDir, getDbDir } from "../config";
+import { IndexDatabase } from "../database";
+import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
 
 describe("IndexDatabase", () => {
   let tmpDir: string;

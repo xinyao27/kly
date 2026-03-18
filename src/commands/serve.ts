@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config.js";
-import { startMcpServer } from "../mcp.js";
+import { isInitialized } from "../config";
+import { startMcpServer } from "../mcp";
 
 export async function runServe(root: string): Promise<void> {
   if (!isInitialized(root)) {

@@ -1,7 +1,7 @@
-import type { IndexDatabase, SearchResult } from "./database.js";
-import type { FileIndex } from "./types.js";
+import type { IndexDatabase, SearchResult } from "./database";
+import type { FileIndex } from "./types";
 
-export type { SearchResult } from "./database.js";
+export type { SearchResult } from "./database";
 
 export function searchFiles(db: IndexDatabase, query: string, limit = 20): SearchResult[] {
   return db.searchFiles(query, limit);

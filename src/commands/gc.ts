@@ -2,9 +2,9 @@ import { execSync } from "node:child_process";
 
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config.js";
-import { isGitRepo } from "../git.js";
-import { listBranchDbs, loadState, removeBranchDb, saveState } from "../store.js";
+import { isInitialized } from "../config";
+import { isGitRepo } from "../git";
+import { listBranchDbs, loadState, removeBranchDb, saveState } from "../store";
 
 export function runGc(root: string): void {
   if (!isInitialized(root)) {

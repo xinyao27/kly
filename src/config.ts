@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
-import type { KlyConfig } from "./types.js";
+import type { KlyConfig } from "./types";
 
 const KLY_DIR = ".kly";
 const CONFIG_FILE = "config.yaml";

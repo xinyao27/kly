@@ -8,10 +8,10 @@ vi.mock("@mariozechner/pi-ai", () => ({
 
 import { complete } from "@mariozechner/pi-ai";
 
-import { initKlyDir } from "../config.js";
-import { buildIndex } from "../indexer.js";
-import { openDatabase } from "../store.js";
-import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
+import { initKlyDir } from "../config";
+import { buildIndex } from "../indexer";
+import { openDatabase } from "../store";
+import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures";
 
 function mockLLMResponse(name: string, description: string) {
   return {

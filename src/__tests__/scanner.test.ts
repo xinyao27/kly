@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { scanFiles } from "../scanner.js";
-import { cleanupTempDir, createConfig, createTempDir, writeFile } from "./helpers/fixtures.js";
+import { scanFiles } from "../scanner";
+import { cleanupTempDir, createConfig, createTempDir, writeFile } from "./helpers/fixtures";
 
 describe("scanner", () => {
   let tmpDir: string;

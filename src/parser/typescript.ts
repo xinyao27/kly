@@ -1,8 +1,8 @@
 import Parser from "tree-sitter";
 import TypeScript from "tree-sitter-typescript";
 
-import type { ParseResult, SymbolInfo, SymbolKind } from "../types.js";
-import { BaseParser } from "./base.js";
+import type { ParseResult, SymbolInfo, SymbolKind } from "../types";
+import { BaseParser } from "./base";
 
 const tsParser = new Parser();
 tsParser.setLanguage(TypeScript.typescript);

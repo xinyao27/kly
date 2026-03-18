@@ -9,7 +9,7 @@ vi.mock("@mariozechner/pi-ai", () => ({
 import { complete } from "@mariozechner/pi-ai";
 import type { TextContent } from "@mariozechner/pi-ai";
 
-import { LLMService } from "../../llm/index.js";
+import { LLMService } from "../../llm/index";
 
 function mockComplete(text: string) {
   const response = {

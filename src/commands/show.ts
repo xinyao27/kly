@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config.js";
-import { openDatabase } from "../store.js";
+import { isInitialized } from "../config";
+import { openDatabase } from "../store";
 
 export function runShow(root: string, filePath: string): void {
   if (!isInitialized(root)) {

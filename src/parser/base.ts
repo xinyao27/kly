@@ -1,4 +1,4 @@
-import type { ParseResult } from "../types.js";
+import type { ParseResult } from "../types";
 
 export abstract class BaseParser {
   abstract readonly extensions: string[];

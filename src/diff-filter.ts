@@ -1,6 +1,6 @@
 import picomatch from "picomatch";
 
-import type { GitDiff, KlyConfig } from "./types.js";
+import type { GitDiff, KlyConfig } from "./types";
 
 export interface FilteredDiff {
   toIndex: string[];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { filterGitDiff } from "../diff-filter.js";
-import type { GitDiff, KlyConfig } from "../types.js";
+import { filterGitDiff } from "../diff-filter";
+import type { GitDiff, KlyConfig } from "../types";
 
 const config: KlyConfig = {
   llm: { provider: "test", model: "test", apiKey: "" },

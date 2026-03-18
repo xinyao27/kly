@@ -10,10 +10,10 @@ vi.mock("@mariozechner/pi-ai", () => ({
 
 import { complete } from "@mariozechner/pi-ai";
 
-import { initKlyDir } from "../config.js";
-import { buildIndex } from "../indexer.js";
-import { copyDatabase, loadState, openDatabase, resolveDbName, saveState } from "../store.js";
-import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
+import { initKlyDir } from "../config";
+import { buildIndex } from "../indexer";
+import { copyDatabase, loadState, openDatabase, resolveDbName, saveState } from "../store";
+import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures";
 
 function git(dir: string, cmd: string): string {
   return execSync(`git ${cmd}`, { cwd: dir, encoding: "utf-8" }).trim();

@@ -1,8 +1,8 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config.js";
-import { searchFiles } from "../query.js";
-import { openDatabase } from "../store.js";
+import { isInitialized } from "../config";
+import { searchFiles } from "../query";
+import { openDatabase } from "../store";
 
 export function runQuery(root: string, description: string): void {
   if (!isInitialized(root)) {

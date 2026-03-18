@@ -2,10 +2,10 @@ import fs from "node:fs";
 
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
-import { getDbDir, getDbPath, getStatePath } from "./config.js";
-import { IndexDatabase } from "./database.js";
-import { branchToDbName, getCurrentBranch, getCurrentCommit, isGitRepo } from "./git.js";
-import type { BranchState, FileIndex, GitState } from "./types.js";
+import { getDbDir, getDbPath, getStatePath } from "./config";
+import { IndexDatabase } from "./database";
+import { branchToDbName, getCurrentBranch, getCurrentCommit, isGitRepo } from "./git";
+import type { BranchState, FileIndex, GitState } from "./types";
 
 const STATE_VERSION = 2;
 

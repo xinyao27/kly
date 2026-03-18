@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 
-import { isInitialized } from "../config.js";
-import { buildIndex } from "../indexer.js";
+import { isInitialized } from "../config";
+import { buildIndex } from "../indexer";
 
 export async function runBuild(
   root: string,

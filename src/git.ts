@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 
-import type { GitDiff } from "./types.js";
+import type { GitDiff } from "./types";
 
 function exec(root: string, cmd: string): string {
   return execSync(cmd, { cwd: root, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();

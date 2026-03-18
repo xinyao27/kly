@@ -3,9 +3,9 @@ import path from "node:path";
 
 import * as p from "@clack/prompts";
 
-import { initKlyDir, isInitialized } from "../config.js";
-import type { KlyConfig } from "../types.js";
-import { runHook } from "./hook.js";
+import { initKlyDir, isInitialized } from "../config";
+import type { KlyConfig } from "../types";
+import { runHook } from "./hook";
 
 export async function runInit(root: string): Promise<void> {
   p.intro("kly init");

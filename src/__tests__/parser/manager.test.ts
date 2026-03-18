@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ParserManager } from "../../parser/index.js";
+import { ParserManager } from "../../parser/index";
 
 describe("ParserManager", () => {
   const manager = new ParserManager();

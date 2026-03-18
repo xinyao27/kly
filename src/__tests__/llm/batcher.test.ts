@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Batcher } from "../../llm/batcher.js";
+import { Batcher } from "../../llm/batcher";
 
 describe("llm/batcher", () => {
   it("should execute all tasks and return results", async () => {

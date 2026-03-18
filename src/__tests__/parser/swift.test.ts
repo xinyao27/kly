@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SwiftParser } from "../../parser/swift.js";
+import { SwiftParser } from "../../parser/swift";
 
 describe("SwiftParser", () => {
   const parser = new SwiftParser();

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 
-import { runBuild } from "./commands/build.js";
-import { runGc } from "./commands/gc.js";
-import { runHook } from "./commands/hook.js";
-import { runInit } from "./commands/init.js";
-import { runQuery } from "./commands/query.js";
-import { runServe } from "./commands/serve.js";
-import { runShow } from "./commands/show.js";
+import { runBuild } from "./commands/build";
+import { runGc } from "./commands/gc";
+import { runHook } from "./commands/hook";
+import { runInit } from "./commands/init";
+import { runQuery } from "./commands/query";
+import { runServe } from "./commands/serve";
+import { runShow } from "./commands/show";
 
 const program = new Command();
 

@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getDbDir, getDbPath, initKlyDir } from "../config.js";
-import { IndexDatabase } from "../database.js";
+import { getDbDir, getDbPath, initKlyDir } from "../config";
+import { IndexDatabase } from "../database";
 import {
   getAllFilesFromDb,
   getBranchState,
@@ -15,8 +15,8 @@ import {
   removeBranchDb,
   saveState,
   setBranchState,
-} from "../store.js";
-import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures.js";
+} from "../store";
+import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
 
 describe("store", () => {
   let tmpDir: string;

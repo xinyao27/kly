@@ -10,8 +10,8 @@ import {
   isAncestor,
   isGitRepo,
   getMergeBase,
-} from "../git.js";
-import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures.js";
+} from "../git";
+import { cleanupTempDir, createTempDir, writeFile } from "./helpers/fixtures";
 
 function git(dir: string, cmd: string): string {
   return execSync(`git ${cmd}`, { cwd: dir, encoding: "utf-8" }).trim();

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { initKlyDir } from "../config.js";
-import { IndexDatabase } from "../database.js";
-import { filterByLanguage, filterByPath, searchFiles } from "../query.js";
-import { openDatabase } from "../store.js";
-import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures.js";
+import { initKlyDir } from "../config";
+import { IndexDatabase } from "../database";
+import { filterByLanguage, filterByPath, searchFiles } from "../query";
+import { openDatabase } from "../store";
+import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
 
 describe("query", () => {
   let tmpDir: string;

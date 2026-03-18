@@ -13,8 +13,8 @@ import {
   initKlyDir,
   isInitialized,
   loadConfig,
-} from "../config.js";
-import { cleanupTempDir, createTempDir } from "./helpers/fixtures.js";
+} from "../config";
+import { cleanupTempDir, createTempDir } from "./helpers/fixtures";
 
 describe("config", () => {
   let tmpDir: string;

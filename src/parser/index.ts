@@ -1,7 +1,7 @@
-import type { Language, ParseResult } from "../types.js";
-import { BaseParser } from "./base.js";
-import { SwiftParser } from "./swift.js";
-import { TypeScriptParser } from "./typescript.js";
+import type { Language, ParseResult } from "../types";
+import { BaseParser } from "./base";
+import { SwiftParser } from "./swift";
+import { TypeScriptParser } from "./typescript";
 
 const EXTENSION_TO_LANGUAGE: Record<string, Language> = {
   ".ts": "typescript",
@@ -34,6 +34,6 @@ export class ParserManager {
   }
 }
 
-export { BaseParser } from "./base.js";
-export { SwiftParser } from "./swift.js";
-export { TypeScriptParser } from "./typescript.js";
+export { BaseParser } from "./base";
+export { SwiftParser } from "./swift";
+export { TypeScriptParser } from "./typescript";

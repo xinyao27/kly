@@ -1,9 +1,9 @@
 import { complete, getModel } from "@mariozechner/pi-ai";
 import type { Api, Model, Provider, TextContent } from "@mariozechner/pi-ai";
 
-import type { KlyConfig, SymbolInfo } from "../types.js";
-import { Batcher } from "./batcher.js";
-import { buildIndexingPrompt, INDEXING_SYSTEM_PROMPT } from "./prompts.js";
+import type { KlyConfig, SymbolInfo } from "../types";
+import { Batcher } from "./batcher";
+import { buildIndexingPrompt, INDEXING_SYSTEM_PROMPT } from "./prompts";
 
 interface LLMIndexResult {
   name: string;

@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { hashConfig, loadConfig } from "./config.js";
-import type { IndexDatabase } from "./database.js";
-import { filterGitDiff } from "./diff-filter.js";
+import { hashConfig, loadConfig } from "./config";
+import type { IndexDatabase } from "./database";
+import { filterGitDiff } from "./diff-filter";
 import {
   getCurrentBranch,
   getCurrentCommit,
@@ -12,11 +12,11 @@ import {
   getMergeBase,
   isGitRepo,
   branchToDbName,
-} from "./git.js";
-import { hashFile, hasChanged } from "./hasher.js";
-import { LLMService } from "./llm/index.js";
-import { ParserManager } from "./parser/index.js";
-import { scanFiles } from "./scanner.js";
+} from "./git";
+import { hashFile, hasChanged } from "./hasher";
+import { LLMService } from "./llm/index";
+import { ParserManager } from "./parser/index";
+import { scanFiles } from "./scanner";
 import {
   openDatabase,
   loadState,
@@ -24,8 +24,8 @@ import {
   getBranchState,
   setBranchState,
   copyDatabase,
-} from "./store.js";
-import type { BranchState, FileIndex } from "./types.js";
+} from "./store";
+import type { BranchState, FileIndex } from "./types";
 
 export interface IndexProgress {
   total: number;
