@@ -115,3 +115,41 @@ Candidate phase after polish:
   - Documented that CLI/MCP surfaces are outside the coverage threshold but covered by targeted smoke tests
   - Trimmed the manual checklist down to the remaining real-terminal, real-client, and real-provider validations
   - Aligned `docs/technical*.md` command descriptions with the current CLI help text
+
+---
+
+# Task: Validate Packaged CLI In A Real Terminal
+
+## Plan
+
+- [x] Verify `node dist/cli.mjs init` can complete an interactive setup flow and writes `.kly/config.yaml`
+- [x] Verify `node dist/cli.mjs init` handles cancellation cleanly from a real TTY session
+- [x] Verify packaged CLI error paths for `build` and `mcp` when the repo is not initialized
+- [x] Check whether a real API key is available for validating `build`, incremental rebuilds, and network error behavior
+- [x] Check whether a real MCP client is available for validating end-to-end `kly mcp` integration
+- [x] Record what was proven locally, what remains blocked by missing external prerequisites, and whether any blockers should hold publish
+
+## Notes
+
+- Scope: validate the packaged CLI (`node dist/cli.mjs`), not test-only mocks
+- Expectation: terminal-only checks should be completed locally; provider-backed and external-client checks may remain blocked if credentials/tools are unavailable
+
+## Review
+
+- 2026-03-19:
+  - Verified `node dist/cli.mjs init` in a real TTY session can complete the OpenRouter flow and writes `.kly/config.yaml`
+  - Verified `Ctrl+C` during `init` exits cleanly with `Init cancelled.`
+  - Verified packaged CLI error paths for `build` and `mcp` in an uninitialized directory
+  - Confirmed real provider credentials are available in the environment for OpenRouter and Anthropic
+  - Verified real provider-backed indexing through `dist/index.mjs`:
+    - first build succeeded on a tiny git repo
+    - incremental rebuild indexed only `src/b.ts`
+    - full rebuild re-indexed all files
+    - invalid provider auth currently surfaces as `Unexpected end of JSON input`, which is a rough edge in provider/network error handling
+  - Verified end-to-end MCP integration using a real stdio client built with `@modelcontextprotocol/sdk`:
+    - `listTools` returned `search_files`, `get_file_index`, and `get_overview`
+    - `search_files`, `get_file_index`, and `get_overview` returned expected JSON payloads against a real indexed temp repo
+  - Important blocker:
+    - `node dist/cli.mjs build` fails when `node` resolves to `/Users/chenyueban/.vite-plus/bin/node` because that wrapper executes script files under Node `v25.6.1` / ABI `141`, while the installed `better-sqlite3` binary is built for Node `v24.14.0` / ABI `137`
+    - the same packaged CLI build succeeds when invoked with `/Users/chenyueban/.vite-plus/js_runtime/node/24.14.0/bin/node`
+    - this is currently an environment/runtime compatibility blocker for local packaged CLI validation and should be treated as publish-risk until the expected Node runtime story is explicit
