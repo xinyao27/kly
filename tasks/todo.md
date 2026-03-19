@@ -68,3 +68,32 @@ Candidate phase after polish:
 
 1. Architecture visualization, if the product still needs a clearer repository-level view
 2. npm publish, once the command surface and UX details are stable
+
+---
+
+# Task: Polish The Current CLI Surface
+
+## Plan
+
+- [ ] Audit and normalize command descriptions, argument names, and error/success copy across `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, and `gc`
+- [ ] Refine user-facing output formatting for `query`, `show`, `overview`, and `graph` so dense repositories remain readable
+- [ ] Add automated command-level verification for the uncovered paths: `init`, `build`, `mcp`, and the top-level CLI wiring in `src/cli.ts`
+- [ ] Add smoke coverage for failure paths and boundary cases such as empty indexes, invalid graph options, missing files, and hook install/uninstall idempotency
+- [ ] Verify MCP startup behavior and tool responses through a realistic stdio flow instead of relying on startup-only checks
+- [ ] Resolve documentation drift between architecture/testing docs and actual coverage guarantees, command surface, and manual verification scope
+- [ ] Re-run build and targeted tests, then record review notes with any remaining rough edges that should block publish
+
+## Notes
+
+- Priority is detail polish and trust-building for the current surface, not new features and not npm publish
+- Existing tests already cover `show`, `overview`, `gc`, `graph`, and `ensureInitialized`, so the biggest gaps are `init`, `build`, `mcp`, CLI wiring, and realistic end-to-end behavior
+- `docs/testing.md` still says "All automatable code must achieve 100% test coverage" while also excluding CLI commands and the MCP server, so the coverage story needs one consistent position
+- Current command implementations surface a few likely polish targets:
+  - `query` mixes summary and symbols into dense single blocks and truncates only in the non-rerank path
+  - `overview` dumps every indexed file, which may become noisy on medium or large repositories
+  - `graph` accepts parsed depth/format values without user-facing validation
+  - `mcp` startup is only lightly exercised even though it is a public integration surface
+
+## Review
+
+- Pending
