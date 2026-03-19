@@ -199,7 +199,7 @@ All CLI user interactions use [@clack/prompts](https://github.com/bombshell-dev/
 - **No `as any` or `as unknown`** — Use proper type narrowing
 - **English code and comments** — All code, variable names, and comments must be in English
 - **YAML for config** — Configuration uses YAML; index data uses SQLite
-- **>90% test coverage** — Enforced via `npm run test:coverage`
+- **Core-module 100% coverage thresholds** — `vite.config.ts` enforces 100% thresholds for the modules listed in `coverage.include`; CLI and MCP surfaces are validated with targeted smoke tests plus manual integration checks
 
 ## Module Details
 
@@ -286,12 +286,12 @@ Takes FTS5 search candidates and reorders them using LLM semantic understanding.
 | Command             | Description                                           | Key Options                                 |
 | ------------------- | ----------------------------------------------------- | ------------------------------------------- |
 | `kly init`          | Interactive setup + optional post-commit hook install | —                                           |
-| `kly build`         | Build index (git-incremental by default)              | `--full` force rebuild, `--quiet` for hooks |
-| `kly query <text>`  | Search files by natural language description (FTS5)   | `--rerank` LLM rerank                       |
-| `kly show <path>`   | Display detailed index for a specific file            | —                                           |
-| `kly overview`      | Repository overview with language breakdown           | —                                           |
-| `kly graph`         | Visualize file dependency graph (Mermaid)             | `--focus <path>`, `--depth <n>`, `--format` |
-| `kly mcp`           | Start MCP stdio server                                | —                                           |
+| `kly build`         | Build or update the repository index                  | `--full` force rebuild, `--quiet` for hooks |
+| `kly query <text>`  | Search indexed files with natural language            | `--rerank` LLM rerank                       |
+| `kly show <path>`   | Show indexed metadata for a specific file             | —                                           |
+| `kly overview`      | Show an indexed repository summary                    | —                                           |
+| `kly graph`         | Render the indexed file dependency graph              | `--focus <path>`, `--depth <n>`, `--format` |
+| `kly mcp`           | Start the MCP server over stdio                       | —                                           |
 | `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
 | `kly gc`            | Clean up databases for deleted branches               | —                                           |
 

@@ -94,4 +94,4 @@ program
     runGc(process.cwd());
   });
 
-program.parse();
+await program.parseAsync();

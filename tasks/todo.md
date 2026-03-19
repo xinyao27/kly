@@ -77,11 +77,11 @@ Candidate phase after polish:
 
 - [x] Audit and normalize command descriptions, argument names, and error/success copy across `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, and `gc`
 - [x] Refine user-facing output formatting for `query`, `show`, `overview`, and `graph` so dense repositories remain readable
-- [ ] Add automated command-level verification for the uncovered paths: `init`, `build`, `mcp`, and the top-level CLI wiring in `src/cli.ts`
-- [ ] Add smoke coverage for failure paths and boundary cases such as empty indexes, invalid graph options, missing files, and hook install/uninstall idempotency
-- [ ] Verify MCP startup behavior and tool responses through a realistic stdio flow instead of relying on startup-only checks
-- [ ] Resolve documentation drift between architecture/testing docs and actual coverage guarantees, command surface, and manual verification scope
-- [ ] Re-run build and targeted tests, then record review notes with any remaining rough edges that should block publish
+- [x] Add automated command-level verification for the uncovered paths: `init`, `build`, `mcp`, and the top-level CLI wiring in `src/cli.ts`
+- [x] Add smoke coverage for failure paths and boundary cases such as empty indexes, invalid graph options, missing files, and hook install/uninstall idempotency
+- [x] Verify MCP startup behavior and tool responses through a realistic stdio flow instead of relying on startup-only checks
+- [x] Resolve documentation drift between architecture/testing docs and actual coverage guarantees, command surface, and manual verification scope
+- [x] Re-run build and targeted tests, then record review notes with any remaining rough edges that should block publish
 
 ## Notes
 
@@ -103,3 +103,15 @@ Candidate phase after polish:
   - Added `graph` validation for invalid depth and unsupported formats, plus clearer warning when a focused file is not indexed
   - Added command tests for formatted query output, richer show/overview output, invalid graph depth, and missing graph focus
   - Verified with `npm test -- --run src/__tests__/commands.test.ts`, `npm run build`, and `node dist/cli.mjs --help`
+- 2026-03-19 slice 2:
+  - Added command-level tests for `runInit`, `runBuild`, and `runServe`
+  - Added source-level CLI wiring tests for `query`, `graph`, `mcp`, and `hook`
+  - Switched CLI parsing to `await program.parseAsync()` so async command handlers are awaited consistently
+  - Added MCP server tests that verify stdio startup plus `search_files`, `get_file_index`, and `get_overview` payloads
+  - Added hook idempotency tests for install/uninstall flows
+  - Verified with `npm test -- --run src/__tests__/commands.test.ts src/__tests__/cli.test.ts src/__tests__/mcp.test.ts src/__tests__/hook.test.ts` and `npm run build`
+- 2026-03-19 slice 3:
+  - Synced `docs/testing*.md` with the actual coverage setup in `vite.config.ts`
+  - Documented that CLI/MCP surfaces are outside the coverage threshold but covered by targeted smoke tests
+  - Trimmed the manual checklist down to the remaining real-terminal, real-client, and real-provider validations
+  - Aligned `docs/technical*.md` command descriptions with the current CLI help text

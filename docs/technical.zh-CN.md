@@ -199,7 +199,7 @@ interface BranchState {
 - **禁止 `as any` 和 `as unknown`** — 使用正确的类型收窄
 - **代码和注释使用英文** — 所有代码、变量名和注释必须使用英文
 - **YAML 用于配置** — 配置使用 YAML；索引数据使用 SQLite
-- **>90% 测试覆盖率** — 通过 `npm run test:coverage` 强制执行
+- **核心模块 100% 覆盖率阈值** — `vite.config.ts` 对 `coverage.include` 中列出的模块执行 100% 阈值；CLI 与 MCP 入口通过定向 smoke 测试和手工集成验证保障质量
 
 ## 模块详解
 
@@ -286,12 +286,12 @@ interface BranchState {
 | 命令                | 描述                                    | 关键选项                                     |
 | ------------------- | --------------------------------------- | -------------------------------------------- |
 | `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                            |
-| `kly build`         | 构建索引（git 仓库中默认增量）          | `--full` 强制全量，`--quiet` 静默（hook 用） |
-| `kly query <text>`  | 按自然语言描述搜索文件（FTS5）          | `--rerank` LLM 重排序                        |
-| `kly show <path>`   | 显示指定文件的详细索引                  | —                                            |
-| `kly overview`      | 仓库概览（语言分布）                    | —                                            |
-| `kly graph`         | 可视化文件依赖图（Mermaid）             | `--focus <path>`、`--depth <n>`、`--format`  |
-| `kly mcp`           | 启动 MCP stdio Server                   | —                                            |
+| `kly build`         | 构建或更新仓库索引                      | `--full` 强制全量，`--quiet` 静默（hook 用） |
+| `kly query <text>`  | 用自然语言搜索已索引文件                | `--rerank` LLM 重排序                        |
+| `kly show <path>`   | 查看指定文件的索引元数据                | —                                            |
+| `kly overview`      | 显示已索引仓库的概要信息                | —                                            |
+| `kly graph`         | 渲染已索引文件依赖图                    | `--focus <path>`、`--depth <n>`、`--format`  |
+| `kly mcp`           | 通过 stdio 启动 MCP Server              | —                                            |
 | `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                     |
 | `kly gc`            | 清理已删除分支的数据库                  | —                                            |
 

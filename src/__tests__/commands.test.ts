@@ -1,7 +1,47 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { initKlyDir } from "../config";
+const sharedMocks = vi.hoisted(() => {
+  const cancelled = Symbol("cancelled");
+  const spinnerInstance = {
+    start: vi.fn(),
+    stop: vi.fn(),
+    message: vi.fn(),
+  };
+
+  return {
+    cancelled,
+    spinnerInstance,
+    select: vi.fn(),
+    password: vi.fn(),
+    text: vi.fn(),
+    confirm: vi.fn(),
+    intro: vi.fn(),
+    outro: vi.fn(),
+    cancel: vi.fn(),
+    isCancel: vi.fn((value: unknown) => value === cancelled),
+    runHook: vi.fn(),
+    buildIndex: vi.fn(),
+    startMcpServer: vi.fn(),
+  };
+});
+
+vi.mock("../commands/hook", () => ({
+  runHook: sharedMocks.runHook,
+}));
+
+vi.mock("../indexer", () => ({
+  buildIndex: sharedMocks.buildIndex,
+}));
+
+vi.mock("../mcp", () => ({
+  startMcpServer: sharedMocks.startMcpServer,
+}));
+
+import { initKlyDir, isInitialized, loadConfig } from "../config";
+import { runBuild } from "../commands/build";
+import { runInit } from "../commands/init";
 import { runQuery } from "../commands/query";
+import { runServe } from "../commands/serve";
 import { ensureInitialized } from "../commands/shared";
 import { runShow } from "../commands/show";
 import { runOverview } from "../commands/overview";
@@ -20,11 +60,15 @@ vi.mock("@clack/prompts", () => ({
     message: vi.fn(),
   },
   note: vi.fn(),
-  spinner: vi.fn(() => ({
-    start: vi.fn(),
-    stop: vi.fn(),
-    message: vi.fn(),
-  })),
+  spinner: vi.fn(() => sharedMocks.spinnerInstance),
+  select: sharedMocks.select,
+  password: sharedMocks.password,
+  text: sharedMocks.text,
+  confirm: sharedMocks.confirm,
+  intro: sharedMocks.intro,
+  outro: sharedMocks.outro,
+  cancel: sharedMocks.cancel,
+  isCancel: sharedMocks.isCancel,
 }));
 
 // Capture process.exit
@@ -54,6 +98,154 @@ describe("ensureInitialized", () => {
   it("does nothing when initialized", () => {
     initKlyDir(tmpDir);
     expect(() => ensureInitialized(tmpDir)).not.toThrow();
+  });
+});
+
+describe("runInit", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = createTempDir();
+    vi.clearAllMocks();
+    sharedMocks.select.mockResolvedValue("openai");
+    sharedMocks.password.mockResolvedValue("sk-test");
+    sharedMocks.text.mockResolvedValue("gpt-4o-mini");
+    sharedMocks.confirm.mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    cleanupTempDir(tmpDir);
+  });
+
+  it("creates the config from prompt answers", async () => {
+    await runInit(tmpDir);
+
+    expect(isInitialized(tmpDir)).toBe(true);
+    expect(loadConfig(tmpDir)).toMatchObject({
+      llm: {
+        provider: "openai",
+        model: "gpt-4o-mini",
+        apiKey: "sk-test",
+      },
+    });
+    expect(p.log.success).toHaveBeenCalledWith("Initialized .kly/ directory");
+    expect(sharedMocks.runHook).not.toHaveBeenCalled();
+  });
+
+  it("offers hook installation in git repositories", async () => {
+    initKlyDir(tmpDir);
+    vi.clearAllMocks();
+    sharedMocks.select.mockResolvedValue("openrouter");
+    sharedMocks.password.mockResolvedValue("or-key");
+    sharedMocks.text.mockResolvedValue("anthropic/claude-haiku-4.5");
+    sharedMocks.confirm.mockResolvedValue(true);
+
+    await import("node:fs").then(({ mkdirSync }) => mkdirSync(`${tmpDir}/.git`, { recursive: true }));
+    await runInit(tmpDir);
+
+    expect(sharedMocks.confirm).toHaveBeenCalledWith({
+      message: "Install post-commit hook for automatic indexing?",
+      initialValue: true,
+    });
+    expect(sharedMocks.runHook).toHaveBeenCalledWith(tmpDir, "install");
+  });
+
+  it("exits cleanly when the provider prompt is cancelled", async () => {
+    sharedMocks.select.mockResolvedValue(sharedMocks.cancelled);
+
+    await expect(runInit(tmpDir)).rejects.toThrow("process.exit(0)");
+    expect(sharedMocks.cancel).toHaveBeenCalledWith("Init cancelled.");
+  });
+});
+
+describe("runBuild", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = createTempDir();
+    vi.clearAllMocks();
+    initKlyDir(tmpDir);
+  });
+
+  afterEach(() => {
+    cleanupTempDir(tmpDir);
+  });
+
+  it("shows spinner progress and passes options through to the indexer", async () => {
+    sharedMocks.buildIndex.mockImplementation(
+      async (
+        _root: string,
+        options: { onProgress?: (progress: { completed: number; total: number; current?: string; skipped: number }) => void },
+      ) => {
+        options.onProgress?.({
+          completed: 1,
+          total: 2,
+          current: "src/auth.ts",
+          skipped: 3,
+        });
+      },
+    );
+
+    await runBuild(tmpDir, { full: true, quiet: false });
+
+    expect(sharedMocks.buildIndex).toHaveBeenCalledWith(
+      tmpDir,
+      expect.objectContaining({
+        full: true,
+        quiet: false,
+        onProgress: expect.any(Function),
+      }),
+    );
+    expect(sharedMocks.spinnerInstance.start).toHaveBeenCalledWith("Building index...");
+    expect(sharedMocks.spinnerInstance.message).toHaveBeenCalledWith(
+      "Indexing [50%] src/auth.ts (3 unchanged)",
+    );
+    expect(sharedMocks.spinnerInstance.stop).toHaveBeenCalledWith("Index built successfully");
+  });
+
+  it("suppresses spinner and log noise in quiet mode", async () => {
+    sharedMocks.buildIndex.mockResolvedValue(undefined);
+
+    await runBuild(tmpDir, { quiet: true });
+
+    expect(p.spinner).not.toHaveBeenCalled();
+    expect(sharedMocks.buildIndex).toHaveBeenCalledWith(
+      tmpDir,
+      expect.objectContaining({
+        quiet: true,
+      }),
+    );
+  });
+
+  it("logs the failure and exits when the indexer throws", async () => {
+    sharedMocks.buildIndex.mockRejectedValue(new Error("LLM unavailable"));
+
+    await expect(runBuild(tmpDir, { quiet: false })).rejects.toThrow("process.exit(1)");
+    expect(sharedMocks.spinnerInstance.stop).toHaveBeenCalledWith("Build failed");
+    expect(p.log.error).toHaveBeenCalledWith("LLM unavailable");
+  });
+});
+
+describe("runServe", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = createTempDir();
+    vi.clearAllMocks();
+    initKlyDir(tmpDir);
+  });
+
+  afterEach(() => {
+    cleanupTempDir(tmpDir);
+  });
+
+  it("starts the MCP server after logging startup", async () => {
+    sharedMocks.startMcpServer.mockResolvedValue(undefined);
+
+    await runServe(tmpDir);
+
+    expect(p.log.info).toHaveBeenCalledWith("Starting MCP server (stdio)...");
+    expect(sharedMocks.startMcpServer).toHaveBeenCalledWith(tmpDir);
   });
 });
 
