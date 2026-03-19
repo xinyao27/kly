@@ -75,8 +75,8 @@ Candidate phase after polish:
 
 ## Plan
 
-- [ ] Audit and normalize command descriptions, argument names, and error/success copy across `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, and `gc`
-- [ ] Refine user-facing output formatting for `query`, `show`, `overview`, and `graph` so dense repositories remain readable
+- [x] Audit and normalize command descriptions, argument names, and error/success copy across `init`, `build`, `query`, `show`, `overview`, `graph`, `mcp`, `hook`, and `gc`
+- [x] Refine user-facing output formatting for `query`, `show`, `overview`, and `graph` so dense repositories remain readable
 - [ ] Add automated command-level verification for the uncovered paths: `init`, `build`, `mcp`, and the top-level CLI wiring in `src/cli.ts`
 - [ ] Add smoke coverage for failure paths and boundary cases such as empty indexes, invalid graph options, missing files, and hook install/uninstall idempotency
 - [ ] Verify MCP startup behavior and tool responses through a realistic stdio flow instead of relying on startup-only checks
@@ -96,4 +96,10 @@ Candidate phase after polish:
 
 ## Review
 
-- Pending
+- 2026-03-19 slice 1:
+  - Normalized top-level CLI help text for `build`, `query`, `show`, `graph`, `overview`, `mcp`, `hook`, and `gc`
+  - Added Commander help/suggestion behavior after CLI errors
+  - Reformatted `query`, `show`, and `overview` output for denser repositories
+  - Added `graph` validation for invalid depth and unsupported formats, plus clearer warning when a focused file is not indexed
+  - Added command tests for formatted query output, richer show/overview output, invalid graph depth, and missing graph focus
+  - Verified with `npm test -- --run src/__tests__/commands.test.ts`, `npm run build`, and `node dist/cli.mjs --help`

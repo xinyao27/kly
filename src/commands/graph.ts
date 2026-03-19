@@ -11,15 +11,37 @@ export interface GraphOptions {
   format?: "ascii" | "svg" | "mermaid";
 }
 
+const SUPPORTED_FORMATS = new Set<GraphOptions["format"]>(["ascii", "svg", "mermaid"]);
+
+function validateGraphOptions(options: GraphOptions): { depth: number; format: GraphOptions["format"] } {
+  const depth = options.depth ?? 2;
+  if (!Number.isInteger(depth) || depth < 1) {
+    p.log.error("`--depth` must be a positive integer.");
+    process.exit(1);
+  }
+
+  const format = options.format ?? "ascii";
+  if (!SUPPORTED_FORMATS.has(format)) {
+    p.log.error("`--format` must be one of: ascii, mermaid, svg.");
+    process.exit(1);
+  }
+
+  return { depth, format };
+}
+
 export async function runGraph(root: string, options: GraphOptions): Promise<void> {
   ensureInitialized(root);
 
-  const format = options.format || "ascii";
-  const depth = options.depth ?? 2;
+  const { depth, format } = validateGraphOptions(options);
 
   const db = openDatabase(root);
   try {
     const graph = buildDependencyGraph(db, { focus: options.focus, depth });
+
+    if (options.focus && !graph.nodes.has(options.focus)) {
+      p.log.warn(`Focused file is not indexed: ${options.focus}`);
+      return;
+    }
 
     if (graph.nodes.size === 0) {
       p.log.warn("No files indexed yet. Run `kly build` first.");

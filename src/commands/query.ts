@@ -12,29 +12,57 @@ export interface QueryOptions {
   rerank?: boolean;
 }
 
+const MAX_RESULTS = 10;
+const MAX_SUMMARY_LENGTH = 120;
+const MAX_SYMBOLS = 5;
+
+function truncateText(value: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function formatSymbols(result: SearchResult): string {
+  const symbolNames = result.file.symbols.slice(0, MAX_SYMBOLS).map((symbol) => symbol.name);
+  if (symbolNames.length === 0) {
+    return "";
+  }
+
+  const remaining = result.file.symbols.length - symbolNames.length;
+  return remaining > 0 ? `${symbolNames.join(", ")} (+${remaining} more)` : symbolNames.join(", ");
+}
+
 function displayResults(results: SearchResult[]): void {
   if (results.length === 0) {
     p.log.warn("No matching files found.");
     return;
   }
 
-  p.log.info(`Found ${results.length} matching file(s):\n`);
+  p.log.info(`Found ${results.length} matching file(s).`);
 
-  for (const result of results) {
+  for (const [index, result] of results.entries()) {
     const { file, score } = result;
-    const symbols =
-      file.symbols.length > 0
-        ? file.symbols
-            .slice(0, 5)
-            .map((s) => s.name)
-            .join(", ")
-        : "";
+    const summary = truncateText(file.summary, MAX_SUMMARY_LENGTH);
+    const symbols = formatSymbols(result);
+    const lines = [
+      `${index + 1}. ${file.path}`,
+      `   ${file.name}`,
+      `   ${file.description}`,
+      `   Score: ${score.toFixed(2)}`,
+    ];
 
-    p.log.message(
-      `${file.path} (score: ${score.toFixed(2)})\n` +
-        `  ${file.name}: ${file.description}\n` +
-        (symbols ? `  symbols: ${symbols}` : ""),
-    );
+    if (summary) {
+      lines.push(`   Summary: ${summary}`);
+    }
+
+    if (symbols) {
+      lines.push(`   Symbols: ${symbols}`);
+    }
+
+    p.log.message(lines.join("\n"));
   }
 }
 
@@ -71,11 +99,11 @@ export async function runQuery(
       }
 
       p.log.info("Reranking results with LLM...");
-      const results = await searchFilesWithRerank(db, model, description);
+      const results = await searchFilesWithRerank(db, model, description, MAX_RESULTS);
       displayResults(results);
     } else {
-      const results = searchFiles(db, description);
-      displayResults(results.slice(0, 20));
+      const results = searchFiles(db, description, MAX_RESULTS);
+      displayResults(results);
     }
   } finally {
     db.close();

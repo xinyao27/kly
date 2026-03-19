@@ -3,6 +3,8 @@ import * as p from "@clack/prompts";
 import { openDatabase } from "../store";
 import { ensureInitialized } from "./shared";
 
+const FILE_PREVIEW_LIMIT = 5;
+
 export function runOverview(root: string): void {
   ensureInitialized(root);
 
@@ -26,7 +28,13 @@ export function runOverview(root: string): void {
       langLines.push(`  ${lang}: ${count} files (${pct}%)`);
     }
 
-    const lines: string[] = [`Total files: ${totalFiles}`, "", "Languages:", ...langLines];
+    const lines: string[] = [
+      `Total files: ${totalFiles}`,
+      `Indexed languages: ${sortedLangs.length}`,
+      "",
+      "Language breakdown:",
+      ...langLines,
+    ];
 
     // Group files by language
     const grouped = new Map<string, typeof allFiles>();
@@ -37,14 +45,18 @@ export function runOverview(root: string): void {
     }
 
     for (const [lang] of sortedLangs) {
-      const files = grouped.get(lang);
+      const files = grouped.get(lang)?.toSorted((a, b) => a.path.localeCompare(b.path));
       if (!files) continue;
-      lines.push("", `${lang}:`);
-      for (const file of files) {
+      lines.push("", `${lang} sample (${Math.min(files.length, FILE_PREVIEW_LIMIT)} of ${files.length}):`);
+      for (const file of files.slice(0, FILE_PREVIEW_LIMIT)) {
         lines.push(`  ${file.path}`);
         if (file.description) {
           lines.push(`    ${file.description}`);
         }
+      }
+
+      if (files.length > FILE_PREVIEW_LIMIT) {
+        lines.push(`  ... ${files.length - FILE_PREVIEW_LIMIT} more file(s)`);
       }
     }
 

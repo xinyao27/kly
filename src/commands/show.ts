@@ -16,8 +16,8 @@ export function runShow(root: string, filePath: string): void {
     }
 
     const lines: string[] = [
-      `Path: ${fileIndex.path}`,
       `Name: ${fileIndex.name}`,
+      `Path: ${fileIndex.path}`,
       `Language: ${fileIndex.language}`,
       `Description: ${fileIndex.description}`,
       "",
@@ -26,23 +26,23 @@ export function runShow(root: string, filePath: string): void {
     ];
 
     if (fileIndex.imports.length > 0) {
-      lines.push("", "Imports:");
+      lines.push("", `Imports (${fileIndex.imports.length}):`);
       for (const imp of fileIndex.imports) {
-        lines.push(`  → ${imp}`);
+        lines.push(`  - ${imp}`);
       }
     }
 
     if (fileIndex.exports.length > 0) {
-      lines.push("", "Exports:");
+      lines.push("", `Exports (${fileIndex.exports.length}):`);
       for (const exp of fileIndex.exports) {
-        lines.push(`  ← ${exp}`);
+        lines.push(`  - ${exp}`);
       }
     }
 
     if (fileIndex.symbols.length > 0) {
-      lines.push("", "Symbols:");
+      lines.push("", `Symbols (${fileIndex.symbols.length}):`);
       for (const symbol of fileIndex.symbols) {
-        lines.push(`  ${symbol.kind} ${symbol.name}`);
+        lines.push(`  - ${symbol.kind} ${symbol.name}`);
         if (symbol.description) {
           lines.push(`    ${symbol.description}`);
         }
@@ -52,7 +52,7 @@ export function runShow(root: string, filePath: string): void {
     lines.push("", `Hash: ${fileIndex.hash}`);
     lines.push(`Indexed: ${new Date(fileIndex.indexedAt).toISOString()}`);
 
-    p.note(lines.join("\n"), fileIndex.path);
+    p.note(lines.join("\n"), `Indexed File: ${fileIndex.path}`);
   } finally {
     db.close();
   }

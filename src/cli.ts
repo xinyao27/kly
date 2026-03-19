@@ -13,7 +13,12 @@ import { runShow } from "./commands/show";
 
 const program = new Command();
 
-program.name("kly").description("Code repository file-level indexing tool").version("0.1.0");
+program
+  .name("kly")
+  .description("Code repository file-level indexing tool")
+  .version("0.1.0")
+  .showHelpAfterError()
+  .showSuggestionAfterError();
 
 program
   .command("init")
@@ -24,7 +29,7 @@ program
 
 program
   .command("build")
-  .description("Build or update the file index")
+  .description("Build or update the repository index")
   .option("--full", "Force full rebuild")
   .option("--quiet", "Suppress output (for git hooks)")
   .action(async (options: { full?: boolean; quiet?: boolean }) => {
@@ -33,7 +38,7 @@ program
 
 program
   .command("query <description>")
-  .description("Search indexed files by description")
+  .description("Search indexed files with natural language")
   .option("--rerank", "Use LLM to rerank results for better relevance")
   .action(async (description: string, options: { rerank?: boolean }) => {
     await runQuery(process.cwd(), description, options);
@@ -41,17 +46,17 @@ program
 
 program
   .command("show <path>")
-  .description("Show detailed index for a file")
+  .description("Show indexed metadata for a file")
   .action((filePath: string) => {
     runShow(process.cwd(), filePath);
   });
 
 program
   .command("graph")
-  .description("Visualize file dependency graph")
-  .option("--focus <path>", "Show dependencies for a specific file")
+  .description("Render the indexed file dependency graph")
+  .option("--focus <path>", "Focus the graph on a specific file")
   .option("--depth <n>", "Maximum dependency depth", "2")
-  .option("--format <format>", "Output format: ascii, svg, mermaid", "ascii")
+  .option("--format <format>", "Output format: ascii, mermaid, svg", "ascii")
   .action(async (options: { focus?: string; depth: string; format: string }) => {
     await runGraph(process.cwd(), {
       focus: options.focus,
@@ -62,29 +67,29 @@ program
 
 program
   .command("overview")
-  .description("Show repository overview")
+  .description("Show an indexed repository summary")
   .action(() => {
     runOverview(process.cwd());
   });
 
 program
   .command("mcp")
-  .description("Start MCP server for agent integration")
+  .description("Start the MCP server over stdio")
   .action(async () => {
     await runServe(process.cwd());
   });
 
 program
   .command("hook")
-  .description("Manage post-commit hook")
-  .argument("<action>", "install or uninstall")
+  .description("Install or uninstall the post-commit hook")
+  .argument("<action>", "install | uninstall")
   .action((action: string) => {
     runHook(process.cwd(), action);
   });
 
 program
   .command("gc")
-  .description("Remove databases for deleted branches")
+  .description("Remove databases for deleted git branches")
   .action(() => {
     runGc(process.cwd());
   });
