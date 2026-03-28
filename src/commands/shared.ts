@@ -1,10 +1,11 @@
-import * as p from "@clack/prompts";
-
 import { isInitialized } from "../config";
+import { error } from "./output";
 
 export function ensureInitialized(root: string): void {
   if (!isInitialized(root)) {
-    p.log.error("Not initialized. Run `kly init` first.");
-    process.exit(1);
+    error(
+      "Not initialized.",
+      "kly init --provider <provider> --api-key <key>",
+    );
   }
 }

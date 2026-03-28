@@ -5,9 +5,87 @@ import * as p from "@clack/prompts";
 
 import { initKlyDir, isInitialized } from "../config";
 import type { KlyConfig } from "../types";
+import { info } from "./output";
 import { runHook } from "./hook";
 
-export async function runInit(root: string): Promise<void> {
+export interface InitOptions {
+  provider?: string;
+  model?: string;
+  apiKey?: string;
+  hook?: boolean;
+  include?: string[];
+  exclude?: string[];
+}
+
+const VALID_PROVIDERS = ["openrouter", "anthropic", "openai", "google", "mistral", "groq"];
+
+const DEFAULT_MODELS: Record<string, string> = {
+  openrouter: "anthropic/claude-haiku-4.5",
+  anthropic: "claude-haiku-4.5",
+  openai: "gpt-4o-mini",
+  google: "gemini-2.0-flash",
+  mistral: "mistral-small-latest",
+  groq: "llama-3.1-8b-instant",
+};
+
+const DEFAULT_INCLUDE = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.swift"];
+const DEFAULT_EXCLUDE = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/.git/**",
+  "**/.kly/**",
+  "**/vendor/**",
+  "**/*.d.ts",
+  "**/*.test.*",
+  "**/*.spec.*",
+  "**/__tests__/**",
+];
+
+export async function runInit(root: string, options: InitOptions = {}): Promise<void> {
+  // If provider and api-key are provided, run non-interactively
+  if (options.provider && options.apiKey) {
+    runNonInteractive(root, options);
+    return;
+  }
+
+  // Fallback to interactive mode
+  await runInteractive(root, options);
+}
+
+function runNonInteractive(root: string, options: InitOptions): void {
+  if (!VALID_PROVIDERS.includes(options.provider!)) {
+    process.stderr.write(
+      `Error: Invalid provider "${options.provider}".\n  Valid providers: ${VALID_PROVIDERS.join(", ")}\n  kly init --provider openrouter --api-key <key>\n`,
+    );
+    process.exit(1);
+  }
+
+  const config: KlyConfig = {
+    llm: {
+      provider: options.provider!,
+      model: options.model || DEFAULT_MODELS[options.provider!] || "",
+      apiKey: options.apiKey!,
+    },
+    include: options.include?.length ? options.include : DEFAULT_INCLUDE,
+    exclude: options.exclude?.length ? options.exclude : DEFAULT_EXCLUDE,
+  };
+
+  initKlyDir(root, config);
+  info("initialized .kly/ directory");
+
+  if (options.hook) {
+    const isGit = fs.existsSync(path.join(root, ".git"));
+    if (isGit) {
+      runHook(root, "install");
+      info("installed post-commit hook");
+    } else {
+      process.stderr.write("Warning: Not a git repo, skipping hook install.\n");
+    }
+  }
+}
+
+async function runInteractive(root: string, options: InitOptions): Promise<void> {
   p.intro("kly init");
 
   if (isInitialized(root)) {
@@ -45,18 +123,9 @@ export async function runInit(root: string): Promise<void> {
     process.exit(0);
   }
 
-  const defaultModels: Record<string, string> = {
-    openrouter: "anthropic/claude-haiku-4.5",
-    anthropic: "claude-haiku-4.5",
-    openai: "gpt-4o-mini",
-    google: "gemini-2.0-flash",
-    mistral: "mistral-small-latest",
-    groq: "llama-3.1-8b-instant",
-  };
-
   const model = await p.text({
     message: "Model name",
-    initialValue: defaultModels[provider] || "",
+    initialValue: DEFAULT_MODELS[provider] || "",
     validate: (value) => {
       if (!value || value.trim().length === 0) {
         return "Model name is required";
@@ -75,19 +144,8 @@ export async function runInit(root: string): Promise<void> {
       model,
       apiKey,
     },
-    include: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.swift"],
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/.git/**",
-      "**/.kly/**",
-      "**/vendor/**",
-      "**/*.d.ts",
-      "**/*.test.*",
-      "**/*.spec.*",
-      "**/__tests__/**",
-    ],
+    include: DEFAULT_INCLUDE,
+    exclude: DEFAULT_EXCLUDE,
   };
 
   initKlyDir(root, config);

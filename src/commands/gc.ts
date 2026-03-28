@@ -1,16 +1,15 @@
 import { execSync } from "node:child_process";
 
-import * as p from "@clack/prompts";
-
 import { isGitRepo } from "../git";
 import { listBranchDbs, loadState, removeBranchDb, saveState } from "../store";
+import { info, warn } from "./output";
 import { ensureInitialized } from "./shared";
 
 export function runGc(root: string): void {
   ensureInitialized(root);
 
   if (!isGitRepo(root)) {
-    p.log.warn("Not a git repository. Nothing to clean.");
+    warn("not a git repository, nothing to clean");
     return;
   }
 
@@ -43,13 +42,13 @@ export function runGc(root: string): void {
     removeBranchDb(root, dbName);
     delete state.branches[dbName];
     cleaned++;
-    p.log.info(`Removed: ${dbName}.db`);
+    info(`removed: ${dbName}.db`);
   }
 
   if (cleaned > 0) {
     saveState(root, state);
-    p.log.success(`Cleaned ${cleaned} stale database(s).`);
+    info(`cleaned ${cleaned} stale database(s)`);
   } else {
-    p.log.info("No stale databases found.");
+    info("no stale databases found");
   }
 }

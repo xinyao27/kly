@@ -1,7 +1,11 @@
 // Core types
 export type {
   BranchState,
+  EnrichedErrorStack,
+  EnrichedFrame,
+  ErrorFrame,
   FileIndex,
+  GitCommit,
   GitDiff,
   GitState,
   KlyConfig,
@@ -40,6 +44,7 @@ export {
   getChangedFiles,
   getCurrentBranch,
   getCurrentCommit,
+  getFileHistory,
   getMergeBase,
   isAncestor,
   isGitRepo,
@@ -72,7 +77,7 @@ export { LLMService } from "./llm/index";
 
 // Indexer
 export { buildIndex } from "./indexer";
-export type { IndexOptions, IndexProgress, ProgressCallback } from "./indexer";
+export type { BuildResult, IndexOptions, IndexProgress, ProgressCallback } from "./indexer";
 
 // Query
 export { filterByLanguage, filterByPath, searchFiles, searchFilesWithRerank } from "./query";
@@ -81,5 +86,8 @@ export { filterByLanguage, filterByPath, searchFiles, searchFilesWithRerank } fr
 export { rerankResults } from "./llm/reranker";
 
 // Graph
-export { buildDependencyGraph, generateMermaid } from "./graph";
+export { buildDependencyGraph, generateMermaid, isRelativeImport, resolveImport } from "./graph";
 export type { DependencyGraph, GraphEdge, GraphNode } from "./graph";
+
+// Enrich
+export { enrichErrorStack } from "./enrich";

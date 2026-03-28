@@ -64,6 +64,44 @@ export interface GitState {
   branches: Record<string, BranchState>;
 }
 
+export interface GitCommit {
+  hash: string;
+  author: string;
+  email: string;
+  date: number;
+  message: string;
+}
+
+export interface ErrorFrame {
+  file: string;
+  line: number;
+  column?: number;
+  function?: string;
+}
+
+export interface EnrichedFrame {
+  file: string;
+  line: number;
+  column?: number;
+  function?: string;
+  // kly index
+  fileDescription: string;
+  fileSummary: string;
+  symbols: SymbolInfo[];
+  language: Language;
+  // kly dependencies
+  importedBy: string[];
+  importsFrom: string[];
+  // git
+  lastModified: GitCommit | null;
+  recentCommits: GitCommit[];
+}
+
+export interface EnrichedErrorStack {
+  frames: EnrichedFrame[];
+  affectedFiles: number;
+}
+
 export interface GitDiff {
   added: string[];
   modified: string[];

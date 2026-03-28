@@ -1,66 +1,69 @@
-import * as p from "@clack/prompts";
-
 import { openDatabase } from "../store";
+import { type OutputOptions, output, warn } from "./output";
 import { ensureInitialized } from "./shared";
 
-const FILE_PREVIEW_LIMIT = 5;
+export interface OverviewOptions extends OutputOptions {}
 
-export function runOverview(root: string): void {
+function formatOverview(data: unknown): string {
+  const overview = data as {
+    totalFiles: number;
+    languages: Record<string, number>;
+    files: Array<{ path: string; name: string; description: string }>;
+  };
+
+  if (overview.totalFiles === 0) {
+    return "no files indexed yet. run `kly build` first.";
+  }
+
+  const lines: string[] = [
+    `total_files: ${overview.totalFiles}`,
+    "",
+    "languages:",
+  ];
+
+  const sorted = Object.entries(overview.languages).sort(([, a], [, b]) => b - a);
+  for (const [lang, count] of sorted) {
+    const pct = ((count / overview.totalFiles) * 100).toFixed(1);
+    lines.push(`  ${lang}: ${count} (${pct}%)`);
+  }
+
+  // Group files by language
+  const grouped = new Map<string, typeof overview.files>();
+  for (const file of overview.files) {
+    // We don't have language in the overview files output, so just list all
+  }
+
+  lines.push("", "files:");
+  for (const file of overview.files) {
+    lines.push(`  ${file.path}`);
+    if (file.description) {
+      lines.push(`    ${file.description}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+export function runOverview(root: string, options: OverviewOptions = {}): void {
   ensureInitialized(root);
 
   const db = openDatabase(root);
   try {
     const totalFiles = db.getFileCount();
-
-    if (totalFiles === 0) {
-      p.log.warn("No files indexed yet. Run `kly build` first.");
-      return;
-    }
-
     const languages = db.getLanguageStats();
     const allFiles = db.getAllFiles();
 
-    // Language breakdown with percentages
-    const langLines: string[] = [];
-    const sortedLangs = Object.entries(languages).sort(([, a], [, b]) => b - a);
-    for (const [lang, count] of sortedLangs) {
-      const pct = ((count / totalFiles) * 100).toFixed(1);
-      langLines.push(`  ${lang}: ${count} files (${pct}%)`);
-    }
+    const data = {
+      totalFiles,
+      languages,
+      files: allFiles.map((f) => ({
+        path: f.path,
+        name: f.name,
+        description: f.description,
+      })),
+    };
 
-    const lines: string[] = [
-      `Total files: ${totalFiles}`,
-      `Indexed languages: ${sortedLangs.length}`,
-      "",
-      "Language breakdown:",
-      ...langLines,
-    ];
-
-    // Group files by language
-    const grouped = new Map<string, typeof allFiles>();
-    for (const file of allFiles) {
-      const group = grouped.get(file.language) || [];
-      group.push(file);
-      grouped.set(file.language, group);
-    }
-
-    for (const [lang] of sortedLangs) {
-      const files = grouped.get(lang)?.toSorted((a, b) => a.path.localeCompare(b.path));
-      if (!files) continue;
-      lines.push("", `${lang} sample (${Math.min(files.length, FILE_PREVIEW_LIMIT)} of ${files.length}):`);
-      for (const file of files.slice(0, FILE_PREVIEW_LIMIT)) {
-        lines.push(`  ${file.path}`);
-        if (file.description) {
-          lines.push(`    ${file.description}`);
-        }
-      }
-
-      if (files.length > FILE_PREVIEW_LIMIT) {
-        lines.push(`  ... ${files.length - FILE_PREVIEW_LIMIT} more file(s)`);
-      }
-    }
-
-    p.note(lines.join("\n"), "Repository Overview");
+    output(data, options, formatOverview);
   } finally {
     db.close();
   }

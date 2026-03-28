@@ -36,6 +36,14 @@ export class IndexDatabase {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS dependencies (
+        from_path TEXT NOT NULL,
+        to_path TEXT NOT NULL,
+        PRIMARY KEY (from_path, to_path)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_deps_to ON dependencies(to_path);
     `);
 
     // Create FTS5 virtual table if not exists
@@ -205,6 +213,66 @@ export class IndexDatabase {
        ON CONFLICT(key) DO UPDATE SET value = ?`,
       )
       .run(key, value, value);
+  }
+
+  upsertDependencies(fromPath: string, toPaths: string[]): void {
+    this.db.prepare("DELETE FROM dependencies WHERE from_path = ?").run(fromPath);
+    const stmt = this.db.prepare(
+      "INSERT OR IGNORE INTO dependencies (from_path, to_path) VALUES (?, ?)",
+    );
+    for (const to of toPaths) {
+      stmt.run(fromPath, to);
+    }
+  }
+
+  upsertBatchDependencies(entries: Array<{ fromPath: string; toPaths: string[] }>): void {
+    const del = this.db.prepare("DELETE FROM dependencies WHERE from_path = ?");
+    const ins = this.db.prepare(
+      "INSERT OR IGNORE INTO dependencies (from_path, to_path) VALUES (?, ?)",
+    );
+    const transaction = this.db.transaction(
+      (items: Array<{ fromPath: string; toPaths: string[] }>) => {
+        for (const { fromPath, toPaths } of items) {
+          del.run(fromPath);
+          for (const to of toPaths) {
+            ins.run(fromPath, to);
+          }
+        }
+      },
+    );
+    transaction(entries);
+  }
+
+  removeDependencies(fromPath: string): void {
+    this.db.prepare("DELETE FROM dependencies WHERE from_path = ?").run(fromPath);
+  }
+
+  removeDependenciesBatch(fromPaths: string[]): void {
+    const stmt = this.db.prepare("DELETE FROM dependencies WHERE from_path = ?");
+    const transaction = this.db.transaction((paths: string[]) => {
+      for (const p of paths) {
+        stmt.run(p);
+      }
+    });
+    transaction(fromPaths);
+  }
+
+  getDependencies(filePath: string): string[] {
+    const rows = this.db
+      .prepare("SELECT to_path FROM dependencies WHERE from_path = ? ORDER BY to_path")
+      .all(filePath) as { to_path: string }[];
+    return rows.map((r) => r.to_path);
+  }
+
+  getDependents(filePath: string): string[] {
+    const rows = this.db
+      .prepare("SELECT from_path FROM dependencies WHERE to_path = ? ORDER BY from_path")
+      .all(filePath) as { from_path: string }[];
+    return rows.map((r) => r.from_path);
+  }
+
+  removeAllDependencies(): void {
+    this.db.exec("DELETE FROM dependencies");
   }
 
   close(): void {

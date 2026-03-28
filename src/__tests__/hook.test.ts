@@ -3,22 +3,12 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@clack/prompts", () => ({
-  log: {
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    success: vi.fn(),
-    message: vi.fn(),
-  },
-}));
-
 // Capture process.exit
 vi.spyOn(process, "exit").mockImplementation((code) => {
   throw new Error(`process.exit(${code})`);
 });
 
-import * as p from "@clack/prompts";
+let stderrData: string;
 
 import { runHook } from "../commands/hook";
 import { cleanupTempDir, createTempDir } from "./helpers/fixtures";
@@ -35,9 +25,15 @@ describe("runHook", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    stderrData = "";
+    vi.spyOn(process.stderr, "write").mockImplementation((chunk: any) => {
+      stderrData += typeof chunk === "string" ? chunk : chunk.toString();
+      return true;
+    });
   });
 
   afterEach(() => {
+    vi.mocked(process.stderr.write).mockRestore?.();
     cleanupTempDir(tmpDir);
   });
 
@@ -50,8 +46,7 @@ describe("runHook", () => {
     const hookPath = path.join(tmpDir, ".git", "hooks", "post-commit");
     const content = fs.readFileSync(hookPath, "utf-8");
     expect(content.match(/# BEGIN kly/g)).toHaveLength(1);
-    expect(p.log.success).toHaveBeenCalledWith("Installed post-commit hook.");
-    expect(p.log.warn).toHaveBeenCalledWith("kly hook already installed.");
+    expect(stderrData).toContain("already installed");
   });
 
   it("removes only the managed block during uninstall", () => {
@@ -69,7 +64,7 @@ describe("runHook", () => {
     expect(content).toContain("echo before");
     expect(content).toContain("echo after");
     expect(content).not.toContain("# BEGIN kly");
-    expect(p.log.success).toHaveBeenCalledWith("Uninstalled post-commit hook.");
+    expect(stderrData).toContain("uninstalled");
   });
 
   it("warns when uninstalling a hook that is not managed by kly", () => {
@@ -79,6 +74,6 @@ describe("runHook", () => {
 
     runHook(tmpDir, "uninstall");
 
-    expect(p.log.warn).toHaveBeenCalledWith("kly hook not found in post-commit.");
+    expect(stderrData).toContain("kly hook not found");
   });
 });

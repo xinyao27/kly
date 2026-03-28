@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 
-import type { GitDiff } from "./types";
+import type { GitCommit, GitDiff } from "./types";
 
 function exec(root: string, cmd: string): string {
   return execSync(cmd, { cwd: root, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
@@ -78,6 +78,29 @@ export function getMergeBase(root: string, a: string, b: string): string | null 
   } catch {
     return null;
   }
+}
+
+export function getFileHistory(root: string, filePath: string, limit = 5): GitCommit[] {
+  let output: string;
+  try {
+    output = exec(root, `git log --follow -n ${limit} --format="%H|%an|%ae|%at|%s" -- "${filePath}"`);
+  } catch {
+    return [];
+  }
+  if (!output) return [];
+  return output
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const [hash, author, email, date, ...msgParts] = line.split("|");
+      return {
+        hash,
+        author,
+        email,
+        date: parseInt(date, 10),
+        message: msgParts.join("|"),
+      };
+    });
 }
 
 export function branchToDbName(branch: string | null, commitHash?: string): string {

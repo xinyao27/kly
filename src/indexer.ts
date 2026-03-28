@@ -13,6 +13,7 @@ import {
   isGitRepo,
   branchToDbName,
 } from "./git";
+import { resolveImport } from "./graph";
 import { hashFile, hasChanged } from "./hasher";
 import { LLMService } from "./llm/index";
 import { ParserManager } from "./parser/index";
@@ -43,18 +44,48 @@ export interface IndexOptions {
   onProgress?: ProgressCallback;
 }
 
-export async function buildIndex(root: string, options: IndexOptions = {}): Promise<void> {
+export interface BuildResult {
+  totalFiles: number;
+  newFiles: number;
+  updatedFiles: number;
+  deletedFiles: number;
+  unchangedFiles: number;
+  branch: string;
+  commit: string;
+  durationMs: number;
+}
+
+function emptyBuildResult(root: string): BuildResult {
+  const gitRepo = isGitRepo(root);
+  return {
+    totalFiles: 0,
+    newFiles: 0,
+    updatedFiles: 0,
+    deletedFiles: 0,
+    unchangedFiles: 0,
+    branch: gitRepo ? (getCurrentBranch(root) || "detached") : "default",
+    commit: gitRepo ? getCurrentCommit(root) : "",
+    durationMs: 0,
+  };
+}
+
+export async function buildIndex(root: string, options: IndexOptions = {}): Promise<BuildResult> {
+  const start = Date.now();
   const config = loadConfig(root);
   const parserManager = new ParserManager();
   const llmService = new LLMService(config);
 
   const gitRepo = isGitRepo(root);
 
+  let result: BuildResult;
   if (gitRepo && !options.full) {
-    await buildGitAware(root, config, parserManager, llmService, options);
+    result = await buildGitAware(root, config, parserManager, llmService, options);
   } else {
-    await buildClassic(root, config, parserManager, llmService, options);
+    result = await buildClassic(root, config, parserManager, llmService, options);
   }
+
+  result.durationMs = Date.now() - start;
+  return result;
 }
 
 async function buildGitAware(
@@ -63,7 +94,7 @@ async function buildGitAware(
   parserManager: ParserManager,
   llmService: LLMService,
   options: IndexOptions,
-): Promise<void> {
+): Promise<BuildResult> {
   const branch = getCurrentBranch(root);
   const commit = getCurrentCommit(root);
   const dbName = branchToDbName(branch, commit);
@@ -71,13 +102,15 @@ async function buildGitAware(
   const state = loadState(root);
   const currentConfigHash = hashConfig(config);
 
+  let result: BuildResult;
+
   // Config changed — force full rebuild
   if (state.configHash && state.configHash !== currentConfigHash) {
-    await buildClassic(root, config, parserManager, llmService, options, dbName);
+    result = await buildClassic(root, config, parserManager, llmService, options, dbName);
     state.configHash = currentConfigHash;
     setBranchState(state, dbName, { lastCommit: commit, lastBuilt: Date.now() });
     saveState(root, state);
-    return;
+    return result;
   }
 
   const branchState = getBranchState(state, dbName);
@@ -85,7 +118,7 @@ async function buildGitAware(
   if (branchState?.lastCommit) {
     if (isAncestor(root, branchState.lastCommit, commit)) {
       // Normal incremental: diff from last indexed commit
-      await buildFromGitDiff(
+      result = await buildFromGitDiff(
         root,
         config,
         parserManager,
@@ -97,7 +130,7 @@ async function buildGitAware(
       );
     } else {
       // Rebase/force push: fall back to hash-based incremental
-      await buildClassic(root, config, parserManager, llmService, options, dbName);
+      result = await buildClassic(root, config, parserManager, llmService, options, dbName);
     }
   } else {
     // New branch: try to fork from parent
@@ -109,7 +142,7 @@ async function buildGitAware(
       const parentState = getBranchState(state, forkedFromDb)!;
       const mergeBase = getMergeBase(root, parentState.lastCommit, commit);
       if (mergeBase) {
-        await buildFromGitDiff(
+        result = await buildFromGitDiff(
           root,
           config,
           parserManager,
@@ -120,11 +153,11 @@ async function buildGitAware(
           commit,
         );
       } else {
-        await buildClassic(root, config, parserManager, llmService, options, dbName);
+        result = await buildClassic(root, config, parserManager, llmService, options, dbName);
       }
     } else {
       // Full build
-      await buildClassic(root, config, parserManager, llmService, options, dbName);
+      result = await buildClassic(root, config, parserManager, llmService, options, dbName);
     }
   }
 
@@ -140,6 +173,7 @@ async function buildGitAware(
   }
   setBranchState(state, dbName, newBranchState);
   saveState(root, state);
+  return result;
 }
 
 function tryForkFromParent(
@@ -166,7 +200,7 @@ async function buildFromGitDiff(
   dbName: string,
   fromCommit: string,
   toCommit: string,
-): Promise<void> {
+): Promise<BuildResult> {
   const gitDiff = getChangedFiles(root, fromCommit, toCommit);
   const filtered = filterGitDiff(gitDiff, config);
 
@@ -180,9 +214,13 @@ async function buildFromGitDiff(
   }
 
   const db = openDatabase(root, dbName);
+  const result = emptyBuildResult(root);
+
   try {
     if (toDelete.length > 0) {
       db.removeFiles(toDelete);
+      db.removeDependenciesBatch(toDelete);
+      result.deletedFiles = toDelete.length;
     }
 
     if (toIndex.length === 0) {
@@ -192,10 +230,17 @@ async function buildFromGitDiff(
         current: "",
         skipped: 0,
       });
-      return;
+      result.totalFiles = db.getFileCount();
+      result.unchangedFiles = result.totalFiles;
+      return result;
     }
 
-    await indexFiles(root, toIndex, db, parserManager, llmService, options);
+    const indexResult = await indexFiles(root, toIndex, db, parserManager, llmService, options);
+    result.newFiles = indexResult.newFiles;
+    result.updatedFiles = indexResult.updatedFiles;
+    result.totalFiles = db.getFileCount();
+    result.unchangedFiles = result.totalFiles - result.newFiles - result.updatedFiles;
+    return result;
   } finally {
     db.close();
   }
@@ -208,11 +253,12 @@ async function buildClassic(
   llmService: LLMService,
   options: IndexOptions,
   dbName?: string,
-): Promise<void> {
+): Promise<BuildResult> {
   const name =
     dbName ||
     (isGitRepo(root) ? branchToDbName(getCurrentBranch(root), getCurrentCommit(root)) : "default");
   const db = openDatabase(root, name);
+  const result = emptyBuildResult(root);
 
   try {
     const files = await scanFiles(root, config);
@@ -223,16 +269,22 @@ async function buildClassic(
       skipped: 0,
     };
 
-    // Collect files that need indexing
+    // Collect files that need indexing, track which already exist
     const toIndex: string[] = [];
+    const existingPaths = new Set<string>();
 
     for (const filePath of files) {
       const hash = hashFile(root, filePath);
       const existing = db.getFile(filePath);
 
+      if (existing) {
+        existingPaths.add(filePath);
+      }
+
       if (existing && !hasChanged(existing.hash, hash) && !options.full) {
         progress.skipped++;
         progress.completed++;
+        result.unchangedFiles++;
         options.onProgress?.(progress);
         continue;
       }
@@ -241,7 +293,23 @@ async function buildClassic(
     }
 
     if (toIndex.length > 0) {
-      await indexFiles(root, toIndex, db, parserManager, llmService, options, progress);
+      const indexResult = await indexFiles(
+        root,
+        toIndex,
+        db,
+        parserManager,
+        llmService,
+        options,
+        progress,
+      );
+      // Determine new vs updated based on whether they existed before
+      for (const filePath of toIndex) {
+        if (existingPaths.has(filePath)) {
+          result.updatedFiles++;
+        } else {
+          result.newFiles++;
+        }
+      }
     }
 
     // Remove files that no longer exist on disk
@@ -250,10 +318,21 @@ async function buildClassic(
     const toRemove = allIndexed.filter((f) => !fileSet.has(f.path)).map((f) => f.path);
     if (toRemove.length > 0) {
       db.removeFiles(toRemove);
+      db.removeDependenciesBatch(toRemove);
+      result.deletedFiles = toRemove.length;
     }
+
+    result.totalFiles = db.getFileCount();
+    return result;
   } finally {
     db.close();
   }
+}
+
+interface IndexFilesResult {
+  indexed: number;
+  newFiles: number;
+  updatedFiles: number;
 }
 
 async function indexFiles(
@@ -264,7 +343,7 @@ async function indexFiles(
   llmService: LLMService,
   options: IndexOptions,
   progress?: IndexProgress,
-): Promise<void> {
+): Promise<IndexFilesResult> {
   const prog = progress || {
     total: filePaths.length,
     completed: 0,
@@ -335,4 +414,28 @@ async function indexFiles(
   });
 
   db.upsertFiles(fileIndexes);
+
+  // Build and write dependencies
+  const allFiles = db.getAllFiles();
+  const indexedPaths = new Set(allFiles.map((f) => f.path));
+  const depEntries: Array<{ fromPath: string; toPaths: string[] }> = [];
+
+  for (const file of parsedFiles) {
+    const resolved: string[] = [];
+    for (const imp of file.imports) {
+      const target = resolveImport(file.path, imp, indexedPaths);
+      if (target) resolved.push(target);
+    }
+    depEntries.push({ fromPath: file.path, toPaths: resolved });
+  }
+
+  if (depEntries.length > 0) {
+    db.upsertBatchDependencies(depEntries);
+  }
+
+  return {
+    indexed: fileIndexes.length,
+    newFiles: 0, // caller determines new vs updated
+    updatedFiles: 0,
+  };
 }

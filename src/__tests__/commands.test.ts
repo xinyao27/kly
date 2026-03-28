@@ -2,15 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sharedMocks = vi.hoisted(() => {
   const cancelled = Symbol("cancelled");
-  const spinnerInstance = {
-    start: vi.fn(),
-    stop: vi.fn(),
-    message: vi.fn(),
-  };
 
   return {
     cancelled,
-    spinnerInstance,
     select: vi.fn(),
     password: vi.fn(),
     text: vi.fn(),
@@ -21,7 +15,6 @@ const sharedMocks = vi.hoisted(() => {
     isCancel: vi.fn((value: unknown) => value === cancelled),
     runHook: vi.fn(),
     buildIndex: vi.fn(),
-    startMcpServer: vi.fn(),
   };
 });
 
@@ -33,24 +26,7 @@ vi.mock("../indexer", () => ({
   buildIndex: sharedMocks.buildIndex,
 }));
 
-vi.mock("../mcp", () => ({
-  startMcpServer: sharedMocks.startMcpServer,
-}));
-
-import { initKlyDir, isInitialized, loadConfig } from "../config";
-import { runBuild } from "../commands/build";
-import { runInit } from "../commands/init";
-import { runQuery } from "../commands/query";
-import { runServe } from "../commands/serve";
-import { ensureInitialized } from "../commands/shared";
-import { runShow } from "../commands/show";
-import { runOverview } from "../commands/overview";
-import { runGc } from "../commands/gc";
-import { runGraph } from "../commands/graph";
-import { openDatabase } from "../store";
-import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
-
-// Mock @clack/prompts to capture output
+// Mock @clack/prompts for init interactive mode
 vi.mock("@clack/prompts", () => ({
   log: {
     error: vi.fn(),
@@ -60,7 +36,11 @@ vi.mock("@clack/prompts", () => ({
     message: vi.fn(),
   },
   note: vi.fn(),
-  spinner: vi.fn(() => sharedMocks.spinnerInstance),
+  spinner: vi.fn(() => ({
+    start: vi.fn(),
+    stop: vi.fn(),
+    message: vi.fn(),
+  })),
   select: sharedMocks.select,
   password: sharedMocks.password,
   text: sharedMocks.text,
@@ -71,12 +51,48 @@ vi.mock("@clack/prompts", () => ({
   isCancel: sharedMocks.isCancel,
 }));
 
+// Capture stdout/stderr
+let stdoutData: string;
+let stderrData: string;
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
 // Capture process.exit
 vi.spyOn(process, "exit").mockImplementation((code) => {
   throw new Error(`process.exit(${code})`);
 });
 
-import * as p from "@clack/prompts";
+import { initKlyDir, isInitialized, loadConfig } from "../config";
+import { runBuild } from "../commands/build";
+import { runInit } from "../commands/init";
+import { runQuery } from "../commands/query";
+import { runShow } from "../commands/show";
+import { runOverview } from "../commands/overview";
+import { runGc } from "../commands/gc";
+import { runGraph } from "../commands/graph";
+import { runDependents } from "../commands/dependents";
+import { runHistory } from "../commands/history";
+import { ensureInitialized } from "../commands/shared";
+import { openDatabase } from "../store";
+import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
+
+function captureOutput() {
+  stdoutData = "";
+  stderrData = "";
+  vi.spyOn(process.stdout, "write").mockImplementation((chunk: any) => {
+    stdoutData += typeof chunk === "string" ? chunk : chunk.toString();
+    return true;
+  });
+  vi.spyOn(process.stderr, "write").mockImplementation((chunk: any) => {
+    stderrData += typeof chunk === "string" ? chunk : chunk.toString();
+    return true;
+  });
+}
+
+function restoreOutput() {
+  vi.mocked(process.stdout.write).mockRestore?.();
+  vi.mocked(process.stderr.write).mockRestore?.();
+}
 
 describe("ensureInitialized", () => {
   let tmpDir: string;
@@ -84,15 +100,17 @@ describe("ensureInitialized", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
   it("exits with code 1 when not initialized", () => {
     expect(() => ensureInitialized(tmpDir)).toThrow("process.exit(1)");
-    expect(p.log.error).toHaveBeenCalledWith("Not initialized. Run `kly init` first.");
+    expect(stderrData).toContain("Not initialized");
   });
 
   it("does nothing when initialized", () => {
@@ -107,54 +125,58 @@ describe("runInit", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
+  });
+
+  afterEach(() => {
+    restoreOutput();
+    cleanupTempDir(tmpDir);
+  });
+
+  it("non-interactive: creates config from flags", async () => {
+    await runInit(tmpDir, {
+      provider: "openai",
+      model: "gpt-4o-mini",
+      apiKey: "sk-test",
+    });
+
+    expect(isInitialized(tmpDir)).toBe(true);
+    expect(loadConfig(tmpDir)).toMatchObject({
+      llm: { provider: "openai", model: "gpt-4o-mini", apiKey: "sk-test" },
+    });
+  });
+
+  it("non-interactive: uses default model when not specified", async () => {
+    await runInit(tmpDir, {
+      provider: "openrouter",
+      apiKey: "sk-or-test",
+    });
+
+    expect(loadConfig(tmpDir)).toMatchObject({
+      llm: { provider: "openrouter", model: "anthropic/claude-haiku-4.5" },
+    });
+  });
+
+  it("non-interactive: rejects invalid provider", async () => {
+    await expect(
+      runInit(tmpDir, { provider: "invalid", apiKey: "key" }),
+    ).rejects.toThrow("process.exit(1)");
+    expect(stderrData).toContain("Invalid provider");
+  });
+
+  it("interactive: falls back when no flags given", async () => {
     sharedMocks.select.mockResolvedValue("openai");
     sharedMocks.password.mockResolvedValue("sk-test");
     sharedMocks.text.mockResolvedValue("gpt-4o-mini");
     sharedMocks.confirm.mockResolvedValue(false);
-  });
 
-  afterEach(() => {
-    cleanupTempDir(tmpDir);
-  });
-
-  it("creates the config from prompt answers", async () => {
     await runInit(tmpDir);
-
     expect(isInitialized(tmpDir)).toBe(true);
-    expect(loadConfig(tmpDir)).toMatchObject({
-      llm: {
-        provider: "openai",
-        model: "gpt-4o-mini",
-        apiKey: "sk-test",
-      },
-    });
-    expect(p.log.success).toHaveBeenCalledWith("Initialized .kly/ directory");
-    expect(sharedMocks.runHook).not.toHaveBeenCalled();
   });
 
-  it("offers hook installation in git repositories", async () => {
-    initKlyDir(tmpDir);
-    vi.clearAllMocks();
-    sharedMocks.select.mockResolvedValue("openrouter");
-    sharedMocks.password.mockResolvedValue("or-key");
-    sharedMocks.text.mockResolvedValue("anthropic/claude-haiku-4.5");
-    sharedMocks.confirm.mockResolvedValue(true);
-
-    await import("node:fs").then(({ mkdirSync }) => mkdirSync(`${tmpDir}/.git`, { recursive: true }));
-    await runInit(tmpDir);
-
-    expect(sharedMocks.confirm).toHaveBeenCalledWith({
-      message: "Install post-commit hook for automatic indexing?",
-      initialValue: true,
-    });
-    expect(sharedMocks.runHook).toHaveBeenCalledWith(tmpDir, "install");
-  });
-
-  it("exits cleanly when the provider prompt is cancelled", async () => {
+  it("interactive: exits when cancelled", async () => {
     sharedMocks.select.mockResolvedValue(sharedMocks.cancelled);
-
     await expect(runInit(tmpDir)).rejects.toThrow("process.exit(0)");
-    expect(sharedMocks.cancel).toHaveBeenCalledWith("Init cancelled.");
   });
 });
 
@@ -165,87 +187,61 @@ describe("runBuild", () => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
     initKlyDir(tmpDir);
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
-  it("shows spinner progress and passes options through to the indexer", async () => {
-    sharedMocks.buildIndex.mockImplementation(
-      async (
-        _root: string,
-        options: { onProgress?: (progress: { completed: number; total: number; current?: string; skipped: number }) => void },
-      ) => {
-        options.onProgress?.({
-          completed: 1,
-          total: 2,
-          current: "src/auth.ts",
-          skipped: 3,
-        });
-      },
-    );
+  it("passes options through to the indexer", async () => {
+    sharedMocks.buildIndex.mockResolvedValue({
+      totalFiles: 2,
+      newFiles: 1,
+      updatedFiles: 1,
+      deletedFiles: 0,
+      unchangedFiles: 0,
+      branch: "main",
+      commit: "abc1234567",
+      durationMs: 1500,
+    });
 
-    await runBuild(tmpDir, { full: true, quiet: false });
+    await runBuild(tmpDir, { full: true });
 
     expect(sharedMocks.buildIndex).toHaveBeenCalledWith(
       tmpDir,
       expect.objectContaining({
         full: true,
-        quiet: false,
         onProgress: expect.any(Function),
       }),
     );
-    expect(sharedMocks.spinnerInstance.start).toHaveBeenCalledWith("Building index...");
-    expect(sharedMocks.spinnerInstance.message).toHaveBeenCalledWith(
-      "Indexing [50%] src/auth.ts (3 unchanged)",
-    );
-    expect(sharedMocks.spinnerInstance.stop).toHaveBeenCalledWith("Index built successfully");
+    expect(stdoutData).toContain("indexed 2 files");
+    expect(stdoutData).toContain("1 new");
+    expect(stdoutData).toContain("branch: main");
   });
 
-  it("suppresses spinner and log noise in quiet mode", async () => {
-    sharedMocks.buildIndex.mockResolvedValue(undefined);
+  it("suppresses output in quiet mode", async () => {
+    sharedMocks.buildIndex.mockResolvedValue({
+      totalFiles: 0,
+      newFiles: 0,
+      updatedFiles: 0,
+      deletedFiles: 0,
+      unchangedFiles: 0,
+      branch: "main",
+      commit: "abc1234",
+      durationMs: 100,
+    });
 
     await runBuild(tmpDir, { quiet: true });
-
-    expect(p.spinner).not.toHaveBeenCalled();
-    expect(sharedMocks.buildIndex).toHaveBeenCalledWith(
-      tmpDir,
-      expect.objectContaining({
-        quiet: true,
-      }),
-    );
+    expect(stdoutData).toBe("");
   });
 
-  it("logs the failure and exits when the indexer throws", async () => {
+  it("logs error and exits when indexer throws", async () => {
     sharedMocks.buildIndex.mockRejectedValue(new Error("LLM unavailable"));
 
-    await expect(runBuild(tmpDir, { quiet: false })).rejects.toThrow("process.exit(1)");
-    expect(sharedMocks.spinnerInstance.stop).toHaveBeenCalledWith("Build failed");
-    expect(p.log.error).toHaveBeenCalledWith("LLM unavailable");
-  });
-});
-
-describe("runServe", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = createTempDir();
-    vi.clearAllMocks();
-    initKlyDir(tmpDir);
-  });
-
-  afterEach(() => {
-    cleanupTempDir(tmpDir);
-  });
-
-  it("starts the MCP server after logging startup", async () => {
-    sharedMocks.startMcpServer.mockResolvedValue(undefined);
-
-    await runServe(tmpDir);
-
-    expect(p.log.info).toHaveBeenCalledWith("Starting MCP server (stdio)...");
-    expect(sharedMocks.startMcpServer).toHaveBeenCalledWith(tmpDir);
+    await expect(runBuild(tmpDir)).rejects.toThrow("process.exit(1)");
+    expect(stderrData).toContain("LLM unavailable");
   });
 });
 
@@ -255,9 +251,11 @@ describe("runShow", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
@@ -265,33 +263,39 @@ describe("runShow", () => {
     expect(() => runShow(tmpDir, "any.ts")).toThrow("process.exit(1)");
   });
 
-  it("warns when file not in index", () => {
+  it("errors when file not in index", () => {
     initKlyDir(tmpDir);
-    runShow(tmpDir, "nonexistent.ts");
-    expect(p.log.warn).toHaveBeenCalledWith("File not found in index: nonexistent.ts");
+    expect(() => runShow(tmpDir, "nonexistent.ts")).toThrow("process.exit(1)");
+    expect(stderrData).toContain("File not found in index");
   });
 
-  it("displays file details when found", () => {
+  it("outputs JSON by default", () => {
     initKlyDir(tmpDir);
     const db = openDatabase(tmpDir, "default");
-    const fileIndex = createFileIndex({
-      path: "src/test.ts",
-      imports: ["fs", "path"],
-      exports: ["runTest"],
-      symbols: [{ name: "runTest", kind: "function", description: "Runs the test workflow." }],
-    });
-    db.upsertFile(fileIndex);
+    db.upsertFile(
+      createFileIndex({
+        path: "src/test.ts",
+        imports: ["fs", "path"],
+        exports: ["runTest"],
+      }),
+    );
     db.close();
 
     runShow(tmpDir, "src/test.ts");
-    expect(p.note).toHaveBeenCalledWith(
-      expect.stringContaining("Imports (2):"),
-      "Indexed File: src/test.ts",
-    );
-    expect(p.note).toHaveBeenCalledWith(
-      expect.stringContaining("Symbols (1):"),
-      "Indexed File: src/test.ts",
-    );
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed.path).toBe("src/test.ts");
+    expect(parsed.imports).toEqual(["fs", "path"]);
+  });
+
+  it("outputs pretty format", () => {
+    initKlyDir(tmpDir);
+    const db = openDatabase(tmpDir, "default");
+    db.upsertFile(createFileIndex({ path: "src/test.ts" }));
+    db.close();
+
+    runShow(tmpDir, "src/test.ts", { pretty: true });
+    expect(stdoutData).toContain("path: src/test.ts");
+    expect(stdoutData).toContain("language: typescript");
   });
 });
 
@@ -301,9 +305,11 @@ describe("runOverview", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
@@ -311,34 +317,19 @@ describe("runOverview", () => {
     expect(() => runOverview(tmpDir)).toThrow("process.exit(1)");
   });
 
-  it("warns when no files indexed", () => {
-    initKlyDir(tmpDir);
-    runOverview(tmpDir);
-    expect(p.log.warn).toHaveBeenCalledWith("No files indexed yet. Run `kly build` first.");
-  });
-
-  it("displays overview when files exist", () => {
+  it("outputs JSON with file counts", () => {
     initKlyDir(tmpDir);
     const db = openDatabase(tmpDir, "default");
     db.upsertFiles([
-      createFileIndex({ path: "src/a.ts", description: "A" }),
-      createFileIndex({ path: "src/b.ts", description: "B" }),
-      createFileIndex({ path: "src/c.ts", description: "C" }),
-      createFileIndex({ path: "src/d.ts", description: "D" }),
-      createFileIndex({ path: "src/e.ts", description: "E" }),
-      createFileIndex({ path: "src/f.ts", description: "F" }),
+      createFileIndex({ path: "src/a.ts" }),
+      createFileIndex({ path: "src/b.ts" }),
     ]);
     db.close();
 
     runOverview(tmpDir);
-    expect(p.note).toHaveBeenCalledWith(
-      expect.stringContaining("Indexed languages: 1"),
-      "Repository Overview",
-    );
-    expect(p.note).toHaveBeenCalledWith(
-      expect.stringContaining("... 1 more file(s)"),
-      "Repository Overview",
-    );
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed.totalFiles).toBe(2);
+    expect(parsed.languages.typescript).toBe(2);
   });
 });
 
@@ -348,47 +339,122 @@ describe("runQuery", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
-  it("warns when no files match", async () => {
+  it("returns empty array when no match", async () => {
     initKlyDir(tmpDir);
     await runQuery(tmpDir, "missing");
-    expect(p.log.warn).toHaveBeenCalledWith("No matching files found.");
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed).toEqual([]);
   });
 
-  it("renders formatted query results", async () => {
+  it("returns matching files as JSON", async () => {
     initKlyDir(tmpDir);
     const db = openDatabase(tmpDir, "default");
     db.upsertFile(
       createFileIndex({
         path: "src/auth.ts",
-        description: "Authentication entrypoints",
-        summary:
-          "Handles login, logout, token refresh, and session validation for the application.",
-        symbols: [
-          { name: "login", kind: "function", description: "Signs a user in." },
-          { name: "logout", kind: "function", description: "Signs a user out." },
-          { name: "refreshSession", kind: "function", description: "Refreshes a session." },
-          { name: "requireAuth", kind: "function", description: "Enforces auth." },
-          { name: "AuthError", kind: "class", description: "Authentication error." },
-          { name: "readCookie", kind: "function", description: "Reads the auth cookie." },
-        ],
+        description: "Authentication service",
       }),
     );
     db.close();
 
     await runQuery(tmpDir, "Authentication");
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed.length).toBe(1);
+    expect(parsed[0].path).toBe("src/auth.ts");
+    expect(parsed[0].score).toBeGreaterThan(0);
+  });
+});
 
-    expect(p.log.info).toHaveBeenCalledWith("Found 1 matching file(s).");
-    expect(p.log.message).toHaveBeenCalledWith(expect.stringContaining("1. src/auth.ts"));
-    expect(p.log.message).toHaveBeenCalledWith(expect.stringContaining("Score:"));
-    expect(p.log.message).toHaveBeenCalledWith(
-      expect.stringContaining("Symbols: login, logout, refreshSession, requireAuth, AuthError (+1 more)"),
-    );
+describe("runGraph", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = createTempDir();
+    vi.clearAllMocks();
+    captureOutput();
+  });
+
+  afterEach(() => {
+    restoreOutput();
+    cleanupTempDir(tmpDir);
+  });
+
+  it("exits when not initialized", () => {
+    expect(() => runGraph(tmpDir)).toThrow("process.exit(1)");
+  });
+
+  it("outputs JSON graph", () => {
+    initKlyDir(tmpDir);
+    const db = openDatabase(tmpDir, "default");
+    db.upsertFiles([
+      createFileIndex({ path: "src/a.ts", imports: ["./b"] }),
+      createFileIndex({ path: "src/b.ts" }),
+    ]);
+    db.close();
+
+    runGraph(tmpDir);
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed.nodes.length).toBe(2);
+    expect(parsed.edges.length).toBe(1);
+    expect(parsed.edges[0]).toEqual({ from: "src/a.ts", to: "src/b.ts" });
+  });
+
+  it("outputs pretty format", () => {
+    initKlyDir(tmpDir);
+    const db = openDatabase(tmpDir, "default");
+    db.upsertFiles([
+      createFileIndex({ path: "src/a.ts", imports: ["./b"] }),
+      createFileIndex({ path: "src/b.ts" }),
+    ]);
+    db.close();
+
+    runGraph(tmpDir, { pretty: true });
+    expect(stdoutData).toContain("src/a.ts");
+    expect(stdoutData).toContain("-> src/b.ts");
+  });
+});
+
+describe("runDependents", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = createTempDir();
+    vi.clearAllMocks();
+    captureOutput();
+  });
+
+  afterEach(() => {
+    restoreOutput();
+    cleanupTempDir(tmpDir);
+  });
+
+  it("exits when file not in index", () => {
+    initKlyDir(tmpDir);
+    expect(() => runDependents(tmpDir, "nonexistent.ts")).toThrow("process.exit(1)");
+  });
+
+  it("returns dependents from dependencies table", () => {
+    initKlyDir(tmpDir);
+    const db = openDatabase(tmpDir, "default");
+    db.upsertFiles([
+      createFileIndex({ path: "src/types.ts" }),
+      createFileIndex({ path: "src/database.ts", imports: ["./types"] }),
+    ]);
+    db.upsertDependencies("src/database.ts", ["src/types.ts"]);
+    db.close();
+
+    runDependents(tmpDir, "src/types.ts");
+    const parsed = JSON.parse(stdoutData);
+    expect(parsed.file).toBe("src/types.ts");
+    expect(parsed.dependents).toEqual(["src/database.ts"]);
   });
 });
 
@@ -398,9 +464,11 @@ describe("runGc", () => {
   beforeEach(() => {
     tmpDir = createTempDir();
     vi.clearAllMocks();
+    captureOutput();
   });
 
   afterEach(() => {
+    restoreOutput();
     cleanupTempDir(tmpDir);
   });
 
@@ -411,55 +479,6 @@ describe("runGc", () => {
   it("warns when not a git repo", () => {
     initKlyDir(tmpDir);
     runGc(tmpDir);
-    expect(p.log.warn).toHaveBeenCalledWith("Not a git repository. Nothing to clean.");
-  });
-});
-
-describe("runGraph", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = createTempDir();
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    cleanupTempDir(tmpDir);
-  });
-
-  it("exits when not initialized", async () => {
-    await expect(runGraph(tmpDir, { format: "mermaid" })).rejects.toThrow("process.exit(1)");
-  });
-
-  it("warns when no files indexed", async () => {
-    initKlyDir(tmpDir);
-    await runGraph(tmpDir, { format: "mermaid" });
-    expect(p.log.warn).toHaveBeenCalledWith("No files indexed yet. Run `kly build` first.");
-  });
-
-  it("warns when no dependencies found", async () => {
-    initKlyDir(tmpDir);
-    const db = openDatabase(tmpDir, "default");
-    db.upsertFile(createFileIndex({ imports: [] }));
-    db.close();
-
-    await runGraph(tmpDir, { format: "mermaid" });
-    expect(p.log.warn).toHaveBeenCalledWith("No dependencies found between indexed files.");
-  });
-
-  it("rejects invalid depth values", async () => {
-    initKlyDir(tmpDir);
-    await expect(runGraph(tmpDir, { format: "mermaid", depth: 0 })).rejects.toThrow("process.exit(1)");
-    expect(p.log.error).toHaveBeenCalledWith("`--depth` must be a positive integer.");
-  });
-
-  it("warns when the focused file is not indexed", async () => {
-    initKlyDir(tmpDir);
-    const db = openDatabase(tmpDir, "default");
-    db.upsertFile(createFileIndex({ path: "src/a.ts" }));
-    db.close();
-
-    await runGraph(tmpDir, { format: "mermaid", focus: "src/missing.ts" });
-    expect(p.log.warn).toHaveBeenCalledWith("Focused file is not indexed: src/missing.ts");
+    expect(stderrData).toContain("not a git repository");
   });
 });

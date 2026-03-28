@@ -30,14 +30,14 @@ const RESOLVE_EXTENSIONS = [
   "/index.jsx",
 ];
 
-function isRelativeImport(importPath: string): boolean {
+export function isRelativeImport(importPath: string): boolean {
   return importPath.startsWith(".") || importPath.startsWith("/");
 }
 
 /**
  * Resolve a relative import path to a file path that exists in the index.
  */
-function resolveImport(
+export function resolveImport(
   fromFile: string,
   importPath: string,
   indexedPaths: Set<string>,
