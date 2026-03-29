@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire } from "node:module";
+
 import { Command } from "commander";
 
 import { runBuild } from "./commands/build";
@@ -13,12 +15,15 @@ import { runOverview } from "./commands/overview";
 import { runQuery } from "./commands/query";
 import { runShow } from "./commands/show";
 
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json") as { version: string };
+
 const program = new Command();
 
 program
   .name("kly")
   .description("Code repository file-level indexing tool")
-  .version("0.2.0")
+  .version(version)
   .showHelpAfterError()
   .showSuggestionAfterError();
 
