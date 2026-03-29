@@ -21,6 +21,14 @@ kly scans your codebase, extracts structural information via tree-sitter AST, an
 npm install -g kly
 ```
 
+## Agent Skill
+
+Install the kly skill to let your AI agent use kly automatically:
+
+```bash
+npx skills add xinyao27/kly
+```
+
 ## Quick Start
 
 ```bash
