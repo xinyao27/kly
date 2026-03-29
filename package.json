@@ -41,7 +41,8 @@
     "test:coverage": "vp test --coverage",
     "prepublishOnly": "npm run build",
     "up": "taze major -Ir",
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "postinstall": "node-gyp rebuild --directory=node_modules/tree-sitter || true"
   },
   "dependencies": {
     "@clack/prompts": "^1.1.0",
