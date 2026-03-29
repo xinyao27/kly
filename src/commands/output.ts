@@ -11,7 +11,11 @@ export interface OutputOptions {
 }
 
 /** Output data as JSON (default) or human-readable (--pretty). */
-export function output(data: unknown, opts: OutputOptions, prettyFormatter?: (data: unknown) => string): void {
+export function output(
+  data: unknown,
+  opts: OutputOptions,
+  prettyFormatter?: (data: unknown) => string,
+): void {
   if (opts.pretty && prettyFormatter) {
     process.stdout.write(prettyFormatter(data) + "\n");
   } else {

@@ -33,7 +33,7 @@ describe("runHook", () => {
   });
 
   afterEach(() => {
-    vi.mocked(process.stderr.write).mockRestore?.();
+    (vi.mocked(process.stderr.write).mockRestore as (() => void) | undefined)?.();
     cleanupTempDir(tmpDir);
   });
 

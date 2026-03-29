@@ -5,7 +5,7 @@ import { loadConfig } from "../config";
 import type { SearchResult } from "../database";
 import { searchFiles, searchFilesWithRerank } from "../query";
 import { openDatabase } from "../store";
-import { type OutputOptions, info, output, warn } from "./output";
+import { type OutputOptions, info, output } from "./output";
 import { ensureInitialized } from "./shared";
 
 export interface QueryOptions extends OutputOptions {

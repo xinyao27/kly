@@ -63,19 +63,19 @@ kly gc
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `kly init` | Initialize kly (supports `--provider`, `--api-key`, `--model` flags) |
-| `kly build` | Build or update the index (`--full` for rebuild, `--quiet` for CI) |
-| `kly query <text>` | Search files by natural language (`--rerank`, `--limit`) |
-| `kly show <path>` | Show indexed metadata for a file |
-| `kly overview` | Repository summary with language breakdown |
-| `kly graph` | File dependency graph (`--focus`, `--depth`) |
-| `kly dependents <path>` | Show files that import the given file |
-| `kly history <path>` | Show git modification history (`--limit`) |
-| `kly enrich` | Enrich error stack frames (stdin or `--frames`) |
-| `kly hook install\|uninstall` | Manage post-commit hook |
-| `kly gc` | Remove databases for deleted branches |
+| Command                       | Description                                                          |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `kly init`                    | Initialize kly (supports `--provider`, `--api-key`, `--model` flags) |
+| `kly build`                   | Build or update the index (`--full` for rebuild, `--quiet` for CI)   |
+| `kly query <text>`            | Search files by natural language (`--rerank`, `--limit`)             |
+| `kly show <path>`             | Show indexed metadata for a file                                     |
+| `kly overview`                | Repository summary with language breakdown                           |
+| `kly graph`                   | File dependency graph (`--focus`, `--depth`)                         |
+| `kly dependents <path>`       | Show files that import the given file                                |
+| `kly history <path>`          | Show git modification history (`--limit`)                            |
+| `kly enrich`                  | Enrich error stack frames (stdin or `--frames`)                      |
+| `kly hook install\|uninstall` | Manage post-commit hook                                              |
+| `kly gc`                      | Remove databases for deleted branches                                |
 
 All read commands support `--pretty` for human-readable output. Default is JSON.
 

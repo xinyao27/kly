@@ -31,11 +31,7 @@ function formatHistory(data: unknown): string {
   return lines.join("\n");
 }
 
-export function runHistory(
-  root: string,
-  filePath: string,
-  options: HistoryOptions = {},
-): void {
+export function runHistory(root: string, filePath: string, options: HistoryOptions = {}): void {
   ensureInitialized(root);
 
   const limit = options.limit ?? 5;

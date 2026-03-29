@@ -54,25 +54,22 @@ vi.mock("@clack/prompts", () => ({
 // Capture stdout/stderr
 let stdoutData: string;
 let stderrData: string;
-const originalStdoutWrite = process.stdout.write.bind(process.stdout);
-const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
 // Capture process.exit
 vi.spyOn(process, "exit").mockImplementation((code) => {
   throw new Error(`process.exit(${code})`);
 });
 
-import { initKlyDir, isInitialized, loadConfig } from "../config";
 import { runBuild } from "../commands/build";
-import { runInit } from "../commands/init";
-import { runQuery } from "../commands/query";
-import { runShow } from "../commands/show";
-import { runOverview } from "../commands/overview";
+import { runDependents } from "../commands/dependents";
 import { runGc } from "../commands/gc";
 import { runGraph } from "../commands/graph";
-import { runDependents } from "../commands/dependents";
-import { runHistory } from "../commands/history";
+import { runInit } from "../commands/init";
+import { runOverview } from "../commands/overview";
+import { runQuery } from "../commands/query";
 import { ensureInitialized } from "../commands/shared";
+import { runShow } from "../commands/show";
+import { initKlyDir, isInitialized, loadConfig } from "../config";
 import { openDatabase } from "../store";
 import { cleanupTempDir, createFileIndex, createTempDir } from "./helpers/fixtures";
 
@@ -90,8 +87,8 @@ function captureOutput() {
 }
 
 function restoreOutput() {
-  vi.mocked(process.stdout.write).mockRestore?.();
-  vi.mocked(process.stderr.write).mockRestore?.();
+  (vi.mocked(process.stdout.write).mockRestore as (() => void) | undefined)?.();
+  (vi.mocked(process.stderr.write).mockRestore as (() => void) | undefined)?.();
 }
 
 describe("ensureInitialized", () => {
@@ -158,9 +155,9 @@ describe("runInit", () => {
   });
 
   it("non-interactive: rejects invalid provider", async () => {
-    await expect(
-      runInit(tmpDir, { provider: "invalid", apiKey: "key" }),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runInit(tmpDir, { provider: "invalid", apiKey: "key" })).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrData).toContain("Invalid provider");
   });
 
@@ -320,10 +317,7 @@ describe("runOverview", () => {
   it("outputs JSON with file counts", () => {
     initKlyDir(tmpDir);
     const db = openDatabase(tmpDir, "default");
-    db.upsertFiles([
-      createFileIndex({ path: "src/a.ts" }),
-      createFileIndex({ path: "src/b.ts" }),
-    ]);
+    db.upsertFiles([createFileIndex({ path: "src/a.ts" }), createFileIndex({ path: "src/b.ts" })]);
     db.close();
 
     runOverview(tmpDir);

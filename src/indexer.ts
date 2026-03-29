@@ -63,7 +63,7 @@ function emptyBuildResult(root: string): BuildResult {
     updatedFiles: 0,
     deletedFiles: 0,
     unchangedFiles: 0,
-    branch: gitRepo ? (getCurrentBranch(root) || "detached") : "default",
+    branch: gitRepo ? getCurrentBranch(root) || "detached" : "default",
     commit: gitRepo ? getCurrentCommit(root) : "",
     durationMs: 0,
   };
@@ -293,15 +293,7 @@ async function buildClassic(
     }
 
     if (toIndex.length > 0) {
-      const indexResult = await indexFiles(
-        root,
-        toIndex,
-        db,
-        parserManager,
-        llmService,
-        options,
-        progress,
-      );
+      await indexFiles(root, toIndex, db, parserManager, llmService, options, progress);
       // Determine new vs updated based on whether they existed before
       for (const filePath of toIndex) {
         if (existingPaths.has(filePath)) {

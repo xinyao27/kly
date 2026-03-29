@@ -27,7 +27,10 @@ program
 program
   .command("init")
   .description("Initialize kly in the current repository")
-  .option("--provider <name>", "LLM provider (openrouter, anthropic, openai, google, mistral, groq)")
+  .option(
+    "--provider <name>",
+    "LLM provider (openrouter, anthropic, openai, google, mistral, groq)",
+  )
   .option("--model <name>", "Model name (default: provider-specific)")
   .option("--api-key <key>", "API key (or set via env variable)")
   .option("--hook", "Also install post-commit hook")

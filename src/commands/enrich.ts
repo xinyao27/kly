@@ -1,7 +1,7 @@
 import { enrichErrorStack } from "../enrich";
 import { openDatabase } from "../store";
 import type { ErrorFrame } from "../types";
-import { error, output } from "./output";
+import { error } from "./output";
 import { ensureInitialized } from "./shared";
 
 export interface EnrichOptions {
@@ -10,8 +10,8 @@ export interface EnrichOptions {
 
 function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    process.stdin.on("data", (chunk) => chunks.push(chunk));
+    const chunks: Uint8Array[] = [];
+    process.stdin.on("data", (chunk: Uint8Array) => chunks.push(chunk));
     process.stdin.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
     process.stdin.on("error", reject);
 
@@ -27,10 +27,7 @@ function parseFrames(input: string): ErrorFrame[] {
   try {
     parsed = JSON.parse(input);
   } catch {
-    error(
-      "Invalid JSON input.",
-      'echo \'[{"file":"src/foo.ts","line":42}]\' | kly enrich',
-    );
+    error("Invalid JSON input.", 'echo \'[{"file":"src/foo.ts","line":42}]\' | kly enrich');
   }
 
   if (!Array.isArray(parsed)) {

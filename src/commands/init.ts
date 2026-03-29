@@ -5,8 +5,8 @@ import * as p from "@clack/prompts";
 
 import { initKlyDir, isInitialized } from "../config";
 import type { KlyConfig } from "../types";
-import { info } from "./output";
 import { runHook } from "./hook";
+import { info } from "./output";
 
 export interface InitOptions {
   provider?: string;
@@ -85,7 +85,7 @@ function runNonInteractive(root: string, options: InitOptions): void {
   }
 }
 
-async function runInteractive(root: string, options: InitOptions): Promise<void> {
+async function runInteractive(root: string, _options: InitOptions): Promise<void> {
   p.intro("kly init");
 
   if (isInitialized(root)) {

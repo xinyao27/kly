@@ -53,9 +53,7 @@ describe("enrichErrorStack", () => {
         path: "src/auth.ts",
         description: "Authentication service",
         summary: "Handles login and token validation",
-        symbols: [
-          { name: "validate", kind: "function", description: "Validates JWT token" },
-        ],
+        symbols: [{ name: "validate", kind: "function", description: "Validates JWT token" }],
       }),
     );
     db.close();
@@ -91,9 +89,7 @@ describe("enrichErrorStack", () => {
 
     const db2 = openDatabase(tmpDir, "default");
     try {
-      const result = enrichErrorStack(db2, tmpDir, [
-        { file: "src/auth.ts", line: 10 },
-      ]);
+      const result = enrichErrorStack(db2, tmpDir, [{ file: "src/auth.ts", line: 10 }]);
 
       expect(result.frames[0].importedBy).toEqual(["src/middleware.ts"]);
       expect(result.frames[0].importsFrom).toEqual(["src/types.ts"]);
@@ -106,9 +102,7 @@ describe("enrichErrorStack", () => {
   it("handles frames for files not in index", () => {
     const db = openDatabase(tmpDir, "default");
     try {
-      const result = enrichErrorStack(db, tmpDir, [
-        { file: "src/unknown.ts", line: 1 },
-      ]);
+      const result = enrichErrorStack(db, tmpDir, [{ file: "src/unknown.ts", line: 1 }]);
 
       expect(result.frames).toHaveLength(1);
       expect(result.frames[0].fileDescription).toBe("");

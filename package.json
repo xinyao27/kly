@@ -2,7 +2,20 @@
   "name": "kly",
   "version": "0.1.0",
   "description": "Code repository file-level indexing tool for AI agents",
+  "homepage": "https://github.com/xinyao27/kly#readme",
+  "bugs": {
+    "url": "https://github.com/xinyao27/kly/issues"
+  },
   "license": "MIT",
+  "author": {
+    "name": "xinyao",
+    "email": "hi@xinyao.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xinyao27/kly.git"
+  },
+  "funding": "https://github.com/sponsors/xinyao27",
   "bin": {
     "kly": "./dist/cli.mjs"
   },
@@ -19,43 +32,46 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
     "dev": "vp pack --watch",
+    "build": "vp pack",
+    "check": "vp check --fix",
+    "lint": "vp lint --fix",
+    "fmt": "vp fmt",
     "test": "vp test",
     "test:coverage": "vp test --coverage",
-    "check": "vp check --fix",
     "prepublishOnly": "npm run build",
-    "up": "taze -Ir"
+    "up": "taze major -Ir",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@clack/prompts": "^1.1.0",
-    "@mariozechner/pi-ai": "^0.60.0",
-
+    "@mariozechner/pi-ai": "^0.63.2",
     "better-sqlite3": "^12.8.0",
     "commander": "^14.0.3",
-    "globby": "^16.1.1",
+    "globby": "^16.2.0",
     "p-limit": "^7.3.0",
     "tree-sitter": "^0.25.0",
     "tree-sitter-swift": "^0.7.1",
     "tree-sitter-typescript": "^0.23.2",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.0",
     "@types/picomatch": "^4.0.2",
     "@typescript/native-preview": "7.0.0-dev.20260317.1",
-    "@vitest/coverage-v8": "^4.1.0",
     "bumpp": "^11.0.1",
     "taze": "^19.10.0",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vite-plus": "^0.1.12",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+    "vite-plus": "latest"
   },
-  "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+      "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+    }
   },
   "inlinedDependencies": {
     "picomatch": "2.3.1"

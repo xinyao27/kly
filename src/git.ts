@@ -83,7 +83,10 @@ export function getMergeBase(root: string, a: string, b: string): string | null 
 export function getFileHistory(root: string, filePath: string, limit = 5): GitCommit[] {
   let output: string;
   try {
-    output = exec(root, `git log --follow -n ${limit} --format="%H|%an|%ae|%at|%s" -- "${filePath}"`);
+    output = exec(
+      root,
+      `git log --follow -n ${limit} --format="%H|%an|%ae|%at|%s" -- "${filePath}"`,
+    );
   } catch {
     return [];
   }

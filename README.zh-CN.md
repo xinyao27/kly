@@ -75,6 +75,7 @@ kly history src/auth.ts
 ```
 
 输出类似：
+
 ```
 abc1234 @alice 2026-03-25 fix: handle expired token
 def5678 @bob   2026-03-20 feat: add refresh token
@@ -96,6 +97,7 @@ echo '[{"file":"src/components/MessageList.tsx","line":142}]' | kly enrich
 ```
 
 输出会告诉你：
+
 - 📄 这个文件是做什么的（「聊天消息列表渲染组件」）
 - 🔗 有哪些文件依赖它（影响范围）
 - 📝 它 import 了哪些模块
@@ -164,12 +166,7 @@ kly hook install
 kly 不只是命令行工具，也是一个导出干净的 TypeScript 库，可以直接 import：
 
 ```typescript
-import {
-  openDatabase,
-  searchFiles,
-  enrichErrorStack,
-  buildIndex,
-} from "kly";
+import { openDatabase, searchFiles, enrichErrorStack, buildIndex } from "kly";
 
 const db = openDatabase("/path/to/repo");
 
@@ -186,19 +183,19 @@ db.close();
 
 ## 所有命令一览
 
-| 命令 | 说明 |
-|---|---|
-| `kly init` | 初始化（支持 `--provider`、`--api-key`、`--model` 参数） |
-| `kly build` | 构建或更新索引（`--full` 全量重建，`--quiet` 静默模式） |
-| `kly query <文本>` | 自然语言搜索文件（`--rerank` LLM 重排序，`--limit` 限制数量） |
-| `kly show <路径>` | 查看文件的索引详情 |
-| `kly overview` | 仓库总览（文件数、语言分布） |
-| `kly graph` | 文件依赖图（`--focus` 聚焦，`--depth` 深度） |
-| `kly dependents <路径>` | 查看谁 import 了这个文件 |
-| `kly history <路径>` | 查看文件的 git 修改历史（`--limit` 限制条数） |
-| `kly enrich` | 错误栈增强（通过 stdin 或 `--frames` 传入） |
-| `kly hook install\|uninstall` | 管理 post-commit hook |
-| `kly gc` | 清理已删除分支的数据库 |
+| 命令                          | 说明                                                          |
+| ----------------------------- | ------------------------------------------------------------- |
+| `kly init`                    | 初始化（支持 `--provider`、`--api-key`、`--model` 参数）      |
+| `kly build`                   | 构建或更新索引（`--full` 全量重建，`--quiet` 静默模式）       |
+| `kly query <文本>`            | 自然语言搜索文件（`--rerank` LLM 重排序，`--limit` 限制数量） |
+| `kly show <路径>`             | 查看文件的索引详情                                            |
+| `kly overview`                | 仓库总览（文件数、语言分布）                                  |
+| `kly graph`                   | 文件依赖图（`--focus` 聚焦，`--depth` 深度）                  |
+| `kly dependents <路径>`       | 查看谁 import 了这个文件                                      |
+| `kly history <路径>`          | 查看文件的 git 修改历史（`--limit` 限制条数）                 |
+| `kly enrich`                  | 错误栈增强（通过 stdin 或 `--frames` 传入）                   |
+| `kly hook install\|uninstall` | 管理 post-commit hook                                         |
+| `kly gc`                      | 清理已删除分支的数据库                                        |
 
 所有查询命令默认输出 JSON（给 Agent 读），加 `--pretty` 输出人类可读格式。
 

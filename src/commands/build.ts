@@ -45,10 +45,7 @@ export async function runBuild(root: string, options: BuildOptions = {}): Promis
       const summary = parts.length > 0 ? parts.join(", ") : "no changes";
       const duration = (result.durationMs / 1000).toFixed(1);
 
-      const lines = [
-        `indexed ${result.totalFiles} files (${summary})`,
-        `branch: ${result.branch}`,
-      ];
+      const lines = [`indexed ${result.totalFiles} files (${summary})`, `branch: ${result.branch}`];
       if (result.commit) {
         lines.push(`commit: ${result.commit.slice(0, 7)}`);
       }

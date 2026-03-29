@@ -11,10 +11,7 @@ function formatDependents(data: unknown): string {
     return `${result.file} is not imported by any indexed file`;
   }
 
-  const lines: string[] = [
-    `${result.file} is imported by ${result.dependents.length} file(s)`,
-    "",
-  ];
+  const lines: string[] = [`${result.file} is imported by ${result.dependents.length} file(s)`, ""];
 
   for (const dep of result.dependents) {
     lines.push(`  ${dep}`);
@@ -34,10 +31,7 @@ export function runDependents(
   try {
     const fileIndex = db.getFile(filePath);
     if (!fileIndex) {
-      error(
-        `File not found in index: ${filePath}`,
-        `kly query "${filePath.split("/").pop()}"`,
-      );
+      error(`File not found in index: ${filePath}`, `kly query "${filePath.split("/").pop()}"`);
     }
 
     const dependents = db.getDependents(filePath);

@@ -1,6 +1,6 @@
 import { buildDependencyGraph } from "../graph";
 import { openDatabase } from "../store";
-import { type OutputOptions, error, output, warn } from "./output";
+import { type OutputOptions, error, output } from "./output";
 import { ensureInitialized } from "./shared";
 
 export interface GraphOptions extends OutputOptions {
@@ -63,10 +63,7 @@ export function runGraph(root: string, options: GraphOptions = {}): void {
     const graph = buildDependencyGraph(db, { focus: options.focus, depth });
 
     if (options.focus && !graph.nodes.has(options.focus)) {
-      error(
-        `File not in index: ${options.focus}`,
-        `kly query "${options.focus.split("/").pop()}"`,
-      );
+      error(`File not in index: ${options.focus}`, `kly query "${options.focus.split("/").pop()}"`);
     }
 
     const data = {

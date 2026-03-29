@@ -37,12 +37,12 @@ export default defineConfig({
     entry: {
       index: "src/index.ts",
       cli: "src/cli.ts",
-      mcp: "src/mcp.ts",
     },
     dts: {
       tsgo: true,
     },
     exports: true,
+    sourcemap: true,
   },
   lint: {
     options: {

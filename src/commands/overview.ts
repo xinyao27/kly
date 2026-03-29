@@ -1,5 +1,5 @@
 import { openDatabase } from "../store";
-import { type OutputOptions, output, warn } from "./output";
+import { type OutputOptions, output } from "./output";
 import { ensureInitialized } from "./shared";
 
 export interface OverviewOptions extends OutputOptions {}
@@ -15,22 +15,12 @@ function formatOverview(data: unknown): string {
     return "no files indexed yet. run `kly build` first.";
   }
 
-  const lines: string[] = [
-    `total_files: ${overview.totalFiles}`,
-    "",
-    "languages:",
-  ];
+  const lines: string[] = [`total_files: ${overview.totalFiles}`, "", "languages:"];
 
   const sorted = Object.entries(overview.languages).sort(([, a], [, b]) => b - a);
   for (const [lang, count] of sorted) {
     const pct = ((count / overview.totalFiles) * 100).toFixed(1);
     lines.push(`  ${lang}: ${count} (${pct}%)`);
-  }
-
-  // Group files by language
-  const grouped = new Map<string, typeof overview.files>();
-  for (const file of overview.files) {
-    // We don't have language in the overview files output, so just list all
   }
 
   lines.push("", "files:");
