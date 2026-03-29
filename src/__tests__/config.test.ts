@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  ensureGitignore,
   getConfigPath,
   getDbDir,
   getDbPath,
@@ -99,6 +100,43 @@ describe("config", () => {
       initKlyDir(tmpDir);
       initKlyDir(tmpDir);
       expect(fs.existsSync(getConfigPath(tmpDir))).toBe(true);
+    });
+
+    it("should create .gitignore with .kly in a git repo when none exists", () => {
+      fs.mkdirSync(path.join(tmpDir, ".git"), { recursive: true });
+      initKlyDir(tmpDir);
+      const gitignorePath = path.join(tmpDir, ".gitignore");
+      expect(fs.existsSync(gitignorePath)).toBe(true);
+      expect(fs.readFileSync(gitignorePath, "utf-8")).toBe(".kly\n");
+    });
+
+    it("should append .kly to existing .gitignore in a git repo", () => {
+      fs.mkdirSync(path.join(tmpDir, ".git"), { recursive: true });
+      fs.writeFileSync(path.join(tmpDir, ".gitignore"), "node_modules\n", "utf-8");
+      initKlyDir(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, ".gitignore"), "utf-8");
+      expect(content).toBe("node_modules\n.kly\n");
+    });
+
+    it("should not duplicate .kly when already in .gitignore", () => {
+      fs.mkdirSync(path.join(tmpDir, ".git"), { recursive: true });
+      fs.writeFileSync(path.join(tmpDir, ".gitignore"), "node_modules\n.kly\n", "utf-8");
+      initKlyDir(tmpDir);
+      initKlyDir(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, ".gitignore"), "utf-8");
+      expect(content).toBe("node_modules\n.kly\n");
+    });
+
+    it("should not create or modify .gitignore when not a git repo", () => {
+      initKlyDir(tmpDir);
+      expect(fs.existsSync(path.join(tmpDir, ".gitignore"))).toBe(false);
+    });
+  });
+
+  describe("ensureGitignore", () => {
+    it("is a no-op without .git", () => {
+      ensureGitignore(tmpDir);
+      expect(fs.existsSync(path.join(tmpDir, ".gitignore"))).toBe(false);
     });
   });
 

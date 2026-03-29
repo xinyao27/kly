@@ -17,6 +17,7 @@ export type {
 
 // Config
 export {
+  ensureGitignore,
   getConfigPath,
   getDbDir,
   getDbPath,

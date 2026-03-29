@@ -56,6 +56,33 @@ export function isInitialized(root: string): boolean {
   return fs.existsSync(getKlyDir(root));
 }
 
+const GITIGNORE_ENTRY = ".kly";
+
+/** Append `.kly` to root `.gitignore` when inside a git repo; idempotent. */
+export function ensureGitignore(root: string): void {
+  const gitDir = path.join(root, ".git");
+  if (!fs.existsSync(gitDir)) {
+    return;
+  }
+
+  const gitignorePath = path.join(root, ".gitignore");
+
+  if (!fs.existsSync(gitignorePath)) {
+    fs.writeFileSync(gitignorePath, `${GITIGNORE_ENTRY}\n`, "utf-8");
+    return;
+  }
+
+  const content = fs.readFileSync(gitignorePath, "utf-8");
+  const hasEntry = content.split(/\r?\n/).some((line) => line.trim() === GITIGNORE_ENTRY);
+  if (hasEntry) {
+    return;
+  }
+
+  const endsWithNewline = content.endsWith("\n") || content === "";
+  const suffix = endsWithNewline ? `${GITIGNORE_ENTRY}\n` : `\n${GITIGNORE_ENTRY}\n`;
+  fs.appendFileSync(gitignorePath, suffix, "utf-8");
+}
+
 export function initKlyDir(root: string, config?: KlyConfig): void {
   const klyDir = getKlyDir(root);
   if (!fs.existsSync(klyDir)) {
@@ -69,6 +96,8 @@ export function initKlyDir(root: string, config?: KlyConfig): void {
 
   const configToWrite = config || DEFAULT_CONFIG;
   fs.writeFileSync(getConfigPath(root), stringifyYaml(configToWrite), "utf-8");
+
+  ensureGitignore(root);
 }
 
 export function loadConfig(root: string): KlyConfig {
