@@ -1,6 +1,6 @@
 {
   "name": "kly",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Code repository file-level indexing tool for AI agents",
   "homepage": "https://github.com/xinyao27/kly#readme",
   "bugs": {
