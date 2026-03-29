@@ -33,7 +33,7 @@
   },
   "scripts": {
     "dev": "vp pack --watch",
-    "build": "vp pack",
+    "build": "npm run postinstall && vp pack",
     "check": "vp check --fix",
     "lint": "vp lint --fix",
     "fmt": "vp fmt",
