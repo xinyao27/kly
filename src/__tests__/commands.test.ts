@@ -87,7 +87,9 @@ function captureOutput() {
 }
 
 function restoreOutput() {
+  // eslint-disable-next-line typescript-eslint/unbound-method
   (vi.mocked(process.stdout.write).mockRestore as (() => void) | undefined)?.();
+  // eslint-disable-next-line typescript-eslint/unbound-method
   (vi.mocked(process.stderr.write).mockRestore as (() => void) | undefined)?.();
 }
 

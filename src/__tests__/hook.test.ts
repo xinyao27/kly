@@ -33,6 +33,7 @@ describe("runHook", () => {
   });
 
   afterEach(() => {
+    // eslint-disable-next-line typescript-eslint/unbound-method
     (vi.mocked(process.stderr.write).mockRestore as (() => void) | undefined)?.();
     cleanupTempDir(tmpDir);
   });
