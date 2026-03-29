@@ -138,21 +138,27 @@ program
   .description("Show file dependency graph")
   .option("--focus <path>", "Focus on a specific file")
   .option("--depth <n>", "Traversal depth", "2")
+  .option(
+    "--format <type>",
+    "Output format: mermaid, json, ascii, svg (default: mermaid, or ascii with --pretty)",
+  )
   .option("--pretty", "Human-readable output")
   .addHelpText(
     "after",
     `
 Examples:
   kly graph
-  kly graph --focus src/auth.ts --depth 3
+  kly graph --format ascii
+  kly graph --format svg --focus src/auth.ts --depth 3
+  kly graph --format mermaid
   kly graph --pretty
-  kly graph --focus src/auth.ts --pretty
 `,
   )
-  .action((options: { focus?: string; depth?: string; pretty?: boolean }) => {
+  .action((options: { focus?: string; depth?: string; format?: string; pretty?: boolean }) => {
     runGraph(process.cwd(), {
       focus: options.focus,
       depth: options.depth ? parseInt(options.depth, 10) : undefined,
+      format: options.format as "json" | "mermaid" | "ascii" | "svg" | undefined,
       pretty: options.pretty,
     });
   });

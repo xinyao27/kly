@@ -1,4 +1,10 @@
-import { buildDependencyGraph } from "../graph";
+import {
+  type GraphFormat,
+  buildDependencyGraph,
+  generateMermaid,
+  renderGraphAscii,
+  renderGraphSvg,
+} from "../graph";
 import { openDatabase } from "../store";
 import { type OutputOptions, error, output } from "./output";
 import { ensureInitialized } from "./shared";
@@ -6,6 +12,7 @@ import { ensureInitialized } from "./shared";
 export interface GraphOptions extends OutputOptions {
   focus?: string;
   depth?: number;
+  format?: GraphFormat;
 }
 
 function formatGraph(data: unknown): string {
@@ -57,6 +64,7 @@ export function runGraph(root: string, options: GraphOptions = {}): void {
   ensureInitialized(root);
 
   const depth = options.depth ?? 2;
+  const format = options.format ?? (options.pretty ? "ascii" : "mermaid");
 
   const db = openDatabase(root);
   try {
@@ -64,6 +72,32 @@ export function runGraph(root: string, options: GraphOptions = {}): void {
 
     if (options.focus && !graph.nodes.has(options.focus)) {
       error(`File not in index: ${options.focus}`, `kly query "${options.focus.split("/").pop()}"`);
+    }
+
+    if (format === "mermaid" || format === "ascii" || format === "svg") {
+      const mermaid = generateMermaid(graph);
+
+      if (graph.nodes.size === 0) {
+        console.log("no files indexed yet. run `kly build` first.");
+        return;
+      }
+      if (graph.edges.length === 0) {
+        console.log("no dependencies found between indexed files.");
+        return;
+      }
+
+      switch (format) {
+        case "mermaid":
+          console.log(mermaid);
+          break;
+        case "ascii":
+          console.log(renderGraphAscii(mermaid));
+          break;
+        case "svg":
+          console.log(renderGraphSvg(mermaid));
+          break;
+      }
+      return;
     }
 
     const data = {

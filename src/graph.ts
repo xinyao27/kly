@@ -1,7 +1,11 @@
 import path from "node:path";
 
+import { renderMermaidASCII, renderMermaidSVG } from "beautiful-mermaid";
+
 import type { IndexDatabase } from "./database";
 import type { FileIndex, Language } from "./types";
+
+export type GraphFormat = "json" | "mermaid" | "ascii" | "svg";
 
 export interface GraphNode {
   path: string;
@@ -175,4 +179,18 @@ export function generateMermaid(graph: DependencyGraph): string {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Render a Mermaid diagram string to ASCII/Unicode art.
+ */
+export function renderGraphAscii(mermaid: string): string {
+  return renderMermaidASCII(mermaid, { colorMode: "none" });
+}
+
+/**
+ * Render a Mermaid diagram string to SVG.
+ */
+export function renderGraphSvg(mermaid: string): string {
+  return renderMermaidSVG(mermaid, { transparent: true });
 }

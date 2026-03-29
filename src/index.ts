@@ -86,8 +86,15 @@ export { filterByLanguage, filterByPath, searchFiles, searchFilesWithRerank } fr
 export { rerankResults } from "./llm/reranker";
 
 // Graph
-export { buildDependencyGraph, generateMermaid, isRelativeImport, resolveImport } from "./graph";
-export type { DependencyGraph, GraphEdge, GraphNode } from "./graph";
+export {
+  buildDependencyGraph,
+  generateMermaid,
+  isRelativeImport,
+  renderGraphAscii,
+  renderGraphSvg,
+  resolveImport,
+} from "./graph";
+export type { DependencyGraph, GraphEdge, GraphFormat, GraphNode } from "./graph";
 
 // Enrich
 export { enrichErrorStack } from "./enrich";

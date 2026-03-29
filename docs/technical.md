@@ -274,7 +274,16 @@ Delegates to FTS5 full-text search in SQLite. Also provides utility filters: `fi
 
 ### Graph (`src/graph.ts`)
 
-Builds dependency graphs from indexed file imports. Resolves relative imports to indexed files (with extension and index.ts completion). Supports focused subgraphs with configurable depth. Generates Mermaid `graph LR` syntax for visualization.
+Builds dependency graphs from indexed file imports. Resolves relative imports to indexed files (with extension and index.ts completion). Supports focused subgraphs with configurable depth. Generates Mermaid `graph LR` syntax and renders it to ASCII or SVG via [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid).
+
+Supports four output formats (`--format`):
+
+| Format    | Description                                   |
+| --------- | --------------------------------------------- |
+| `mermaid` | Default, Mermaid syntax (most agent-friendly) |
+| `json`    | Structured JSON (nodes + edges)               |
+| `ascii`   | ASCII art rendered by beautiful-mermaid       |
+| `svg`     | SVG rendered by beautiful-mermaid             |
 
 ### Reranker (`src/llm/reranker.ts`)
 
@@ -282,16 +291,16 @@ Takes FTS5 search candidates and reorders them using LLM semantic understanding.
 
 ## CLI Commands
 
-| Command             | Description                                           | Key Options                                 |
-| ------------------- | ----------------------------------------------------- | ------------------------------------------- |
-| `kly init`          | Interactive setup + optional post-commit hook install | —                                           |
-| `kly build`         | Build or update the repository index                  | `--full` force rebuild, `--quiet` for hooks |
-| `kly query <text>`  | Search indexed files with natural language            | `--rerank` LLM rerank                       |
-| `kly show <path>`   | Show indexed metadata for a specific file             | —                                           |
-| `kly overview`      | Show an indexed repository summary                    | —                                           |
-| `kly graph`         | Render the indexed file dependency graph              | `--focus <path>`, `--depth <n>`, `--format` |
-| `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
-| `kly gc`            | Clean up databases for deleted branches               | —                                           |
+| Command             | Description                                           | Key Options                                        |
+| ------------------- | ----------------------------------------------------- | -------------------------------------------------- |
+| `kly init`          | Interactive setup + optional post-commit hook install | —                                                  |
+| `kly build`         | Build or update the repository index                  | `--full` force rebuild, `--quiet` for hooks        |
+| `kly query <text>`  | Search indexed files with natural language            | `--rerank` LLM rerank                              |
+| `kly show <path>`   | Show indexed metadata for a specific file             | —                                                  |
+| `kly overview`      | Show an indexed repository summary                    | —                                                  |
+| `kly graph`         | Render the indexed file dependency graph              | `--focus <path>`, `--depth <n>`, `--format <type>` |
+| `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                           |
+| `kly gc`            | Clean up databases for deleted branches               | —                                                  |
 
 ## Directory Structure
 

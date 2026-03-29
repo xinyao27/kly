@@ -274,7 +274,16 @@ interface BranchState {
 
 ### Graph (`src/graph.ts`)
 
-从已索引文件的 imports 构建依赖图。解析相对导入到已索引文件（支持扩展名补全和 index.ts 补全）。支持聚焦子图和可配置深度。生成 Mermaid `graph LR` 语法用于可视化。
+从已索引文件的 imports 构建依赖图。解析相对导入到已索引文件（支持扩展名补全和 index.ts 补全）。支持聚焦子图和可配置深度。生成 Mermaid `graph LR` 语法，并通过 [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid) 渲染为 ASCII 或 SVG 输出。
+
+支持四种输出格式（`--format`）：
+
+| 格式      | 描述                                   |
+| --------- | -------------------------------------- |
+| `mermaid` | 默认，Mermaid 语法（对 agent 最友好）  |
+| `json`    | 结构化 JSON（节点 + 边）               |
+| `ascii`   | 通过 beautiful-mermaid 渲染的 ASCII 图 |
+| `svg`     | 通过 beautiful-mermaid 渲染的 SVG 图   |
 
 ### Reranker (`src/llm/reranker.ts`)
 
@@ -282,16 +291,16 @@ interface BranchState {
 
 ## CLI 命令
 
-| 命令                | 描述                                    | 关键选项                                     |
-| ------------------- | --------------------------------------- | -------------------------------------------- |
-| `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                            |
-| `kly build`         | 构建或更新仓库索引                      | `--full` 强制全量，`--quiet` 静默（hook 用） |
-| `kly query <text>`  | 用自然语言搜索已索引文件                | `--rerank` LLM 重排序                        |
-| `kly show <path>`   | 查看指定文件的索引元数据                | —                                            |
-| `kly overview`      | 显示已索引仓库的概要信息                | —                                            |
-| `kly graph`         | 渲染已索引文件依赖图                    | `--focus <path>`、`--depth <n>`、`--format`  |
-| `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                     |
-| `kly gc`            | 清理已删除分支的数据库                  | —                                            |
+| 命令                | 描述                                    | 关键选项                                           |
+| ------------------- | --------------------------------------- | -------------------------------------------------- |
+| `kly init`          | 交互式设置 + 可选 post-commit hook 安装 | —                                                  |
+| `kly build`         | 构建或更新仓库索引                      | `--full` 强制全量，`--quiet` 静默（hook 用）       |
+| `kly query <text>`  | 用自然语言搜索已索引文件                | `--rerank` LLM 重排序                              |
+| `kly show <path>`   | 查看指定文件的索引元数据                | —                                                  |
+| `kly overview`      | 显示已索引仓库的概要信息                | —                                                  |
+| `kly graph`         | 渲染已索引文件依赖图                    | `--focus <path>`、`--depth <n>`、`--format <type>` |
+| `kly hook <action>` | 安装/卸载 post-commit hook              | `install` 或 `uninstall`                           |
+| `kly gc`            | 清理已删除分支的数据库                  | —                                                  |
 
 ## 目录结构
 
