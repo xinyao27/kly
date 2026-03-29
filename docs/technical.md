@@ -12,8 +12,8 @@ kly is a code repository file-level indexing tool. It generates structured metad
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                     CLI / MCP                        │
-│  (commander)            (stdio transport)            │
+│                        CLI                            │
+│                    (commander)                        │
 ├─────────────────────────────────────────────────────┤
 │                     Indexer                           │
 │              (orchestration engine)                   │
@@ -28,11 +28,10 @@ kly is a code repository file-level indexing tool. It generates structured metad
 
 ### Entry Points
 
-| Entry   | File           | Purpose                                  |
-| ------- | -------------- | ---------------------------------------- |
-| Library | `src/index.ts` | Public API for programmatic usage        |
-| CLI     | `src/cli.ts`   | `kly` command-line tool                  |
-| MCP     | `src/mcp.ts`   | MCP Server (stdio) for agent integration |
+| Entry   | File           | Purpose                           |
+| ------- | -------------- | --------------------------------- |
+| Library | `src/index.ts` | Public API for programmatic usage |
+| CLI     | `src/cli.ts`   | `kly` command-line tool           |
 
 ## Data Flow
 
@@ -199,7 +198,7 @@ All CLI user interactions use [@clack/prompts](https://github.com/bombshell-dev/
 - **No `as any` or `as unknown`** — Use proper type narrowing
 - **English code and comments** — All code, variable names, and comments must be in English
 - **YAML for config** — Configuration uses YAML; index data uses SQLite
-- **Core-module 100% coverage thresholds** — `vite.config.ts` enforces 100% thresholds for the modules listed in `coverage.include`; CLI and MCP surfaces are validated with targeted smoke tests plus manual integration checks
+- **Core-module 100% coverage thresholds** — `vite.config.ts` enforces 100% thresholds for the modules listed in `coverage.include`; CLI surfaces are validated with targeted smoke tests plus manual integration checks
 
 ## Module Details
 
@@ -291,34 +290,8 @@ Takes FTS5 search candidates and reorders them using LLM semantic understanding.
 | `kly show <path>`   | Show indexed metadata for a specific file             | —                                           |
 | `kly overview`      | Show an indexed repository summary                    | —                                           |
 | `kly graph`         | Render the indexed file dependency graph              | `--focus <path>`, `--depth <n>`, `--format` |
-| `kly mcp`           | Start the MCP server over stdio                       | —                                           |
 | `kly hook <action>` | Install/uninstall post-commit hook                    | `install` or `uninstall`                    |
 | `kly gc`            | Clean up databases for deleted branches               | —                                           |
-
-## MCP Server
-
-Exposes 3 tools via stdio transport for agent consumption:
-
-### `search_files`
-
-Natural language file search powered by FTS5.
-
-- **Input:** `{ query: string, limit?: number, rerank?: boolean }`
-- **Output:** JSON array of `{ path, name, description, score }`
-
-### `get_file_index`
-
-Retrieve complete index for a specific file.
-
-- **Input:** `{ path: string }`
-- **Output:** Full `FileIndex` JSON object
-
-### `get_overview`
-
-Repository summary.
-
-- **Input:** none
-- **Output:** `{ totalFiles, languages: { [lang]: count }, files: [{ path, name, description }] }`
 
 ## Directory Structure
 
@@ -327,7 +300,6 @@ kly/
 ├── src/
 │   ├── index.ts              # Library public API
 │   ├── cli.ts                # CLI entry (commander)
-│   ├── mcp.ts                # MCP Server (stdio)
 │   ├── types.ts              # Core types
 │   ├── config.ts             # .kly/ directory management
 │   ├── database.ts           # SQLite IndexDatabase class
@@ -346,7 +318,6 @@ kly/
 │   │   ├── show.ts
 │   │   ├── overview.ts       # Repository overview
 │   │   ├── graph.ts          # Dependency graph CLI
-│   │   ├── serve.ts
 │   │   ├── hook.ts           # Git hook install/uninstall
 │   │   └── gc.ts             # Branch db cleanup
 │   ├── llm/
@@ -392,7 +363,6 @@ kly/
 | LLM             | `@mariozechner/pi-ai`          | Unified multi-provider LLM API                  |
 | Static Analysis | `tree-sitter`                  | AST parsing (TS/JS/Swift)                       |
 | Storage         | `better-sqlite3`               | Per-branch SQLite with FTS5 full-text search    |
-| MCP             | `@modelcontextprotocol/sdk`    | Agent-facing tool protocol                      |
 | File Discovery  | `globby`                       | Glob patterns with gitignore                    |
 | CLI             | `commander` + `@clack/prompts` | Command-line interface with interactive prompts |
 | Concurrency     | `p-limit`                      | Rate limit LLM calls                            |
@@ -420,8 +390,7 @@ kly/
 - Core modules: scanner, hasher, store, config
 - Tree-sitter parsers: TypeScript, JavaScript, Swift
 - LLM integration with multi-provider support
-- CLI: init, build, query, show, mcp, hook, gc
-- MCP Server with stdio transport
+- CLI: init, build, query, show, hook, gc
 - Git-aware incremental indexing with per-branch SQLite storage
 - FTS5 full-text search
 - Post-commit hook system
@@ -430,7 +399,7 @@ kly/
 
 - `kly overview` — repository-level summary command
 - `kly graph` — dependency graph visualization (Mermaid via beautiful-mermaid)
-- LLM rerank for query results (`--rerank` flag + MCP `rerank` param)
+- LLM rerank for query results (`--rerank` flag)
 
 ### P2
 

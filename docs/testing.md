@@ -4,7 +4,7 @@
 
 ## Testing Strategy
 
-kly follows **TDD (Test-Driven Development)** — new features must have tests written first, then implementation. The core modules listed in `vite.config.ts` are held to **100% coverage thresholds**, while CLI and MCP surfaces are verified through targeted smoke tests plus manual end-to-end checks.
+kly follows **TDD (Test-Driven Development)** — new features must have tests written first, then implementation. The core modules listed in `vite.config.ts` are held to **100% coverage thresholds**, while CLI surfaces are verified through targeted smoke tests plus manual end-to-end checks.
 
 ## Test Infrastructure
 
@@ -46,7 +46,6 @@ src/__tests__/
 ├── commands.test.ts             # Command wrappers and output formatting
 ├── cli.test.ts                  # Top-level CLI wiring
 ├── hook.test.ts                 # Hook install/uninstall flows
-├── mcp.test.ts                  # MCP tool registration and responses
 ├── indexer.test.ts              # Indexer integration (mock LLM)
 ├── parser/
 │   ├── typescript.test.ts       # TS/TSX/JS/JSX parser (merged)
@@ -78,14 +77,13 @@ test: {
 
 **Covered modules:** config, database, diff-filter, git, scanner, hasher, store, query, graph, indexer, parser/_, llm/_
 
-**Outside coverage thresholds:** CLI commands (`src/commands/`), MCP server (`src/mcp.ts`), entry points (`src/cli.ts`, `src/index.ts`)
+**Outside coverage thresholds:** CLI commands (`src/commands/`), entry points (`src/cli.ts`, `src/index.ts`)
 
 These paths still have targeted automated tests:
 
 - `src/__tests__/commands.test.ts` — command wrappers, formatting, and failure paths
 - `src/__tests__/cli.test.ts` — top-level CLI argument wiring
 - `src/__tests__/hook.test.ts` — hook install/uninstall idempotency
-- `src/__tests__/mcp.test.ts` — MCP tool registration and JSON payloads
 
 ## Mock Strategy
 
@@ -98,7 +96,7 @@ These paths still have targeted automated tests:
 
 ## Manual Test Checklist
 
-The following checks still require manual verification because they depend on a real terminal, a real MCP client, or a live LLM provider.
+The following checks still require manual verification because they depend on a real terminal or a live LLM provider.
 
 ### CLI Commands
 
@@ -107,12 +105,6 @@ The following checks still require manual verification because they depend on a 
 - [ ] `kly build`: Spinner shows progress; errors when not initialized
 - [ ] `kly build`: Incremental mode skips unchanged files (default in git repos)
 - [ ] `kly build --full`: Full rebuild re-indexes all files
-- [ ] `kly mcp`: Starts from the packaged CLI in a real terminal session
-
-### MCP Server
-
-- [ ] Configure MCP client to connect to `kly mcp`
-- [ ] Confirm a real MCP client can call `search_files`, `get_file_index`, and `get_overview`
 
 ### LLM Integration (requires real API key)
 

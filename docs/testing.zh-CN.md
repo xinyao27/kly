@@ -4,7 +4,7 @@
 
 ## 测试策略
 
-kly 遵循 **TDD（测试驱动开发）** — 新功能必须先写测试再实现。`vite.config.ts` 中列出的核心模块执行 **100% 覆盖率阈值**，CLI 与 MCP 入口则通过定向 smoke 测试和手工端到端验证保证质量。
+kly 遵循 **TDD（测试驱动开发）** — 新功能必须先写测试再实现。`vite.config.ts` 中列出的核心模块执行 **100% 覆盖率阈值**，CLI 入口则通过定向 smoke 测试和手工端到端验证保证质量。
 
 ## 测试基础设施
 
@@ -46,7 +46,6 @@ src/__tests__/
 ├── commands.test.ts             # Command 包装层与输出格式
 ├── cli.test.ts                  # 顶层 CLI 接线
 ├── hook.test.ts                 # Hook 安装/卸载流程
-├── mcp.test.ts                  # MCP 工具注册与响应
 ├── indexer.test.ts              # Indexer 集成测试（mock LLM）
 ├── parser/
 │   ├── typescript.test.ts       # TS/TSX/JS/JSX 解析器（合并后）
@@ -78,14 +77,13 @@ test: {
 
 **覆盖的模块：** config、database、diff-filter、git、scanner、hasher、store、query、graph、indexer、parser/_、llm/_
 
-**不纳入覆盖率阈值：** CLI 命令（`src/commands/`）、MCP Server（`src/mcp.ts`）、入口文件（`src/cli.ts`、`src/index.ts`）
+**不纳入覆盖率阈值：** CLI 命令（`src/commands/`）、入口文件（`src/cli.ts`、`src/index.ts`）
 
 这些路径仍然有定向自动化测试：
 
 - `src/__tests__/commands.test.ts` — command 包装、输出格式和失败路径
 - `src/__tests__/cli.test.ts` — 顶层 CLI 参数接线
 - `src/__tests__/hook.test.ts` — hook 安装/卸载幂等性
-- `src/__tests__/mcp.test.ts` — MCP 工具注册和 JSON 负载
 
 ## Mock 策略
 
@@ -98,7 +96,7 @@ test: {
 
 ## 手动测试清单
 
-以下检查仍需要手动验证，因为它们依赖真实终端、真实 MCP client 或真实 LLM provider。
+以下检查仍需要手动验证，因为它们依赖真实终端或真实 LLM provider。
 
 ### CLI 命令
 
@@ -107,12 +105,6 @@ test: {
 - [ ] `kly build`：spinner 显示进度；未初始化时报错
 - [ ] `kly build`：增量模式跳过未更改文件（git 仓库中默认）
 - [ ] `kly build --full`：全量重建重新索引所有文件
-- [ ] `kly mcp`：通过打包后的 CLI 在真实终端里启动
-
-### MCP Server
-
-- [ ] 配置 MCP client 连接 `kly mcp`
-- [ ] 确认真实 MCP client 能调用 `search_files`、`get_file_index` 和 `get_overview`
 
 ### LLM 集成（需要真实 API key）
 
